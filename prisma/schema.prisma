@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Local dev uses SQLite out-of-the-box.
+// For ₹0 Cloud Run + Neon/Supabase deployment, change provider = "postgresql".
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  avatarUrl      String?
+  passwordHash   String?
+  googleId       String?  @unique
+  role           String   @default("Student")
+  isAdmin        Boolean  @default(false)
+  preferredLang  String   @default("en-US")
+  preferredLevel String   @default("Intermediate")
+  preferredModel String   @default("gemini-3.8-flash")
+  creditsBalance Int      @default(10)
+  xpPoints       Int      @default(100)
+  streakDays     Int      @default(1)
+  lastActiveDate String   @default("")
+  planTier       String   @default("Starter")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  courses       Course[]
+  lessons       Lesson[]
+  quizzes       Quiz[]
+  flashcardSets FlashcardSet[]
+  transactions  CreditTransaction[]
+  paymentOrders PaymentOrder[]
+}
+
+model CreditTransaction {
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Int      // Positive for top-ups/bonuses/refunds, negative for AI spends
+  balanceAfter Int
+  type         String   // WELCOME_BONUS | PURCHASE | SPEND | REFUND
+  description  String
+  metadataJson String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model PaymentOrder {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String   // razorpay | lemonsqueezy | sandbox
+  externalOrderId   String   @unique
+  externalPaymentId String?
+  packId            String
+  creditsAmount     Int
+  amountSubunits    Int      // Paise (INR) or Cents (USD)
+  currency          String   @default("INR")
+  status            String   @default("CREATED") // CREATED | PAID | FAILED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model Course {
+  id                    String   @id @default(cuid())
+  userId                String
+  title                 String
+  subject               String
+  description           String
+  level                 String   @default("Intermediate")
+  language              String   @default("en-US")
+  coverGradient         String   @default("from-cyan-500 to-blue-600")
+  modulesJson           String
+  completedChaptersJson String   @default("[]")
+  progressPercent       Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([userId, updatedAt])
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  subject       String   @default("General")
+  topic         String
+  mode          String   @default("lesson") // lesson | story | solve | cheatsheet
+  sourceType    String   @default("topic")  // topic | upload | url | paste | course
+  sourceContent String   @default("")
+  language      String   @default("en-US")
+  level         String   @default("Intermediate")
+  content       String
+  notes         String   @default("")
+  isFavorite    Boolean  @default(false)
+  courseId      String?
+  chapterId     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  messages      DoubtMessage[]
+  quizzes       Quiz[]
+  flashcardSets FlashcardSet[]
+
+  @@index([userId, createdAt])
+}
+
+model DoubtMessage {
+  id        String   @id @default(cuid())
+  lessonId  String
+  role      String   // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  topic          String
+  language       String   @default("en-US")
+  level          String   @default("Intermediate")
+  questionsJson  String
+  totalQuestions Int      @default(10)
+  bestScore      Int      @default(0)
+  attemptsCount  Int      @default(0)
+  lessonId       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson   Lesson?       @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  attempts QuizAttempt[]
+
+  @@index([userId, createdAt])
+}
+
+model QuizAttempt {
+  id           String   @id @default(cuid())
+  quizId       String
+  score        Int
+  total        Int
+  answersJson  String
+  timeTakenSec Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model FlashcardSet {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  topic         String
+  language      String   @default("en-US")
+  cardsJson     String
+  totalCards    Int      @default(10)
+  masteredCount Int      @default(0)
+  lessonId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+}

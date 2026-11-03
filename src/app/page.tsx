@@ -1,69 +1,451 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Sparkles,
+  ArrowRight,
+  BookOpen,
+  FileCheck2,
+  GraduationCap,
+  BrainCircuit,
+  Flame,
+  Trophy,
+  Layers,
+  Clock,
+  Star,
+  KeyRound,
+  Presentation,
+  Wand2,
+} from "lucide-react";
+import { promptApiKeyModal, getStoredApiKey } from "@/lib/client-api";
+
+interface DashboardData {
+  profile: {
+    name: string;
+    role: string;
+    xpPoints: number;
+    streakDays: number;
+    preferredLang: string;
+    preferredLevel: string;
+  };
+  hasServerKey: boolean;
+  stats: {
+    totalLessons: number;
+    totalCourses: number;
+    quizAttemptsCount: number;
+    avgQuizAccuracy: number;
+    flashcardsMastered: number;
+  };
+  recentLessons: Array<{
+    id: string;
+    title: string;
+    subject: string;
+    mode: string;
+    level: string;
+    isFavorite: boolean;
+    createdAt: string;
+  }>;
+  courses: Array<{
+    id: string;
+    title: string;
+    subject: string;
+    level: string;
+    coverGradient: string;
+    progressPercent: number;
+  }>;
+}
+
+const SAMPLE_TOPICS = [
+  { subject: "Physics", topic: "Quantum Entanglement & Bell's Theorem" },
+  { subject: "Mathematics", topic: "Fourier Transform & Signal Intuition" },
+  { subject: "Computer Science", topic: "How Transformer Attention Works" },
+  { subject: "Biology", topic: "CRISPR-Cas9 Gene Editing Mechanism" },
+];
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [quickTopic, setQuickTopic] = useState("");
+  const [quickSubject, setQuickSubject] = useState("");
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasLocalKey, setHasLocalKey] = useState(true);
+
+  useEffect(() => {
+    setHasLocalKey(Boolean(getStoredApiKey()));
+    fetch("/api/dashboard")
+      .then((r) => r.json())
+      .then((res) => {
+        if (!res.error) setData(res);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handleQuickStart(mode = "lesson") {
+    const trimmed = quickTopic.trim();
+    if (!trimmed) {
+      router.push(`/classroom?mode=${mode}`);
+      return;
+    }
+    const params = new URLSearchParams({
+      topic: trimmed,
+      subject: quickSubject.trim() || "General",
+      mode,
+      autostart: "1",
+    });
+    router.push(`/classroom?${params.toString()}`);
+  }
+
+  const aiConfigured = Boolean(data?.hasServerKey || hasLocalKey);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 space-y-8">
+      {/* API Setup Banner if not configured yet */}
+      {!loading && !aiConfigured && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent p-5">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-amber-100">
+                One-Step Setup: Connect Your Google Gemini API Key
+              </h3>
+              <p className="text-xs text-amber-200/80 mt-0.5">
+                Your API key is now stored securely on your backend/settings instead of exposed in HTML source code.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={promptApiKeyModal}
+            className="shrink-0 rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-300 transition"
+          >
+            Connect Gemini Key
+          </button>
+        </div>
+      )}
+
+      {/* Hero Quick-Launch Studio */}
+      <section className="relative overflow-hidden rounded-3xl border border-cyan-500/25 bg-gradient-to-br from-slate-900 via-[#0e192d] to-slate-950 p-6 sm:p-10 shadow-2xl">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-blue-600/15 blur-3xl" />
+
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300 mb-4">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Welcome back, {data?.profile?.name || "Scholar"}</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            What would you like to{" "}
+            <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-400 bg-clip-text text-transparent">
+              master today?
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-2.5 text-sm sm:text-base text-slate-300 max-w-2xl">
+            Stream live blackboard lectures with synchronized voice narration, solve scanned exam papers, build multi-chapter courses, or drill interactive quizzes.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+          {/* Instant Topic Bar */}
+          <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+            <input
+              type="text"
+              value={quickSubject}
+              onChange={(e) => setQuickSubject(e.target.value)}
+              placeholder="Subject (e.g. Physics)"
+              className="sm:w-44 rounded-xl border border-white/15 bg-slate-950/75 px-4 py-3.5 text-sm text-white placeholder-slate-400 focus:border-cyan-400 focus:outline-none"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={quickTopic}
+                onChange={(e) => setQuickTopic(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleQuickStart("lesson");
+                }}
+                placeholder="Enter any topic, theorem, exam chapter, or concept..."
+                className="w-full rounded-xl border border-white/15 bg-slate-950/75 px-4 py-3.5 text-sm text-white placeholder-slate-400 focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+            <button
+              onClick={() => handleQuickStart("lesson")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 hover:brightness-110 transition"
+            >
+              <span>Start Lesson</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Sample Topic Pills */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-slate-400 mr-1">Try:</span>
+            {SAMPLE_TOPICS.map((item) => (
+              <button
+                key={item.topic}
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    topic: item.topic,
+                    subject: item.subject,
+                    mode: "lesson",
+                    autostart: "1",
+                  });
+                  router.push(`/classroom?${params.toString()}`);
+                }}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-200 transition"
+              >
+                {item.topic}
+              </button>
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* 4 Core Studio Launchers */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link
+          href="/classroom?mode=lesson"
+          className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-cyan-400/40 hover:bg-slate-900 transition"
+        >
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
+            <Presentation className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-white group-hover:text-cyan-300 transition">
+            Blackboard Classroom
+          </h3>
+          <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+            Live voice-narrated lectures from topics, PDFs, images, or web URLs.
+          </p>
+        </Link>
+
+        <Link
+          href="/classroom?tab=upload&mode=solve"
+          className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-amber-400/40 hover:bg-slate-900 transition"
+        >
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20">
+            <FileCheck2 className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-white group-hover:text-amber-300 transition">
+            Solve Exam Paper
+          </h3>
+          <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+            Upload PDFs or paste homework screenshots for step-by-step LaTeX solutions.
+          </p>
+        </Link>
+
+        <Link
+          href="/courses"
+          className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-violet-400/40 hover:bg-slate-900 transition"
+        >
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/20">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-white group-hover:text-violet-300 transition">
+            Course & Syllabus Builder
+          </h3>
+          <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+            Generate structured multi-chapter learning paths and track mastery.
+          </p>
+        </Link>
+
+        <Link
+          href="/practice"
+          className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-emerald-400/40 hover:bg-slate-900 transition"
+        >
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+            <BrainCircuit className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-white group-hover:text-emerald-300 transition">
+            Quiz & 3D Flashcards
+          </h3>
+          <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+            Practice MCQs with detailed explanations and active-recall decks.
+          </p>
+        </Link>
+      </section>
+
+      {/* Mastery Metrics */}
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-400">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">
+              {data?.stats.totalLessons ?? 0}
+            </div>
+            <div className="text-xs text-slate-400">Lessons Studied</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">
+              {data?.stats.avgQuizAccuracy ?? 0}%
+            </div>
+            <div className="text-xs text-slate-400">Quiz Accuracy</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">
+              {data?.stats.flashcardsMastered ?? 0}
+            </div>
+            <div className="text-xs text-slate-400">Cards Mastered</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
+            <Flame className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">
+              {data?.profile?.streakDays ?? 1} Day{(data?.profile?.streakDays ?? 1) === 1 ? "" : "s"}
+            </div>
+            <div className="text-xs text-slate-400">Learning Streak</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Two-Column Recent Activity & Active Courses */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Active Courses */}
+        <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-cyan-400" />
+              Active Learning Paths
+            </h2>
+            <Link
+              href="/courses"
+              className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
+            >
+              View all →
+            </Link>
+          </div>
+
+          {!data?.courses?.length ? (
+            <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
+              <Wand2 className="mx-auto h-8 w-8 text-slate-500 mb-2" />
+              <p className="text-sm font-medium text-slate-300">
+                No custom courses yet
+              </p>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                Generate a structured multi-chapter syllabus for any exam or skill.
+              </p>
+              <Link
+                href="/courses"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/15 transition"
+              >
+                Create Your First Course
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {data.courses.map((course) => (
+                <Link
+                  key={course.id}
+                  href={`/courses?id=${course.id}`}
+                  className="block rounded-xl border border-white/10 bg-slate-950/60 p-4 hover:border-cyan-400/30 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[11px] font-medium text-cyan-400">
+                        {course.subject} • {course.level}
+                      </span>
+                      <h3 className="font-semibold text-white text-sm mt-0.5">
+                        {course.title}
+                      </h3>
+                    </div>
+                    <span className="text-xs font-bold text-cyan-300">
+                      {course.progressPercent}%
+                    </span>
+                  </div>
+                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${course.coverGradient}`}
+                      style={{ width: `${course.progressPercent}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Recent Blackboard Sessions */}
+        <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Clock className="h-5 w-5 text-cyan-400" />
+              Recent Blackboard Sessions
+            </h2>
+            <Link
+              href="/library"
+              className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
+            >
+              Open Library →
+            </Link>
+          </div>
+
+          {!data?.recentLessons?.length ? (
+            <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
+              <Presentation className="mx-auto h-8 w-8 text-slate-500 mb-2" />
+              <p className="text-sm font-medium text-slate-300">
+                Your blackboard history will appear here
+              </p>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                Every lesson, story, and solved exam paper is saved automatically.
+              </p>
+              <Link
+                href="/classroom"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/30 px-4 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/30 transition"
+              >
+                Open Classroom
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {data.recentLessons.map((lesson) => (
+                <Link
+                  key={lesson.id}
+                  href={`/classroom?lessonId=${lesson.id}`}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 hover:border-cyan-400/30 transition"
+                >
+                  <div className="min-w-0 pr-3">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-300">
+                        {lesson.mode}
+                      </span>
+                      <span className="truncate text-sm font-semibold text-white">
+                        {lesson.title}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {lesson.subject} • {lesson.level}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {lesson.isFavorite && (
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    )}
+                    <ArrowRight className="h-4 w-4 text-slate-500" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
