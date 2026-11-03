@@ -1,0 +1,17 @@
+{
+  "appId": "app.ashuteacher.twa",
+  "appName": "AshuTeacher",
+  "webDir": "public",
+  "server": {
+    "url": "https://ashuteacher.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#090d16"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#090d16"
+  }
+}

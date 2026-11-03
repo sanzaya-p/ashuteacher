@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Inter,
   Caveat,
@@ -32,8 +32,20 @@ const notoOriya = Noto_Sans_Oriya({
 const appUrl =
   process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ashuteacher.app";
 
+export const viewport: Viewport = {
+  themeColor: "#06b6d4",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
+  applicationName: "AshuTeacher",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AshuTeacher",
+  },
   title: {
     default: "AshuTeacher — AI Interactive Blackboard, Exam Solver & Voice Tutor",
     template: "%s | AshuTeacher",

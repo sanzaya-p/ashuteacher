@@ -31,6 +31,7 @@ import {
 import { ApiKeyModal } from "./ApiKeyModal";
 import { AuthModal } from "./AuthModal";
 import { PaywallModal } from "./PaywallModal";
+import { InstallAppButton } from "./InstallAppButton";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -254,6 +255,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom Wallet, AI Status & Account Card */}
         <div className="space-y-2.5 border-t border-white/10 p-4">
+          <InstallAppButton />
+
           {/* Study Credits Wallet Card */}
           {authenticated ? (
             <Link
