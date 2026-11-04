@@ -1,38 +1,40 @@
-# AshuTeacher — AI Interactive Classroom & Learning Studio
+# 🎓 AshuTeacher — AI Voice Blackboard & Step-by-Step Exam Solver
 
-A full-stack EdTech web application built with **Next.js (App Router, TypeScript)**, **Tailwind CSS**, **Prisma + SQLite** (PostgreSQL-ready), and the official **`@google/genai`** SDK.
+[![Live Web App](https://img.shields.io/badge/Live_Web_App-ashuteacher.vercel.app-06b6d4?style=for-the-badge)](https://ashuteacher.vercel.app)
+[![Download Android APK](https://img.shields.io/badge/Android_APK-Download_v1.0.0-10b981?style=for-the-badge)](https://github.com/sanzaya-p/ashuteacher/releases/latest)
+[![Free Credits](https://img.shields.io/badge/Sign--Up_Bonus-30_Free_Credits-8b5cf6?style=for-the-badge)](https://ashuteacher.vercel.app/classroom)
 
-## Key Capabilities
+**AshuTeacher** is an interactive **AI Voice Blackboard & Exam Paper Solver** built for school, board exam (**CBSE, ICSE, State Boards**), **JEE / NEET**, and college students across India and worldwide.
+
+Instead of reading dry walls of chatbot text, watch formulas, derivations, and diagrams streamed onto a smart chalkboard while a synchronized voice teacher explains every line in **English, Hindi, Odia, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi**, and more.
+
+- 🌐 **Launch Web & iOS App:** https://ashuteacher.vercel.app
+- 📲 **Direct Android `.APK` Download:** https://ashuteacher.vercel.app/downloads/AshuTeacher.apk
+
+---
+
+## ✨ Key Features
 
 - **Interactive Smart Blackboard (`/classroom`)**:
-  - **4 Input Sources**: Topic, File Upload (PDF with page-range selector, images, `Ctrl+V` screenshot paste, TXT/Markdown), CORS-free Server URL Extractor (websites & remote PDFs), and Pasted Text.
-  - **4 Teaching Modes**: Interactive Lesson, Educational Story, Step-by-Step Exam/Homework Solver (multimodal vision + text), and Formula Cheat Sheet.
-  - **Real-Time Streaming**: Markdown, KaTeX math (`$...$` & `$$...$$`), and Mermaid diagrams rendered live on Chalkboard, Photon Dark, or Parchment themes.
-  - **Synchronized Voice Narrator**: Multilingual browser voice synthesis (14+ languages including English, Hindi, Odia, Spanish, French, etc.) with LaTeX-to-speech conversion and active spoken-section highlighting.
-  - **"Raise Hand" Live Doubt Chat & Notes**: Ask context-aware follow-up questions mid-lesson (via keyboard or voice microphone) and save personal study notes.
-- **Course & Syllabus Architect (`/courses`)**: Generate structured multi-module learning paths, track chapter completion, and launch any chapter directly on the Blackboard.
-- **Quiz & 3D Flashcard Arena (`/practice`)**: Schema-validated (`responseJsonSchema`) multiple-choice quizzes with step-by-step math explanations, score tracking, and 3D flip flashcards.
-- **Saved Study Library (`/library`)**: Search, filter, favorite, and resume any past session.
-- **Commercial Security**: Server-side Gemini SDK routes (`/api/*`) keep API keys out of client source code, with optional Bring-Your-Own-Key support in `/settings`.
+  - **4 Input Sources**: Topic search, PDF / Exam Photo Upload (`Ctrl+V` screenshot paste supported), URL Extractor, and Pasted Notes.
+  - **4 Teaching Modes**: Interactive Lesson, Story Mode, Step-by-Step Exam Paper Solver, and Formula Cheat Sheet.
+  - **Live Voice Teacher & Paragraph Highlighting**: Speaks equations naturally in **14+ Indian & global languages** while highlighting each block on the board.
+  - **"Raise Hand" Mid-Lesson Q&A**: Interrupt anytime via microphone or text to clear doubts on the spot.
+- **Course & Syllabus Architect (`/courses`)**: Build structured multi-module study roadmaps and launch chapters on the Blackboard in 1 tap.
+- **Quiz & 3D Flashcard Arena (`/practice`)**: Auto-generate MCQ tests with detailed explanations and 3D spaced-repetition flashcards.
+- **Pay-Per-Use Study Wallet (`/pricing`)**: Start immediately with **30 Free Study Credits** on sign-up — no recurring subscription lock-in.
 
-## Quick Start
+---
 
-1. **Install dependencies & initialize database**:
+## 🚀 Self-Hosting / Local Development
+
+1. **Install dependencies & push database schema**:
    ```bash
    npm install
    npm run db:push
    ```
-
-2. **Configure Gemini API Key**:
-   - Copy `.env.example` to `.env` and set `GEMINI_API_KEY="your_key"`, **or**
-   - Start the app and paste your key directly in **Settings** (`http://localhost:3000/settings`).
-
-3. **Start the development server**:
+2. **Add your free Gemini API key** in `.env` (`GEMINI_API_KEY=...`) or via `/settings`.
+3. **Run locally**:
    ```bash
    npm run dev
    ```
-   Open `http://localhost:3000`.
-
-## Deploying to Production
-
-- For cloud deployment (Vercel, Railway, Render, Docker), change `provider = "sqlite"` to `provider = "postgresql"` in `prisma/schema.prisma` and set `DATABASE_URL` and `GEMINI_API_KEY` in your hosting environment variables.

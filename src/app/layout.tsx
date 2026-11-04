@@ -85,12 +85,34 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "AshuTeacher",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web, Android, iOS",
+    url: appUrl,
+    downloadUrl: `${appUrl}/downloads/AshuTeacher.apk`,
+    description:
+      "Interactive AI Voice Blackboard and Step-by-Step Exam Paper Solver in English, Hindi, Odia, and 14+ languages with custom courses, quizzes, and 3D flashcards.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      description: "30 Free Study Credits on Sign-Up",
+    },
+  };
+
   return (
     <html
       lang="en"
       className={`${inter.variable} ${caveat.variable} ${jetbrainsMono.variable} ${notoOriya.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <AppShell>{children}</AppShell>
       </body>
     </html>
