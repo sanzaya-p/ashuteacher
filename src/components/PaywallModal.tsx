@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Zap, X, ArrowRight, CheckCircle2 } from "lucide-react";
 import { subscribePaywall } from "@/lib/client-api";
-import { CREDIT_PACKS } from "@/lib/credits";
+import { CREDIT_PACKS } from "@/lib/credit-packs";
 
 export function PaywallModal() {
   const [open, setOpen] = useState(false);

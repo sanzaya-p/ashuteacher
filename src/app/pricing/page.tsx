@@ -12,7 +12,7 @@ import {
   CreditCard,
   Smartphone,
 } from "lucide-react";
-import { CREDIT_PACKS, CREDIT_COSTS } from "@/lib/credits";
+import { CREDIT_PACKS, CREDIT_COSTS } from "@/lib/credit-packs";
 import { notifyWalletUpdated, promptAuthModal } from "@/lib/client-api";
 
 interface WalletResponse {

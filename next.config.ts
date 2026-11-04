@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
+  serverExternalPackages: ["@prisma/client", "prisma"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
