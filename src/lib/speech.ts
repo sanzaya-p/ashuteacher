@@ -70,10 +70,9 @@ export function latexToSpeech(latex: string): string {
 export function markdownToSpeechSegments(markdown: string): string[] {
   if (!markdown) return [];
 
-  // Remove mermaid code blocks from speech
-  let cleaned = markdown.replace(/```mermaid[\s\S]*?```/g, " Refer to the diagram on the board. ");
-  // Simplify code blocks
-  cleaned = cleaned.replace(/```[\w-]*\n([\s\S]*?)```/g, " Code block shown on the board. ");
+  // Skip mermaid diagrams and raw code blocks cleanly so non-English narration stays natural
+  let cleaned = markdown.replace(/```mermaid[\s\S]*?```/g, "\n\n");
+  cleaned = cleaned.replace(/```[\w-]*\n([\s\S]*?)```/g, "\n\n");
   // Convert block math
   cleaned = cleaned.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => ` ${latexToSpeech(math)}. `);
   // Convert inline math
@@ -90,7 +89,7 @@ export function markdownToSpeechSegments(markdown: string): string[] {
     .replace(/\|/g, " ");
 
   return cleaned
-    .split(/\n{2,}|(?<=[.!?।॥。！？؟])\s*/)
+    .split(/\n{2,}|(?<=[.!?।॥᱾᱿۔။།።。！？؟])\s*/)
     .map((s) => s.replace(/\s+/g, " ").trim())
     .filter((s) => s.length > 1);
 }

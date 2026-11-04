@@ -3,9 +3,21 @@ export interface SupportedLanguage {
   name: string;
   flag: string;
   group: "indian" | "international";
+  /**
+   * ONLY list fallback BCP-47 voice prefixes that use the EXACT SAME phonetic script
+   * (e.g. Devanagari -> hi-IN, Bengali-Assamese -> bn-IN).
+   * Never list cross-script fallbacks (e.g. Ol Chiki -> hi-IN), or browser TTS will
+   * read only English words and silently skip all native script characters!
+   */
   fallbackVoiceLangs?: string[];
   scriptFont?: string;
 }
+
+export const AI_TTS_VOICES = [
+  { id: "ai:Kore", voiceName: "Kore", label: "✨ AI Neural — Kore (Warm Professor)" },
+  { id: "ai:Puck", voiceName: "Puck", label: "✨ AI Neural — Puck (Clear Tutor)" },
+  { id: "ai:Aoede", voiceName: "Aoede", label: "✨ AI Neural — Aoede (Storyteller)" },
+] as const;
 
 export const INDIAN_LANGUAGES: SupportedLanguage[] = [
   { code: "en-IN", name: "English (India)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["en-US", "en-GB"] },
@@ -16,21 +28,21 @@ export const INDIAN_LANGUAGES: SupportedLanguage[] = [
   { code: "mr-IN", name: "Marathi (मराठी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
   { code: "ta-IN", name: "Tamil (தமிழ்)", flag: "🇮🇳", group: "indian" },
   { code: "gu-IN", name: "Gujarati (ગુજરાતી)", flag: "🇮🇳", group: "indian" },
-  { code: "ur-IN", name: "Urdu (اردو)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ur-PK", "ar-SA"] },
+  { code: "ur-IN", name: "Urdu (اردو)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ur-PK"] },
   { code: "kn-IN", name: "Kannada (ಕನ್ನಡ)", flag: "🇮🇳", group: "indian" },
   { code: "ml-IN", name: "Malayalam (മലയാളം)", flag: "🇮🇳", group: "indian" },
   { code: "pa-IN", name: "Punjabi (ਪੰਜਾਬੀ)", flag: "🇮🇳", group: "indian" },
-  { code: "as-IN", name: "Assamese (অসমীয়া)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["bn-IN", "hi-IN"] },
+  { code: "as-IN", name: "Assamese (অসমীয়া)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["bn-IN", "bn-BD"] },
   { code: "mai-IN", name: "Maithili (मैथिली)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
   { code: "sa-IN", name: "Sanskrit (संस्कृतम्)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
   { code: "ne-IN", name: "Nepali (नेपाली)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ne-NP", "hi-IN"] },
   { code: "kok-IN", name: "Konkani (कोंकणी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["mr-IN", "hi-IN"] },
   { code: "doi-IN", name: "Dogri (डोगरी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
   { code: "brx-IN", name: "Bodo (बड़ो)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "mni-IN", name: "Manipuri / Meitei (মৈতৈলোন্)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["bn-IN", "hi-IN"] },
-  { code: "sat-IN", name: "Santali (ᱥᱟᱱᱛᱟᱲᱤ)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN", "or-IN"] },
-  { code: "ks-IN", name: "Kashmiri (कश्मीरी / کٲشُر)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ur-IN", "hi-IN"] },
-  { code: "sd-IN", name: "Sindhi (सिन्धी / سنڌي)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN", "ur-IN"] },
+  { code: "mni-IN", name: "Manipuri / Meitei (মৈতৈলোন্)", flag: "🇮🇳", group: "indian" },
+  { code: "sat-IN", name: "Santali (ᱥᱟᱱᱛᱟᱲᱤ)", flag: "🇮🇳", group: "indian" },
+  { code: "ks-IN", name: "Kashmiri (कश्मीरी / کٲشُر)", flag: "🇮🇳", group: "indian" },
+  { code: "sd-IN", name: "Sindhi (सिन्धी / سنڌي)", flag: "🇮🇳", group: "indian" },
   { code: "bho-IN", name: "Bhojpuri (भोजपुरी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
   { code: "hinglish", name: "Hinglish (Hindi + English Mix)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["en-IN", "hi-IN"] },
 ];
@@ -102,6 +114,42 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   ...INDIAN_LANGUAGES,
   ...INTERNATIONAL_LANGUAGES,
 ];
+
+/**
+ * Returns browser SpeechSynthesisVoice[] that can genuinely pronounce the target language's script.
+ * Returns [] when no compatible native/same-script browser voice is installed on the user's device
+ * (e.g., Santali Ol Chiki `sat-IN`, Manipuri `mni-IN`, Custom dialects, or Odia on desktop Chrome).
+ */
+export function findBrowserVoicesForLanguage<T extends { lang: string }>(
+  voices: T[],
+  languageCode: string
+): T[] {
+  if (!voices.length || languageCode.startsWith("custom:")) {
+    return [];
+  }
+  const langEntry = SUPPORTED_LANGUAGES.find((l) => l.code === languageCode);
+  const baseLang = languageCode.split("-")[0];
+  const candidates = Array.from(
+    new Set(
+      [
+        languageCode,
+        baseLang,
+        ...(langEntry?.fallbackVoiceLangs || []),
+      ]
+        .filter((c) => c && c !== "hinglish")
+        .map((c) => c.replace(/_/g, "-").toLowerCase())
+    )
+  );
+
+  for (const candidate of candidates) {
+    const matched = voices.filter((v) => {
+      const norm = (v.lang || "").replace(/_/g, "-").toLowerCase();
+      return norm === candidate || norm.startsWith(`${candidate}-`);
+    });
+    if (matched.length > 0) return matched;
+  }
+  return [];
+}
 
 export const STUDENT_LEVELS = [
   { id: "Beginner", label: "Beginner", desc: "Intuitive analogies & zero jargon" },

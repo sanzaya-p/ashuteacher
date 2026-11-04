@@ -47,9 +47,11 @@ import {
   Share2,
 } from "lucide-react";
 import {
+  AI_TTS_VOICES,
   STUDENT_LEVELS,
   SUPPORTED_LANGUAGES,
   TEACHING_MODES,
+  findBrowserVoicesForLanguage,
 } from "@/lib/constants";
 import { markdownToSpeechSegments } from "@/lib/speech";
 import { apiFetch, getStoredModel } from "@/lib/client-api";
@@ -117,15 +119,21 @@ function ClassroomInner() {
     chapterId?: string;
   }>({});
 
-  // SpeechSynthesis narrator state
+  // SpeechSynthesis & Gemini AI Neural TTS narrator state
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isSynthesizingAudio, setIsSynthesizingAudio] = useState<boolean>(false);
   const [speechIndex, setSpeechIndex] = useState<number>(0);
   const speechSegments = useMemo(
     () => markdownToSpeechSegments(boardMarkdown),
     [boardMarkdown]
   );
   const speechActiveRef = useRef(false);
+  const speechRunIdRef = useRef(0);
+  const aiAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsBlobCacheRef = useRef<Map<string, string>>(new Map());
+  const ttsInflightRef = useRef<Map<string, Promise<string>>>(new Map());
+  const userPickedAiVoiceRef = useRef(false);
 
   // Right Drawer: Doubt Chat & Notes
   const [rightDrawer, setRightDrawer] = useState<"closed" | "doubt" | "notes">(
@@ -191,7 +199,7 @@ function ClassroomInner() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const autostartTriggeredRef = useRef(false);
 
-  // Load browser SpeechSynthesis voices
+  // Load browser SpeechSynthesis voices (using addEventListener so LanguageSelector doesn't clash)
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
@@ -200,81 +208,275 @@ function ClassroomInner() {
       setVoices(all);
     }
     updateVoices();
-    window.speechSynthesis.onvoiceschanged = updateVoices;
+    window.speechSynthesis.addEventListener?.("voiceschanged", updateVoices);
 
+    const cacheMap = ttsBlobCacheRef.current;
     return () => {
+      window.speechSynthesis.removeEventListener?.("voiceschanged", updateVoices);
       window.speechSynthesis.cancel();
+      if (aiAudioRef.current) {
+        aiAudioRef.current.pause();
+        aiAudioRef.current.src = "";
+        aiAudioRef.current = null;
+      }
+      for (const blobUrl of cacheMap.values()) {
+        URL.revokeObjectURL(blobUrl);
+      }
+      cacheMap.clear();
     };
   }, []);
 
-  const voicesForLanguage = useMemo(() => {
-    if (language.startsWith("custom:")) {
-      return voices;
-    }
-    const langEntry = SUPPORTED_LANGUAGES.find((l) => l.code === language);
-    const candidates = [
-      language,
-      ...(langEntry?.fallbackVoiceLangs || []),
-      language.split("-")[0],
-    ].map((c) => c.toLowerCase());
+  const voicesForLanguage = useMemo(
+    () => findBrowserVoicesForLanguage(voices, language),
+    [voices, language]
+  );
+  const hasNativeBrowserVoice = voicesForLanguage.length > 0;
 
-    for (const candidate of candidates) {
-      const matched = voices.filter((v) =>
-        v.lang.toLowerCase().startsWith(candidate)
-      );
-      if (matched.length > 0) return matched;
+  const activeLanguageDisplay = useMemo(() => {
+    if (language.startsWith("custom:")) {
+      return language.slice("custom:".length).trim() || "Custom Dialect";
     }
-    return [];
-  }, [voices, language]);
+    return (
+      SUPPORTED_LANGUAGES.find((l) => l.code === language)?.name || language
+    );
+  }, [language]);
 
   useEffect(() => {
-    if (voicesForLanguage.length > 0) {
+    if (hasNativeBrowserVoice) {
+      if (userPickedAiVoiceRef.current && selectedVoiceName.startsWith("ai:")) {
+        return;
+      }
       if (!voicesForLanguage.some((v) => v.name === selectedVoiceName)) {
         setSelectedVoiceName(voicesForLanguage[0].name);
       }
     } else {
-      setSelectedVoiceName("");
+      // No native/same-script browser voice exists (e.g. Santali Ol Chiki, Manipuri, Custom dialect, or Odia on desktop Chrome).
+      // Automatically switch to Gemini AI Neural Voice so native scripts are never skipped!
+      if (!selectedVoiceName.startsWith("ai:")) {
+        setSelectedVoiceName("ai:Kore");
+      }
     }
-  }, [voicesForLanguage, selectedVoiceName]);
+  }, [hasNativeBrowserVoice, voicesForLanguage, selectedVoiceName]);
 
-  // Stop speech helper
+  // Keep active HTML5 AI audio speed synced when slider moves
+  useEffect(() => {
+    if (aiAudioRef.current) {
+      aiAudioRef.current.playbackRate = speakingRate;
+    }
+  }, [speakingRate]);
+
+  // Stop speech helper (both Browser SpeechSynthesis and Gemini AI Audio)
   const stopSpeaking = useCallback(() => {
+    speechRunIdRef.current += 1;
     speechActiveRef.current = false;
+    if (aiAudioRef.current) {
+      aiAudioRef.current.onended = null;
+      aiAudioRef.current.ontimeupdate = null;
+      aiAudioRef.current.onerror = null;
+      aiAudioRef.current.pause();
+      aiAudioRef.current.src = "";
+      aiAudioRef.current = null;
+    }
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
+    setIsSynthesizingAudio(false);
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);
 
-  // Speak starting from a specific segment index
+  const fetchAiTtsBlobUrl = useCallback(
+    async (text: string, voiceName: string): Promise<string> => {
+      const cacheKey = `${voiceName}::${text}`;
+      const cached = ttsBlobCacheRef.current.get(cacheKey);
+      if (cached) return cached;
+
+      const existingPromise = ttsInflightRef.current.get(cacheKey);
+      if (existingPromise) return existingPromise;
+
+      const promise = (async () => {
+        try {
+          const res = await apiFetch("/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, voice: voiceName }),
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `AI TTS error (${res.status})`);
+          }
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          ttsBlobCacheRef.current.set(cacheKey, blobUrl);
+          return blobUrl;
+        } finally {
+          ttsInflightRef.current.delete(cacheKey);
+        }
+      })();
+
+      ttsInflightRef.current.set(cacheKey, promise);
+      return promise;
+    },
+    []
+  );
+
+  // Speak starting from a specific segment index (Hybrid: Gemini AI Neural Voice or Browser Voice)
   const speakFromSegment = useCallback(
     (startIndex: number, segmentsOverride?: string[]) => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      if (typeof window === "undefined") return;
       const segs = segmentsOverride || speechSegments;
       if (!segs.length || startIndex >= segs.length) {
         stopSpeaking();
         return;
       }
 
-      window.speechSynthesis.cancel();
+      // Cancel any prior run cleanly
+      const runId = speechRunIdRef.current + 1;
+      speechRunIdRef.current = runId;
+      if (aiAudioRef.current) {
+        aiAudioRef.current.onended = null;
+        aiAudioRef.current.ontimeupdate = null;
+        aiAudioRef.current.onerror = null;
+        aiAudioRef.current.pause();
+        aiAudioRef.current.src = "";
+        aiAudioRef.current = null;
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+
       speechActiveRef.current = true;
       setIsSpeaking(true);
       setIsPaused(false);
       setSpeechIndex(startIndex);
 
+      const useAiVoice =
+        selectedVoiceName.startsWith("ai:") || !hasNativeBrowserVoice;
+
+      if (useAiVoice) {
+        const aiVoiceName = selectedVoiceName.startsWith("ai:")
+          ? selectedVoiceName.slice(3)
+          : "Kore";
+
+        const buildBatch = (fromIdx: number) => {
+          let endIdx = fromIdx;
+          const parts: string[] = [segs[fromIdx]];
+          let charCount = segs[fromIdx].length;
+          while (
+            endIdx + 1 < segs.length &&
+            charCount + segs[endIdx + 1].length + 2 <= 580
+          ) {
+            endIdx += 1;
+            parts.push(segs[endIdx]);
+            charCount += segs[endIdx].length + 2;
+          }
+          return {
+            endIdx,
+            text: parts.join(" "),
+            segLengths: parts.map((p) => Math.max(1, p.length)),
+          };
+        };
+
+        const batch = buildBatch(startIndex);
+        setIsSynthesizingAudio(true);
+
+        fetchAiTtsBlobUrl(batch.text, aiVoiceName)
+          .then((blobUrl) => {
+            if (!speechActiveRef.current || speechRunIdRef.current !== runId) {
+              return;
+            }
+            setIsSynthesizingAudio(false);
+
+            // Prefetch next batch in the background for zero-gap transitions
+            if (batch.endIdx + 1 < segs.length) {
+              const nextBatch = buildBatch(batch.endIdx + 1);
+              fetchAiTtsBlobUrl(nextBatch.text, aiVoiceName).catch(() => {});
+            }
+
+            const audio = new Audio(blobUrl);
+            audio.playbackRate = speakingRate;
+            aiAudioRef.current = audio;
+
+            const totalChars = batch.segLengths.reduce((a, b) => a + b, 0);
+            audio.ontimeupdate = () => {
+              if (!audio.duration || !Number.isFinite(audio.duration)) return;
+              const targetChar = (audio.currentTime / audio.duration) * totalChars;
+              let acc = 0;
+              let offset = 0;
+              for (let i = 0; i < batch.segLengths.length; i++) {
+                acc += batch.segLengths[i];
+                if (targetChar <= acc) {
+                  offset = i;
+                  break;
+                }
+                offset = i;
+              }
+              setSpeechIndex(startIndex + offset);
+            };
+
+            audio.onended = () => {
+              if (!speechActiveRef.current || speechRunIdRef.current !== runId) {
+                return;
+              }
+              const nextIdx = batch.endIdx + 1;
+              if (nextIdx < segs.length) {
+                speakFromSegment(nextIdx, segs);
+              } else {
+                speechActiveRef.current = false;
+                setIsSpeaking(false);
+                setIsPaused(false);
+              }
+            };
+
+            audio.onerror = () => {
+              if (speechRunIdRef.current !== runId) return;
+              speechActiveRef.current = false;
+              setIsSpeaking(false);
+              setIsSynthesizingAudio(false);
+            };
+
+            audio.play().catch((err) => {
+              if (speechRunIdRef.current !== runId) return;
+              speechActiveRef.current = false;
+              setIsSpeaking(false);
+              setStatusMessage(
+                `Click Narrate to start audio (${err instanceof Error ? err.message : "autoplay blocked"}).`
+              );
+            });
+          })
+          .catch((err) => {
+            if (speechRunIdRef.current !== runId) return;
+            setIsSynthesizingAudio(false);
+            speechActiveRef.current = false;
+            setIsSpeaking(false);
+            const reason =
+              err instanceof Error ? err.message : "AI voice unavailable";
+            if (!hasNativeBrowserVoice) {
+              setStatusMessage(
+                `No built-in browser voice for ${activeLanguageDisplay}. Sign in to enable AI Neural Voice (${reason}).`
+              );
+            } else {
+              setStatusMessage(`AI Voice unavailable (${reason}). Select a Browser Voice.`);
+            }
+          });
+        return;
+      }
+
+      if (!("speechSynthesis" in window)) {
+        stopSpeaking();
+        return;
+      }
+
       const utter = new SpeechSynthesisUtterance(segs[startIndex]);
       const chosen = voicesForLanguage.find((v) => v.name === selectedVoiceName);
       if (chosen) utter.voice = chosen;
-      utter.lang = language.startsWith("custom:")
-        ? chosen?.lang || "en-IN"
-        : language === "hinglish"
-          ? "en-IN"
-          : language;
+      utter.lang =
+        chosen?.lang ||
+        (language === "hinglish" ? "en-IN" : language);
       utter.rate = speakingRate;
 
       utter.onend = () => {
-        if (!speechActiveRef.current) return;
+        if (!speechActiveRef.current || speechRunIdRef.current !== runId) return;
         const next = startIndex + 1;
         if (next < segs.length) {
           speakFromSegment(next, segs);
@@ -286,13 +488,24 @@ function ClassroomInner() {
       };
 
       utter.onerror = () => {
+        if (speechRunIdRef.current !== runId) return;
         speechActiveRef.current = false;
         setIsSpeaking(false);
       };
 
       window.speechSynthesis.speak(utter);
     },
-    [speechSegments, voicesForLanguage, selectedVoiceName, language, speakingRate, stopSpeaking]
+    [
+      speechSegments,
+      voicesForLanguage,
+      hasNativeBrowserVoice,
+      selectedVoiceName,
+      language,
+      activeLanguageDisplay,
+      speakingRate,
+      stopSpeaking,
+      fetchAiTtsBlobUrl,
+    ]
   );
 
   // Load existing lesson if `?lessonId=...` is passed
@@ -1150,12 +1363,18 @@ function ClassroomInner() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 items-start">
               <div>
                 <label className="block text-xs text-slate-300 mb-1">
                   Language (Indian &amp; World)
                 </label>
-                <LanguageSelector value={language} onChange={setLanguage} />
+                <LanguageSelector
+                  value={language}
+                  onChange={(nextLang) => {
+                    stopSpeaking();
+                    setLanguage(nextLang);
+                  }}
+                />
               </div>
               <div>
                 <label className="block text-xs text-slate-300 mb-1">
@@ -1163,23 +1382,72 @@ function ClassroomInner() {
                 </label>
                 <select
                   value={selectedVoiceName}
-                  onChange={(e) => setSelectedVoiceName(e.target.value)}
+                  onChange={(e) => {
+                    const nextVoice = e.target.value;
+                    userPickedAiVoiceRef.current = nextVoice.startsWith("ai:");
+                    stopSpeaking();
+                    setSelectedVoiceName(nextVoice);
+                  }}
                   className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-2.5 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
                 >
-                  {voicesForLanguage.length > 0 ? (
-                    voicesForLanguage.map((v) => (
-                      <option key={v.name} value={v.name} className="bg-slate-900">
-                        {v.name.replace(/Microsoft |Google /g, "")}
+                  {hasNativeBrowserVoice && (
+                    <optgroup
+                      label="🔊 Built-in Browser Voices (Instant / Offline)"
+                      className="bg-slate-950 text-emerald-300 font-semibold"
+                    >
+                      {voicesForLanguage.map((v) => (
+                        <option
+                          key={v.name}
+                          value={v.name}
+                          className="bg-slate-900 text-white font-normal"
+                        >
+                          🔊 {v.name.replace(/Microsoft |Google /g, "")}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  <optgroup
+                    label="✨ Gemini AI Neural Voices (Reads All Indian & World Scripts)"
+                    className="bg-slate-950 text-cyan-300 font-semibold"
+                  >
+                    {AI_TTS_VOICES.map((av) => (
+                      <option
+                        key={av.id}
+                        value={av.id}
+                        className="bg-slate-900 text-white font-normal"
+                      >
+                        {av.label}
                       </option>
-                    ))
-                  ) : (
-                    <option value="" className="bg-slate-900">
-                      System Default
-                    </option>
+                    ))}
+                  </optgroup>
+
+                  {!hasNativeBrowserVoice && (
+                    <optgroup
+                      label="🔇 Browser Voice Status"
+                      className="bg-slate-950 text-amber-300 font-semibold"
+                    >
+                      <option disabled value="__none__" className="bg-slate-900 text-slate-400">
+                        Browser voice unavailable for {activeLanguageDisplay}
+                      </option>
+                    </optgroup>
                   )}
                 </select>
               </div>
             </div>
+
+            {!hasNativeBrowserVoice && (
+              <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-snug text-amber-200">
+                <span className="font-semibold text-amber-300">
+                  Browser voice unavailable for {activeLanguageDisplay}:
+                </span>{" "}
+                Switched automatically to{" "}
+                <span className="font-semibold text-cyan-300">
+                  ✨ Gemini AI Neural Voice
+                </span>{" "}
+                so every native script word is spoken aloud instead of skipping non-English text.
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
@@ -1260,11 +1528,34 @@ function ClassroomInner() {
                   className="flex items-center gap-1 rounded-lg bg-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/30 transition"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" />
-                  <span>Narrate</span>
+                  <span>
+                    {selectedVoiceName.startsWith("ai:") || !hasNativeBrowserVoice
+                      ? "Narrate (AI)"
+                      : "Narrate"}
+                  </span>
+                </button>
+              ) : isSynthesizingAudio ? (
+                <button
+                  onClick={stopSpeaking}
+                  className="flex items-center gap-1.5 rounded-lg bg-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-200 transition"
+                  title="Synthesizing Gemini AI Neural Voice..."
+                >
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>AI Voice...</span>
                 </button>
               ) : (
                 <button
                   onClick={() => {
+                    if (aiAudioRef.current) {
+                      if (isPaused) {
+                        aiAudioRef.current.play().catch(() => {});
+                        setIsPaused(false);
+                      } else {
+                        aiAudioRef.current.pause();
+                        setIsPaused(true);
+                      }
+                      return;
+                    }
                     if (isPaused) {
                       window.speechSynthesis.resume();
                       setIsPaused(false);
