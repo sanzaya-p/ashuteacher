@@ -18,18 +18,28 @@ import {
   KeyRound,
   Presentation,
   Wand2,
+  Gift,
+  Volume2,
+  Coins,
 } from "lucide-react";
-import { promptApiKeyModal, getStoredApiKey } from "@/lib/client-api";
+import {
+  promptApiKeyModal,
+  promptAuthModal,
+  getStoredApiKey,
+} from "@/lib/client-api";
 
 interface DashboardData {
+  authenticated?: boolean;
+  canConfigureServerKey?: boolean;
   profile: {
     name: string;
     role: string;
+    creditsBalance?: number;
     xpPoints: number;
     streakDays: number;
     preferredLang: string;
     preferredLevel: string;
-  };
+  } | null;
   hasServerKey: boolean;
   stats: {
     totalLessons: number;
@@ -99,11 +109,12 @@ export default function DashboardPage() {
   }
 
   const aiConfigured = Boolean(data?.hasServerKey || hasLocalKey);
+  const isNewVisitor = !loading && data?.authenticated === false;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 space-y-8">
-      {/* API Setup Banner if not configured yet */}
-      {!loading && !aiConfigured && (
+      {/* API Setup Banner (only shown to local dev / admin if server key missing) */}
+      {!loading && !aiConfigured && data?.canConfigureServerKey && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent p-5">
           <div className="flex items-start gap-3.5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
@@ -111,10 +122,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <h3 className="text-sm font-bold text-amber-100">
-                One-Step Setup: Connect Your Google Gemini API Key
+                Owner Setup: Connect Your Server Gemini API Key
               </h3>
               <p className="text-xs text-amber-200/80 mt-0.5">
-                Your API key is now stored securely on your backend/settings instead of exposed in HTML source code.
+                Your API key stays hidden on your server so visitors only see the student credit experience.
               </p>
             </div>
           </div>
@@ -127,6 +138,40 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* New Visitor Welcome Offer Strip */}
+      {isNewVisitor && (
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl border border-cyan-400/35 bg-gradient-to-r from-cyan-500/15 via-blue-600/10 to-emerald-500/10 p-5 shadow-lg">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300">
+              <Gift className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-extrabold text-white">
+                New Student Offer: Get 10 Free AI Study Credits Instantly
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, exam paper solving, quizzes &amp; 3D flashcards in 14+ languages.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={promptAuthModal}
+              className="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-cyan-500/25 hover:brightness-110 transition"
+            >
+              Claim 10 Free Credits
+            </button>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-slate-200 hover:bg-white/10 transition"
+            >
+              <Coins className="h-3.5 w-3.5 text-amber-300" />
+              Pricing
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Hero Quick-Launch Studio */}
       <section className="relative overflow-hidden rounded-3xl border border-cyan-500/25 bg-gradient-to-br from-slate-900 via-[#0e192d] to-slate-950 p-6 sm:p-10 shadow-2xl">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/15 blur-3xl" />
@@ -134,8 +179,17 @@ export default function DashboardPage() {
 
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300 mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Welcome back, {data?.profile?.name || "Scholar"}</span>
+            {isNewVisitor ? (
+              <>
+                <Volume2 className="h-3.5 w-3.5" />
+                <span>AI Voice Blackboard • English, Hindi, Odia + 11 Languages</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Welcome back, {data?.profile?.name || "Scholar"}</span>
+              </>
+            )}
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">

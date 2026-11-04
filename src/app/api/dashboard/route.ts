@@ -15,6 +15,7 @@ export async function GET() {
       return NextResponse.json({
         authenticated: false,
         hasServerKey,
+        canConfigureServerKey: process.env.NODE_ENV !== "production",
         profile: null,
         stats: {
           totalLessons: 0,
@@ -81,6 +82,8 @@ export async function GET() {
 
     return NextResponse.json({
       authenticated: true,
+      canConfigureServerKey:
+        process.env.NODE_ENV !== "production" || Boolean(user.isAdmin),
       profile: {
         id: user.id,
         name: user.name,
