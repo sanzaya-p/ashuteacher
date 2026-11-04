@@ -5,6 +5,23 @@ export function getLanguageName(langCode: string): string {
   return SUPPORTED_LANGUAGES.find((l) => l.code === langCode)?.name || "English (US)";
 }
 
+const FALLBACK_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.6-flash",
+];
+
+function isTransientCapacityError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes("503") ||
+    msg.includes("429") ||
+    msg.includes("UNAVAILABLE") ||
+    msg.includes("RESOURCE_EXHAUSTED") ||
+    msg.toLowerCase().includes("high demand")
+  );
+}
+
 export function createGeminiClient(overrideKey?: string | null): GoogleGenAI {
   const apiKey =
     (overrideKey && overrideKey.trim()) ||
@@ -18,7 +35,43 @@ export function createGeminiClient(overrideKey?: string | null): GoogleGenAI {
     );
   }
 
-  return new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
+  const origGenerate = ai.models.generateContent.bind(ai.models);
+  const origStream = ai.models.generateContentStream.bind(ai.models);
+
+  ai.models.generateContent = async (params) => {
+    const candidates = Array.from(
+      new Set([params.model, ...FALLBACK_MODELS])
+    );
+    let lastErr: unknown;
+    for (const m of candidates) {
+      try {
+        return await origGenerate({ ...params, model: m });
+      } catch (err) {
+        lastErr = err;
+        if (!isTransientCapacityError(err)) throw err;
+      }
+    }
+    throw lastErr;
+  };
+
+  ai.models.generateContentStream = async (params) => {
+    const candidates = Array.from(
+      new Set([params.model, ...FALLBACK_MODELS])
+    );
+    let lastErr: unknown;
+    for (const m of candidates) {
+      try {
+        return await origStream({ ...params, model: m });
+      } catch (err) {
+        lastErr = err;
+        if (!isTransientCapacityError(err)) throw err;
+      }
+    }
+    throw lastErr;
+  };
+
+  return ai;
 }
 
 export function resolveModelName(overrideModel?: string | null): string {
