@@ -41,6 +41,11 @@ prisma/*.db-journal
 # vercel
 .vercel
 
+# private android signing keys & raw store bundles
+/android-release
+*.keystore
+*.jks
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

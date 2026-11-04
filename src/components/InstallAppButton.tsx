@@ -136,8 +136,16 @@ export function InstallAppButton() {
               </div>
             ) : (
               <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/70 p-4 text-xs text-slate-300">
-                <p className="font-semibold text-cyan-300">
-                  On Android (Chrome) or Desktop:
+                <a
+                  href="/downloads/AshuTeacher.apk"
+                  download="AshuTeacher.apk"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-4 text-xs font-extrabold text-white shadow-lg shadow-emerald-500/20 hover:brightness-110 transition"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Android .APK (1.3 MB)
+                </a>
+                <p className="font-semibold text-cyan-300 pt-1">
+                  Or instant 1-tap browser install:
                 </p>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
