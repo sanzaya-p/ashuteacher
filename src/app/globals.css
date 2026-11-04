@@ -149,6 +149,16 @@ body {
   background: rgba(241, 245, 249, 0.9);
 }
 
+/* Keep Mermaid v10 measurement/error containers offscreen (preserving getBBox() layout metrics) */
+body > div[id^="dmermaid-"],
+body > svg[id^="mermaid-"] {
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Print / PDF Export clean formatting */
 @media print {
   body {

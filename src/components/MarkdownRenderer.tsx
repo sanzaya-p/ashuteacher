@@ -6,6 +6,25 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
+function sanitizeMermaidChart(raw: string): string {
+  // Auto-quote unquoted square-bracket node labels that contain parentheses or equals signs
+  // e.g. A[ବାହ୍ୟ ବଳ (Force)] -> A["ବାହ୍ୟ ବଳ (Force)"]
+  return raw
+    .trim()
+    .replace(/(\b[A-Za-z0-9_]+)\[(?!")([^\][\n]*[()=][^\][\n]*)\]/g, '$1["$2"]');
+}
+
+function cleanupMermaidOrphans(renderId?: string) {
+  if (typeof document === "undefined") return;
+  if (renderId) {
+    document.getElementById(renderId)?.remove();
+    document.getElementById(`d${renderId}`)?.remove();
+  }
+  document
+    .querySelectorAll('body > [id^="dmermaid-"], body > [id^="mermaid-"]')
+    .forEach((el) => el.remove());
+}
+
 function MermaidBlock({ chart }: { chart: string }) {
   const rawId = useId();
   const safeId = `mermaid-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -14,7 +33,13 @@ function MermaidBlock({ chart }: { chart: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    async function renderDiagram() {
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const timer = setTimeout(async () => {
+      const cleaned = sanitizeMermaidChart(chart);
+      if (!cleaned) return;
+
+      const renderId = `${safeId}-${Math.floor(Math.random() * 100000)}`;
       try {
         const mermaid = (await import("mermaid")).default;
         mermaid.initialize({
@@ -23,27 +48,52 @@ function MermaidBlock({ chart }: { chart: string }) {
           securityLevel: "loose",
           fontFamily: "Inter, sans-serif",
         });
-        const { svg: renderedSvg } = await mermaid.render(
-          `${safeId}-${Math.floor(Math.random() * 100000)}`,
-          chart.trim()
-        );
+        mermaid.setParseErrorHandler(() => {});
+
+        const isValid = await mermaid.parse(cleaned, { suppressErrors: true });
+        if (!isValid) {
+          // Likely still streaming token-by-token; only show raw fallback if still invalid after 2.5s
+          fallbackTimer = setTimeout(() => {
+            if (!cancelled) setError(true);
+          }, 2500);
+          return;
+        }
+
+        const { svg: renderedSvg } = await mermaid.render(renderId, cleaned);
+        if (renderedSvg.includes("Syntax error in text")) {
+          fallbackTimer = setTimeout(() => {
+            if (!cancelled) setError(true);
+          }, 2500);
+          return;
+        }
         if (!cancelled) {
           setSvg(renderedSvg);
           setError(false);
         }
       } catch {
-        if (!cancelled) {
-          setError(true);
-        }
+        fallbackTimer = setTimeout(() => {
+          if (!cancelled) setError(true);
+        }, 2500);
+      } finally {
+        cleanupMermaidOrphans(renderId);
       }
-    }
-    if (chart.trim()) {
-      renderDiagram();
-    }
+    }, 180);
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
     };
   }, [chart, safeId]);
+
+  if (svg) {
+    return (
+      <div
+        className="my-6 flex justify-center rounded-2xl bg-slate-950/60 border border-cyan-500/20 p-5 overflow-x-auto shadow-inner"
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    );
+  }
 
   if (error) {
     return (
@@ -53,19 +103,10 @@ function MermaidBlock({ chart }: { chart: string }) {
     );
   }
 
-  if (!svg) {
-    return (
-      <div className="my-4 rounded-xl bg-slate-900/50 border border-cyan-500/20 p-6 text-center text-sm text-slate-400">
-        Rendering diagram...
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="my-6 flex justify-center rounded-2xl bg-slate-950/60 border border-cyan-500/20 p-5 overflow-x-auto shadow-inner"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="my-4 rounded-xl bg-slate-900/50 border border-cyan-500/20 p-6 text-center text-sm text-slate-400">
+      Sketching diagram on blackboard...
+    </div>
   );
 }
 
@@ -94,7 +135,8 @@ export function MarkdownRenderer({
 
     const normalizedTarget = activeSpeechSnippet
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/[^\p{L}\p{M}\p{N}\s]/gu, "")
+      .replace(/\s+/g, " ")
       .trim()
       .slice(0, 36);
 
@@ -104,7 +146,7 @@ export function MarkdownRenderer({
     for (const block of Array.from(blocks)) {
       const blockText = (block.textContent || "")
         .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
+        .replace(/[^\p{L}\p{M}\p{N}\s]/gu, "")
         .replace(/\s+/g, " ");
       if (blockText.includes(normalizedTarget)) {
         block.classList.add("active-speech-block");
