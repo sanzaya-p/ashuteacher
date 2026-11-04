@@ -92,7 +92,7 @@ export default function OpenGraphImage() {
               lineHeight: 1.4,
             }}
           >
-            Paste any tough question or PDF | Step-by-step LaTeX solutions | Live narration in 14+ languages | Custom courses, quizzes &amp; 3D flashcards
+            Paste any tough question or PDF | Step-by-step LaTeX solutions | All 22 Indian &amp; 60+ Global Languages | Courses, quizzes &amp; 3D flashcards
           </div>
         </div>
 

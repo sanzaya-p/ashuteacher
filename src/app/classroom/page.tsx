@@ -54,6 +54,7 @@ import {
 import { markdownToSpeechSegments } from "@/lib/speech";
 import { apiFetch, getStoredModel } from "@/lib/client-api";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 type SourceTab = "topic" | "upload" | "url" | "paste";
 type BoardTheme = "photon" | "chalk" | "paper";
@@ -207,12 +208,23 @@ function ClassroomInner() {
   }, []);
 
   const voicesForLanguage = useMemo(() => {
-    const prefix = language.split("-")[0].toLowerCase();
-    const exact = voices.filter((v) =>
-      v.lang.toLowerCase().startsWith(language.toLowerCase())
-    );
-    if (exact.length > 0) return exact;
-    return voices.filter((v) => v.lang.toLowerCase().startsWith(prefix));
+    if (language.startsWith("custom:")) {
+      return voices;
+    }
+    const langEntry = SUPPORTED_LANGUAGES.find((l) => l.code === language);
+    const candidates = [
+      language,
+      ...(langEntry?.fallbackVoiceLangs || []),
+      language.split("-")[0],
+    ].map((c) => c.toLowerCase());
+
+    for (const candidate of candidates) {
+      const matched = voices.filter((v) =>
+        v.lang.toLowerCase().startsWith(candidate)
+      );
+      if (matched.length > 0) return matched;
+    }
+    return [];
   }, [voices, language]);
 
   useEffect(() => {
@@ -254,7 +266,11 @@ function ClassroomInner() {
       const utter = new SpeechSynthesisUtterance(segs[startIndex]);
       const chosen = voicesForLanguage.find((v) => v.name === selectedVoiceName);
       if (chosen) utter.voice = chosen;
-      utter.lang = language;
+      utter.lang = language.startsWith("custom:")
+        ? chosen?.lang || "en-IN"
+        : language === "hinglish"
+          ? "en-IN"
+          : language;
       utter.rate = speakingRate;
 
       utter.onend = () => {
@@ -808,7 +824,10 @@ function ClassroomInner() {
       onend: () => void;
       start: () => void;
     };
-    recognition.lang = language;
+    recognition.lang =
+      language.startsWith("custom:") || language === "hinglish"
+        ? "en-IN"
+        : language;
     recognition.interimResults = false;
     setIsListeningMic(true);
 
@@ -1134,19 +1153,9 @@ function ClassroomInner() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-slate-300 mb-1">
-                  Language
+                  Language (Indian &amp; World)
                 </label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-2.5 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
-                >
-                  {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.code} className="bg-slate-900">
-                      {l.flag} {l.name}
-                    </option>
-                  ))}
-                </select>
+                <LanguageSelector value={language} onChange={setLanguage} />
               </div>
               <div>
                 <label className="block text-xs text-slate-300 mb-1">

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "AshuTeacher — AI Interactive Blackboard & Exam Solver",
     short_name: "AshuTeacher",
     description:
-      "AI Teacher with interactive smart blackboard, live voice narration in 14+ languages, step-by-step exam paper solver, courses, quizzes & 3D flashcards.",
+      "AI Teacher with interactive smart blackboard, live voice narration in 85+ Indian & world languages, step-by-step exam paper solver, courses, quizzes & 3D flashcards.",
     start_url: "/",
     scope: "/",
     display: "standalone",

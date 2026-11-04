@@ -17,9 +17,9 @@ import {
 import {
   CourseModule,
   STUDENT_LEVELS,
-  SUPPORTED_LANGUAGES,
 } from "@/lib/constants";
 import { apiFetch, getStoredModel } from "@/lib/client-api";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface CourseRecord {
   id: string;
@@ -222,19 +222,13 @@ function CoursesInner() {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Language
+                Language (Indian &amp; Global)
               </label>
-              <select
+              <LanguageSelector
                 value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none"
-              >
-                {SUPPORTED_LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code} className="bg-slate-900">
-                    {l.flag} {l.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setLanguage}
+                selectClassName="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              />
             </div>
 
             <div>

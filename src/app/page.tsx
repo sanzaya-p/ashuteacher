@@ -150,7 +150,7 @@ export default function DashboardPage() {
                 New Student Offer: Get 30 Free AI Study Credits Instantly
               </h2>
               <p className="text-xs text-slate-300 mt-0.5">
-                Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, exam paper solving, quizzes &amp; 3D flashcards in 14+ languages.
+                Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, exam paper solving, quizzes &amp; 3D flashcards across all 22 Indian &amp; 60+ world languages.
               </p>
             </div>
           </div>

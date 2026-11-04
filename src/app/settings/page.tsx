@@ -14,7 +14,6 @@ import {
 import {
   GEMINI_MODELS,
   STUDENT_LEVELS,
-  SUPPORTED_LANGUAGES,
 } from "@/lib/constants";
 import {
   getStoredApiKey,
@@ -22,6 +21,7 @@ import {
   setStoredApiKey,
   setStoredModel,
 } from "@/lib/client-api";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function SettingsPage() {
   const [name, setName] = useState("Scholar");
@@ -306,19 +306,13 @@ export default function SettingsPage() {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Default Language
+                Default Language (All Indian &amp; World Languages)
               </label>
-              <select
+              <LanguageSelector
                 value={preferredLang}
-                onChange={(e) => setPreferredLang(e.target.value)}
-                className="w-full rounded-xl border border-white/15 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none"
-              >
-                {SUPPORTED_LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code} className="bg-slate-900">
-                    {l.flag} {l.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setPreferredLang}
+                selectClassName="w-full rounded-xl border border-white/15 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              />
             </div>
 
             <div>

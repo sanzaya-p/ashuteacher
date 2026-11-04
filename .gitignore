@@ -43,6 +43,7 @@ prisma/*.db-journal
 
 # private android signing keys & raw store bundles
 /android-release
+/ignou-ncide-2026-submission
 *.keystore
 *.jks
 

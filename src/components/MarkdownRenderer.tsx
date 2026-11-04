@@ -157,7 +157,7 @@ export function MarkdownRenderer({
   }, [activeSpeechSnippet]);
 
   return (
-    <div ref={containerRef} className={`markdown-body ${className}`}>
+    <div ref={containerRef} dir="auto" className={`markdown-body ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

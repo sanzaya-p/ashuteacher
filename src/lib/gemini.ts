@@ -2,7 +2,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { SUPPORTED_LANGUAGES } from "./constants";
 
 export function getLanguageName(langCode: string): string {
-  return SUPPORTED_LANGUAGES.find((l) => l.code === langCode)?.name || "English (US)";
+  const raw = (langCode || "").trim();
+  if (!raw) return "English (US)";
+  if (raw.startsWith("custom:")) {
+    return raw.slice("custom:".length).trim() || "English";
+  }
+  const matched = SUPPORTED_LANGUAGES.find(
+    (l) => l.code.toLowerCase() === raw.toLowerCase()
+  );
+  if (matched) return matched.name;
+  try {
+    const dn = new Intl.DisplayNames(["en"], { type: "language" });
+    const resolved = dn.of(raw);
+    if (resolved) return resolved;
+  } catch {
+    // Ignore invalid BCP-47 tags and pass raw string through
+  }
+  return raw;
 }
 
 const FALLBACK_MODELS = [

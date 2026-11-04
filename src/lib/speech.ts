@@ -90,7 +90,7 @@ export function markdownToSpeechSegments(markdown: string): string[] {
     .replace(/\|/g, " ");
 
   return cleaned
-    .split(/\n{2,}|(?<=[.!?])\s+/)
+    .split(/\n{2,}|(?<=[.!?।॥。！？؟])\s*/)
     .map((s) => s.replace(/\s+/g, " ").trim())
     .filter((s) => s.length > 1);
 }
