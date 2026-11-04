@@ -20,7 +20,7 @@ model User {
   isAdmin        Boolean  @default(false)
   preferredLang  String   @default("en-US")
   preferredLevel String   @default("Intermediate")
-  preferredModel String   @default("gemini-3.8-flash")
+  preferredModel String   @default("gemini-3-flash-preview")
   creditsBalance Int      @default(10)
   xpPoints       Int      @default(100)
   streakDays     Int      @default(1)

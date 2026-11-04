@@ -74,7 +74,7 @@ export const CREDIT_PACKS: CreditPack[] = [
       "600 Study Credits (Lowest cost per credit)",
       "Up to 300 Lessons or 150 Exam Papers",
       "All 14+ Languages & Raise-Hand Voice Q&A",
-      "Priority Model Selection (Gemini 3.8 Flash)",
+      "Priority Model Selection (Gemini 3 Flash)",
     ],
     gradient: "from-emerald-500 to-teal-600",
   },

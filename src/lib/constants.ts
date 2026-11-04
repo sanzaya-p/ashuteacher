@@ -61,10 +61,11 @@ export const TEACHING_MODES = [
 ] as const;
 
 export const GEMINI_MODELS = [
-  { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Latest Recommended — Free Tier + Multimodal)" },
-  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (Ultra-Fast & Lowest Cost)" },
-  { id: "gemini-4-argon", label: "Gemini 4 Argon (Flagship Deep STEM Reasoning — Paid Tier)" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview (Fast & Reliable — Default)" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (Ultra-Fast & High Quota)" },
   { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash (Stable General Purpose)" },
+  { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Multimodal — May Spike in Demand)" },
+  { id: "gemini-4-argon", label: "Gemini 4 Argon (Flagship Deep STEM Reasoning — Paid Tier)" },
 ];
 
 export const COURSE_GRADIENTS = [

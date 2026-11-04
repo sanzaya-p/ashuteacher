@@ -1,7 +1,7 @@
 "use client";
 
 const STORAGE_API_KEY = "ashuteacher_gemini_key";
-const STORAGE_MODEL = "ashuteacher_gemini_model";
+const STORAGE_MODEL = "ashuteacher_gemini_model_v2";
 
 type Listener = () => void;
 type CreditsListener = (credits?: number) => void;
@@ -28,8 +28,8 @@ export function setStoredApiKey(key: string) {
 }
 
 export function getStoredModel(): string {
-  if (typeof window === "undefined") return "gemini-3.8-flash";
-  return localStorage.getItem(STORAGE_MODEL) || "gemini-3.8-flash";
+  if (typeof window === "undefined") return "gemini-3-flash-preview";
+  return localStorage.getItem(STORAGE_MODEL) || "gemini-3-flash-preview";
 }
 
 export function setStoredModel(model: string) {

@@ -6,7 +6,7 @@ export function getLanguageName(langCode: string): string {
 }
 
 const FALLBACK_MODELS = [
-  "gemini-3.8-flash",
+  "gemini-3-flash-preview",
   "gemini-3.5-flash-lite",
   "gemini-3.6-flash",
 ];
@@ -75,11 +75,11 @@ export function createGeminiClient(overrideKey?: string | null): GoogleGenAI {
 }
 
 export function resolveModelName(overrideModel?: string | null): string {
-  return (
-    (overrideModel && overrideModel.trim()) ||
-    process.env.GEMINI_MODEL ||
-    "gemini-3.8-flash"
-  );
+  const trimmed = overrideModel ? overrideModel.trim() : "";
+  if (trimmed && trimmed !== "gemini-3.8-flash") {
+    return trimmed;
+  }
+  return process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 }
 
 export function buildTeachingSystemPrompt(params: {

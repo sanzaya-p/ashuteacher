@@ -111,7 +111,7 @@ export default function OpenGraphImage() {
               background: "rgba(255,255,255,0.07)",
             }}
           >
-            Powered by Gemini 3.8 Flash
+            Powered by Gemini 3 Flash
           </span>
           <span
             style={{
