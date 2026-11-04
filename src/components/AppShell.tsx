@@ -20,6 +20,7 @@ import {
   LogIn,
   LogOut,
   Coins,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getStoredApiKey,
@@ -46,9 +47,11 @@ const NAV_ITEMS = [
 function SidebarNav({
   onSelect,
   onPathnameChange,
+  showAdmin,
 }: {
   onSelect: () => void;
   onPathnameChange: (p: string) => void;
+  showAdmin: boolean;
 }) {
   const pathname = usePathname();
 
@@ -56,9 +59,13 @@ function SidebarNav({
     onPathnameChange(pathname);
   }, [pathname, onPathnameChange]);
 
+  const items = showAdmin
+    ? [...NAV_ITEMS, { href: "/admin", label: "Founder Admin", icon: ShieldCheck }]
+    : NAV_ITEMS;
+
   return (
     <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const active =
           item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -94,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [activePath, setActivePath] = useState("/");
   const [aiReady, setAiReady] = useState<boolean | null>(null);
   const [canConfigKey, setCanConfigKey] = useState<boolean>(false);
+  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [profileInfo, setProfileInfo] = useState<{
     name: string;
@@ -120,6 +128,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setCanConfigKey(Boolean(data.canConfigureServerKey));
         setAuthenticated(Boolean(data.authenticated));
         if (data.profile) {
+          const emailLower = String(data.profile.email || "").toLowerCase();
+          setIsAdminUser(
+            Boolean(
+              data.profile.isAdmin ||
+                emailLower === "sanzaya@msn.com" ||
+                emailLower === "spatel@ignou.ac.in"
+            )
+          );
           setProfileInfo({
             name: data.profile.name,
             email: data.profile.email,
@@ -250,6 +266,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SidebarNav
             onSelect={() => setMobileOpen(false)}
             onPathnameChange={setActivePath}
+            showAdmin={isAdminUser}
           />
         </Suspense>
 
