@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Coins,
   Zap,
@@ -490,6 +491,24 @@ export default function PricingPage() {
           )}
         </section>
       </div>
+
+      <footer className="border-t border-white/10 pt-6 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-400">
+        <Link href="/legal#terms" className="hover:text-white underline-offset-4 hover:underline">
+          Terms &amp; Conditions
+        </Link>
+        <Link href="/legal#privacy" className="hover:text-white underline-offset-4 hover:underline">
+          Privacy Policy
+        </Link>
+        <Link href="/legal#refunds" className="hover:text-white underline-offset-4 hover:underline">
+          Cancellation &amp; Refund Policy
+        </Link>
+        <Link href="/legal#delivery" className="hover:text-white underline-offset-4 hover:underline">
+          Digital Delivery Policy
+        </Link>
+        <Link href="/legal#contact" className="hover:text-white underline-offset-4 hover:underline">
+          Contact Us
+        </Link>
+      </footer>
     </div>
   );
 }

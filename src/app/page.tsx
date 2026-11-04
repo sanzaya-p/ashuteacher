@@ -500,6 +500,31 @@ export default function DashboardPage() {
           )}
         </section>
       </div>
+
+      {/* Footer Compliance Links (Razorpay & Global Gateways) */}
+      <footer className="border-t border-white/10 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <span>© 2026 AshuTeacher • Online Education &amp; AI Learning Studio</span>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href="/pricing" className="hover:text-slate-300 transition">
+            Pricing (INR / USD)
+          </Link>
+          <Link href="/legal#terms" className="hover:text-slate-300 transition">
+            Terms &amp; Conditions
+          </Link>
+          <Link href="/legal#privacy" className="hover:text-slate-300 transition">
+            Privacy Policy
+          </Link>
+          <Link href="/legal#refunds" className="hover:text-slate-300 transition">
+            Refund Policy
+          </Link>
+          <Link href="/legal#delivery" className="hover:text-slate-300 transition">
+            Digital Delivery
+          </Link>
+          <Link href="/legal#contact" className="hover:text-slate-300 transition">
+            Contact Us
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
