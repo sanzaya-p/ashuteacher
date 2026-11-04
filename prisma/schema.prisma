@@ -21,7 +21,7 @@ model User {
   preferredLang  String   @default("en-US")
   preferredLevel String   @default("Intermediate")
   preferredModel String   @default("gemini-3-flash-preview")
-  creditsBalance Int      @default(10)
+  creditsBalance Int      @default(30)
   xpPoints       Int      @default(100)
   streakDays     Int      @default(1)
   lastActiveDate String   @default("")

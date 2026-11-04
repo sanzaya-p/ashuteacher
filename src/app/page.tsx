@@ -147,7 +147,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-extrabold text-white">
-                New Student Offer: Get 10 Free AI Study Credits Instantly
+                New Student Offer: Get 30 Free AI Study Credits Instantly
               </h2>
               <p className="text-xs text-slate-300 mt-0.5">
                 Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, exam paper solving, quizzes &amp; 3D flashcards in 14+ languages.
@@ -159,7 +159,7 @@ export default function DashboardPage() {
               onClick={promptAuthModal}
               className="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-cyan-500/25 hover:brightness-110 transition"
             >
-              Claim 10 Free Credits
+              Claim 30 Free Credits
             </button>
             <Link
               href="/pricing"

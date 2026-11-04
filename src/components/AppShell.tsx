@@ -285,7 +285,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2.5 text-xs font-bold text-white shadow-lg hover:brightness-110 transition"
             >
               <LogIn className="h-4 w-4" />
-              Sign In • Get 10 Free Credits
+              Sign In • Get 30 Free Credits
             </button>
           )}
 

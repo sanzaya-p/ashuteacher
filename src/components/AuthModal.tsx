@@ -92,7 +92,7 @@ export function AuthModal() {
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-white">
-              {mode === "signup" ? "Claim 10 Free Credits" : "Welcome Back"}
+              {mode === "signup" ? "Claim 30 Free Credits" : "Welcome Back"}
             </h2>
             <p className="text-xs text-slate-400">
               Sign in to save lessons, solve papers & track mastery
@@ -102,7 +102,7 @@ export function AuthModal() {
 
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-200">
           <Gift className="h-4 w-4 shrink-0 text-emerald-400" />
-          <span>New accounts automatically get 10 Free Study Credits!</span>
+          <span>New accounts automatically get 30 Free Study Credits!</span>
         </div>
 
         {/* Google 1-Click OAuth */}
@@ -142,7 +142,7 @@ export function AuthModal() {
             className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/15 py-2.5 px-4 text-xs font-bold text-amber-200 hover:bg-amber-500/25 transition"
           >
             <Zap className="h-4 w-4 text-amber-400" />
-            1-Click Local Dev Login (Founder Account + 10 Credits)
+            1-Click Local Dev Login (Founder Account + 30 Credits)
           </button>
         )}
 
@@ -226,7 +226,7 @@ export function AuthModal() {
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : mode === "signup" ? (
-              "Create Account & Get 10 Free Credits"
+              "Create Account & Get 30 Free Credits"
             ) : (
               "Sign In"
             )}

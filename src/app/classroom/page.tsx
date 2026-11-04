@@ -158,7 +158,7 @@ function ClassroomInner() {
     if (subject.trim()) params.set("subject", subject.trim());
 
     const shareUrl = `${window.location.origin}/classroom?${params.toString()}`;
-    const shareText = `I just studied "${activeTopic}" on AshuTeacher's AI Voice Blackboard! Sign up for 10 free study credits and try this lesson:`;
+    const shareText = `I just studied "${activeTopic}" on AshuTeacher's AI Voice Blackboard! Sign up for 30 free study credits and try this lesson:`;
 
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
@@ -1367,7 +1367,7 @@ function ClassroomInner() {
                       ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-200"
                       : "border-cyan-400/30 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20"
                   }`}
-                  title="Share Lesson & Invite Friends (10 Free Credits)"
+                  title="Share Lesson & Invite Friends (30 Free Credits)"
                 >
                   {shareCopied ? (
                     <>

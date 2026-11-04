@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
               amount: WELCOME_FREE_CREDITS,
               balanceAfter: WELCOME_FREE_CREDITS,
               type: "WELCOME_BONUS",
-              description: "Welcome Free Trial Credits (10 Credits)",
+              description: `Welcome Free Trial Credits (+${WELCOME_FREE_CREDITS} Free Credits)`,
             },
           });
           return created;

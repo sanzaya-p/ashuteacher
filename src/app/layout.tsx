@@ -70,13 +70,13 @@ export const metadata: Metadata = {
     siteName: "AshuTeacher",
     title: "AshuTeacher — AI Interactive Blackboard & Exam Solver",
     description:
-      "Upload any PDF, screenshot, or tough topic. Watch it written step-by-step on a smart blackboard with live voice narration. Claim 10 free credits!",
+      "Upload any PDF, screenshot, or tough topic. Watch it written step-by-step on a smart blackboard with live voice narration. Claim 30 free credits!",
   },
   twitter: {
     card: "summary_large_image",
     title: "AshuTeacher — AI Interactive Blackboard & Exam Solver",
     description:
-      "Step-by-step LaTeX solutions, live voice narration in 14+ languages, custom courses & quizzes. Start free with 10 credits.",
+      "Step-by-step LaTeX solutions, live voice narration in 14+ languages, custom courses & quizzes. Start free with 30 credits.",
   },
 };
 

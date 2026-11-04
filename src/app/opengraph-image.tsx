@@ -69,7 +69,7 @@ export default function OpenGraphImage() {
               fontWeight: 700,
             }}
           >
-            10 Free Study Credits on Sign-Up
+            30 Free Study Credits on Sign-Up
           </div>
         </div>
 

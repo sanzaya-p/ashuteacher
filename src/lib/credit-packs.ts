@@ -1,4 +1,4 @@
-export const WELCOME_FREE_CREDITS = 10;
+export const WELCOME_FREE_CREDITS = 30;
 
 export const CREDIT_COSTS = {
   DOUBT: 1,

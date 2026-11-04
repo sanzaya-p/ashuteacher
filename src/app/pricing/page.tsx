@@ -451,7 +451,7 @@ export default function PricingPage() {
           {!wallet?.authenticated ? (
             <div className="rounded-2xl border border-dashed border-white/15 bg-slate-950/50 p-8 text-center">
               <p className="text-sm text-slate-300 mb-3">
-                Sign in to claim your 10 Free Credits and view your wallet history.
+                Sign in to claim your 30 Free Credits and view your wallet history.
               </p>
               <button
                 onClick={promptAuthModal}
