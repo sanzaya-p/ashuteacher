@@ -75,6 +75,10 @@ interface AdminPayload {
     totalCourses: number;
     totalQuizzes: number;
     totalFlashcards: number;
+    cachedLessonsCount?: number;
+    cachedCatalogNodesCount?: number;
+    apiCallsSavedByCache?: number;
+    activeGeminiKeyPoolSize?: number;
   };
   users: AdminUserRow[];
   paymentOrders: AdminPaymentRow[];
@@ -229,7 +233,7 @@ export default function FounderAdminPage() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span>Registered Scholars</span>
@@ -282,6 +286,21 @@ export default function FounderAdminPage() {
           </div>
           <div className="mt-1 text-xs text-slate-400">
             {data.stats.totalLessons} lessons • {data.stats.totalQuizzes} quizzes • {data.stats.totalCourses} courses
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-cyan-500/25 bg-slate-900/80 p-5">
+          <div className="flex items-center justify-between text-xs text-cyan-300">
+            <span>Zero-Cost Scale Cache</span>
+            <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+          </div>
+          <div className="mt-2 text-2xl font-extrabold text-white">
+            {(data.stats.cachedLessonsCount ?? 0) +
+              (data.stats.cachedCatalogNodesCount ?? 0)}
+          </div>
+          <div className="mt-1 text-xs text-emerald-300">
+            {data.stats.apiCallsSavedByCache ?? 0} AI calls saved •{" "}
+            {data.stats.activeGeminiKeyPoolSize ?? 1} key(s) active
           </div>
         </div>
       </div>

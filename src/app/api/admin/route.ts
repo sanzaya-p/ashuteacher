@@ -6,6 +6,7 @@ import {
   isFounderAdminEmail,
   requireAuthUser,
 } from "@/lib/auth";
+import { resolveGeminiKeyPool } from "@/lib/gemini";
 import { handleApiError } from "@/lib/api-error";
 
 async function requireAdmin() {
@@ -40,6 +41,8 @@ export async function GET() {
       totalQuizzes,
       totalFlashcards,
       recentSignupsCount,
+      cachedLessonsAgg,
+      cachedCatalogNodesCount,
     ] = await Promise.all([
       prisma.user.findMany({
         orderBy: { createdAt: "desc" },
@@ -92,9 +95,21 @@ export async function GET() {
       prisma.user.count({
         where: { createdAt: { gte: sevenDaysAgo } },
       }),
+      prisma.lessonCache.aggregate({
+        _count: { _all: true },
+        _sum: { hitCount: true },
+      }),
+      prisma.catalogCache.count(),
     ]);
 
     const totalUsers = await prisma.user.count();
+    const cachedLessonsCount = cachedLessonsAgg._count._all || 0;
+    const totalCacheDeliveries = cachedLessonsAgg._sum.hitCount || 0;
+    const apiCallsSavedByCache = Math.max(
+      0,
+      totalCacheDeliveries - cachedLessonsCount
+    );
+    const activeGeminiKeyPoolSize = resolveGeminiKeyPool().length;
 
     const paidOrders = paymentOrders.filter((o) => o.status === "PAID");
     const revenuePaiseInr = paidOrders
@@ -122,6 +137,10 @@ export async function GET() {
         totalCourses,
         totalQuizzes,
         totalFlashcards,
+        cachedLessonsCount,
+        cachedCatalogNodesCount,
+        apiCallsSavedByCache,
+        activeGeminiKeyPoolSize,
       },
       users,
       paymentOrders,

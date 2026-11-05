@@ -11,6 +11,25 @@ export function handleApiError(error: unknown, fallbackMessage = "Request failed
   if (message.includes("AUTH_REQUIRED")) {
     return NextResponse.json({ error: message, code: "AUTH_REQUIRED" }, { status: 403 });
   }
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("429") ||
+    lower.includes("503") ||
+    lower.includes("resource_exhausted") ||
+    lower.includes("rate limit") ||
+    lower.includes("too many requests") ||
+    lower.includes("high demand")
+  ) {
+    console.warn("AI Capacity Spike:", message);
+    return NextResponse.json(
+      {
+        error:
+          "High concurrent learner traffic right now — any deducted Study Credits were automatically refunded. Please tap again in a few seconds!",
+        code: "HIGH_TRAFFIC_RETRY",
+      },
+      { status: 503 }
+    );
+  }
   console.error("API Error:", error);
   return NextResponse.json({ error: message }, { status: 500 });
 }

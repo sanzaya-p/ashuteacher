@@ -48,67 +48,119 @@ const FALLBACK_MODELS = [
   "gemini-3.6-flash",
 ];
 
+const BURST_BACKOFF_BASE_MS = [700, 1650];
+let keyRotationCursor = 0;
+
 function isTransientCapacityError(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
   return (
     msg.includes("503") ||
     msg.includes("429") ||
-    msg.includes("UNAVAILABLE") ||
-    msg.includes("RESOURCE_EXHAUSTED") ||
-    msg.toLowerCase().includes("high demand")
+    msg.includes("unavailable") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("rate limit") ||
+    msg.includes("too many requests") ||
+    msg.includes("quota") ||
+    msg.includes("high demand") ||
+    msg.includes("overloaded")
   );
 }
 
-export function createGeminiClient(overrideKey?: string | null): GoogleGenAI {
-  const apiKey =
-    (overrideKey && overrideKey.trim()) ||
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    "";
+function sleepWithJitter(baseMs: number): Promise<void> {
+  const jitter = Math.floor(Math.random() * 450);
+  return new Promise((resolve) => setTimeout(resolve, baseMs + jitter));
+}
 
-  if (!apiKey) {
+export function resolveGeminiKeyPool(overrideKey?: string | null): string[] {
+  if (overrideKey && overrideKey.trim()) {
+    return [overrideKey.trim()];
+  }
+  const rawPool = [
+    ...(process.env.GEMINI_API_KEYS || "").split(/[,;\s]+/),
+    process.env.GEMINI_API_KEY || "",
+    process.env.GOOGLE_API_KEY || "",
+  ]
+    .map((k) => k.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(rawPool));
+}
+
+export function createGeminiClient(overrideKey?: string | null): GoogleGenAI {
+  const keyPool = resolveGeminiKeyPool(overrideKey);
+
+  if (keyPool.length === 0) {
     throw new Error(
       "MISSING_API_KEY: No Gemini API key configured. Add GEMINI_API_KEY to .env or enter your API key in Settings."
     );
   }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const origGenerate = ai.models.generateContent.bind(ai.models);
-  const origStream = ai.models.generateContentStream.bind(ai.models);
+  const startIdx = keyRotationCursor++ % keyPool.length;
+  const orderedKeys = [
+    ...keyPool.slice(startIdx),
+    ...keyPool.slice(0, startIdx),
+  ];
 
-  ai.models.generateContent = async (params) => {
+  const sdkClients = orderedKeys.map((apiKey) => {
+    const client = new GoogleGenAI({ apiKey });
+    return {
+      generate: client.models.generateContent.bind(client.models),
+      stream: client.models.generateContentStream.bind(client.models),
+      instance: client,
+    };
+  });
+
+  const primaryAi = sdkClients[0].instance;
+
+  primaryAi.models.generateContent = async (params) => {
     const candidates = Array.from(
       new Set([params.model, ...FALLBACK_MODELS])
     );
     let lastErr: unknown;
-    for (const m of candidates) {
-      try {
-        return await origGenerate({ ...params, model: m });
-      } catch (err) {
-        lastErr = err;
-        if (!isTransientCapacityError(err)) throw err;
+
+    for (let wave = 0; wave <= BURST_BACKOFF_BASE_MS.length; wave++) {
+      if (wave > 0) {
+        await sleepWithJitter(BURST_BACKOFF_BASE_MS[wave - 1]);
+      }
+      for (const sdk of sdkClients) {
+        for (const m of candidates) {
+          try {
+            return await sdk.generate({ ...params, model: m });
+          } catch (err) {
+            lastErr = err;
+            if (!isTransientCapacityError(err)) throw err;
+          }
+        }
       }
     }
     throw lastErr;
   };
 
-  ai.models.generateContentStream = async (params) => {
+  primaryAi.models.generateContentStream = async (params) => {
     const candidates = Array.from(
       new Set([params.model, ...FALLBACK_MODELS])
     );
     let lastErr: unknown;
-    for (const m of candidates) {
-      try {
-        return await origStream({ ...params, model: m });
-      } catch (err) {
-        lastErr = err;
-        if (!isTransientCapacityError(err)) throw err;
+
+    for (let wave = 0; wave <= BURST_BACKOFF_BASE_MS.length; wave++) {
+      if (wave > 0) {
+        await sleepWithJitter(BURST_BACKOFF_BASE_MS[wave - 1]);
+      }
+      for (const sdk of sdkClients) {
+        for (const m of candidates) {
+          try {
+            return await sdk.stream({ ...params, model: m });
+          } catch (err) {
+            lastErr = err;
+            if (!isTransientCapacityError(err)) throw err;
+          }
+        }
       }
     }
     throw lastErr;
   };
 
-  return ai;
+  return primaryAi;
 }
 
 export function resolveModelName(overrideModel?: string | null): string {

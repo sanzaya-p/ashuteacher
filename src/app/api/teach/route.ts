@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -9,6 +10,123 @@ import { requireAuthUser } from "@/lib/auth";
 import { CREDIT_COSTS, refundCredits, spendCredits } from "@/lib/credits";
 import { handleApiError } from "@/lib/api-error";
 import { countAllTopicsInSubjects } from "@/app/api/academy/[id]/route";
+
+function normalizeKeyPart(val: unknown): string {
+  return String(val || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function buildLessonCacheKey(params: {
+  mode: string;
+  level: string;
+  language: string;
+  curriculumContext: string;
+  subject: string;
+  topic: string;
+  fullChapter: boolean;
+  chapterOutline: string;
+}): string {
+  const raw = [
+    "v1",
+    normalizeKeyPart(params.mode),
+    normalizeKeyPart(params.level),
+    normalizeKeyPart(params.language),
+    normalizeKeyPart(params.curriculumContext),
+    normalizeKeyPart(params.subject),
+    normalizeKeyPart(params.topic),
+    params.fullChapter ? "full" : "std",
+    normalizeKeyPart(params.chapterOutline),
+  ].join("|");
+  return crypto.createHash("sha256").update(raw).digest("hex");
+}
+
+async function recordLessonProgressAndXp(params: {
+  userId: string;
+  courseId?: string | null;
+  chapterId?: string | null;
+  programId?: string | null;
+  programTopicId?: string | null;
+}) {
+  const { userId, courseId, chapterId, programId, programTopicId } = params;
+
+  await prisma.user
+    .update({
+      where: { id: userId },
+      data: { xpPoints: { increment: 25 } },
+    })
+    .catch(() => null);
+
+  if (courseId && chapterId) {
+    const course = await prisma.course
+      .findFirst({
+        where: { id: courseId, userId },
+      })
+      .catch(() => null);
+    if (course) {
+      const completed: string[] = JSON.parse(
+        course.completedChaptersJson || "[]"
+      );
+      if (!completed.includes(chapterId)) {
+        completed.push(chapterId);
+        const modules = JSON.parse(course.modulesJson || "[]");
+        const totalChapters = modules.reduce(
+          (acc: number, m: { chapters?: unknown[] }) =>
+            acc + (Array.isArray(m.chapters) ? m.chapters.length : 0),
+          0
+        );
+        const progressPercent =
+          totalChapters > 0
+            ? Math.min(100, Math.round((completed.length / totalChapters) * 100))
+            : 0;
+        await prisma.course
+          .update({
+            where: { id: courseId },
+            data: {
+              completedChaptersJson: JSON.stringify(completed),
+              progressPercent,
+            },
+          })
+          .catch(() => null);
+      }
+    }
+  }
+
+  if (programId && programTopicId) {
+    const program = await prisma.learningProgram
+      .findFirst({
+        where: { id: programId, userId },
+      })
+      .catch(() => null);
+    if (program) {
+      const completedTopics: string[] = JSON.parse(
+        program.completedTopicsJson || "[]"
+      );
+      if (!completedTopics.includes(programTopicId)) {
+        completedTopics.push(programTopicId);
+        const subjects = JSON.parse(program.subjectsJson || "[]");
+        const totalTopics = countAllTopicsInSubjects(subjects);
+        const progressPercent =
+          totalTopics > 0
+            ? Math.min(
+                100,
+                Math.round((completedTopics.length / totalTopics) * 100)
+              )
+            : 0;
+        await prisma.learningProgram
+          .update({
+            where: { id: programId },
+            data: {
+              completedTopicsJson: JSON.stringify(completedTopics),
+              progressPercent,
+            },
+          })
+          .catch(() => null);
+      }
+    }
+  }
+}
 
 export async function POST(req: NextRequest) {
   let chargedUserId: string | null = null;
@@ -43,26 +161,113 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const effectiveTitle = (topic || "Untitled Session").slice(0, 140);
+    const model = resolveModelName(requestedModel || user.preferredModel);
+    const cost =
+      mode === "solve" ? CREDIT_COSTS.SOLVE_PAPER : CREDIT_COSTS.LESSON;
+
+    const isCacheable = Boolean(
+      !attachment?.base64Data &&
+        !String(sourceContent || "").trim() &&
+        mode !== "solve" &&
+        effectiveTitle.trim().length >= 3 &&
+        req.headers.get("x-no-cache") !== "1"
+    );
+
+    const lessonCacheKey = isCacheable
+      ? buildLessonCacheKey({
+          mode,
+          level,
+          language,
+          curriculumContext: String(curriculumContext || ""),
+          subject: String(subject || "General"),
+          topic: effectiveTitle,
+          fullChapter: Boolean(fullChapter),
+          chapterOutline: String(chapterOutline || ""),
+        })
+      : "";
+
+    const cachedEntry = isCacheable
+      ? await prisma.lessonCache
+          .findUnique({ where: { cacheKey: lessonCacheKey } })
+          .catch(() => null)
+      : null;
+
+    const isCacheHit = Boolean(
+      cachedEntry && cachedEntry.content && cachedEntry.content.trim().length >= 100
+    );
+
     const headerKey =
       process.env.NODE_ENV !== "production" || user.isAdmin
         ? req.headers.get("x-gemini-api-key")
         : null;
-    const ai = createGeminiClient(headerKey);
-    const model = resolveModelName(requestedModel || user.preferredModel);
+    const ai = isCacheHit ? null : createGeminiClient(headerKey);
 
-    // Deduct credits atomically
-    const cost =
-      mode === "solve" ? CREDIT_COSTS.SOLVE_PAPER : CREDIT_COSTS.LESSON;
-    const effectiveTitle = (topic || "Untitled Session").slice(0, 140);
-
+    // Deduct Study Credits atomically (strictly enforced on both cache hits and misses)
     const { remainingCredits } = await spendCredits({
       userId: user.id,
       cost,
       description: `${mode === "solve" ? "Solved Paper" : "Lesson"}: ${effectiveTitle}`,
-      metadata: { mode, model },
+      metadata: { mode, model, cached: isCacheHit },
     });
     chargedUserId = user.id;
     chargedAmount = cost;
+
+    // Zero-API-Call Global Cache Hit Path (<50ms delivery, 0 Gemini quota consumed)
+    if (isCacheHit && cachedEntry) {
+      const cachedText = cachedEntry.content;
+      const createdLesson = await prisma.lesson.create({
+        data: {
+          userId: user.id,
+          title: effectiveTitle,
+          subject: subject || "General",
+          topic: effectiveTitle,
+          mode,
+          sourceType,
+          sourceContent: (sourceContent || topic || "").slice(0, 50000),
+          language,
+          level,
+          content: cachedText,
+          courseId: courseId || null,
+          chapterId: chapterId || null,
+          programId: programId || null,
+          programTopicId: programTopicId || null,
+        },
+      });
+
+      await prisma.lessonCache
+        .update({
+          where: { id: cachedEntry.id },
+          data: { hitCount: { increment: 1 } },
+        })
+        .catch(() => null);
+
+      await recordLessonProgressAndXp({
+        userId: user.id,
+        courseId,
+        chapterId,
+        programId,
+        programTopicId,
+      });
+
+      const encoder = new TextEncoder();
+      const hitStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(cachedText));
+          controller.close();
+        },
+      });
+
+      return new Response(hitStream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "X-Lesson-Id": createdLesson.id,
+          "X-Credits-Remaining": String(remainingCredits),
+          "X-Cache": "HIT",
+        },
+      });
+    }
 
     const systemInstruction = buildTeachingSystemPrompt({
       mode,
@@ -151,7 +356,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const responseStream = await ai.models.generateContentStream({
+    const responseStream = await ai!.models.generateContentStream({
       model,
       contents: [{ role: "user", parts }],
       config: { systemInstruction },
@@ -176,76 +381,34 @@ export async function POST(req: NextRequest) {
             data: { content: fullContent },
           });
 
-          await prisma.user
-            .update({
-              where: { id: user.id },
-              data: { xpPoints: { increment: 25 } },
-            })
-            .catch(() => null);
-
-          if (courseId && chapterId) {
-            const course = await prisma.course.findFirst({
-              where: { id: courseId, userId: user.id },
-            });
-            if (course) {
-              const completed: string[] = JSON.parse(
-                course.completedChaptersJson || "[]"
-              );
-              if (!completed.includes(chapterId)) {
-                completed.push(chapterId);
-                const modules = JSON.parse(course.modulesJson || "[]");
-                const totalChapters = modules.reduce(
-                  (acc: number, m: { chapters?: unknown[] }) =>
-                    acc + (Array.isArray(m.chapters) ? m.chapters.length : 0),
-                  0
-                );
-                const progressPercent =
-                  totalChapters > 0
-                    ? Math.min(
-                        100,
-                        Math.round((completed.length / totalChapters) * 100)
-                      )
-                    : 0;
-                await prisma.course.update({
-                  where: { id: courseId },
-                  data: {
-                    completedChaptersJson: JSON.stringify(completed),
-                    progressPercent,
-                  },
-                });
-              }
-            }
+          if (isCacheable && lessonCacheKey && fullContent.trim().length >= 120) {
+            await prisma.lessonCache
+              .upsert({
+                where: { cacheKey: lessonCacheKey },
+                create: {
+                  cacheKey: lessonCacheKey,
+                  subject: String(subject || "General"),
+                  topic: effectiveTitle,
+                  mode,
+                  level,
+                  language,
+                  content: fullContent,
+                  hitCount: 1,
+                },
+                update: {
+                  content: fullContent,
+                },
+              })
+              .catch(() => null);
           }
 
-          if (programId && programTopicId) {
-            const program = await prisma.learningProgram.findFirst({
-              where: { id: programId, userId: user.id },
-            });
-            if (program) {
-              const completedTopics: string[] = JSON.parse(
-                program.completedTopicsJson || "[]"
-              );
-              if (!completedTopics.includes(programTopicId)) {
-                completedTopics.push(programTopicId);
-                const subjects = JSON.parse(program.subjectsJson || "[]");
-                const totalTopics = countAllTopicsInSubjects(subjects);
-                const progressPercent =
-                  totalTopics > 0
-                    ? Math.min(
-                        100,
-                        Math.round((completedTopics.length / totalTopics) * 100)
-                      )
-                    : 0;
-                await prisma.learningProgram.update({
-                  where: { id: programId },
-                  data: {
-                    completedTopicsJson: JSON.stringify(completedTopics),
-                    progressPercent,
-                  },
-                });
-              }
-            }
-          }
+          await recordLessonProgressAndXp({
+            userId: user.id,
+            courseId,
+            chapterId,
+            programId,
+            programTopicId,
+          });
 
           controller.close();
         } catch (streamErr) {
@@ -275,6 +438,7 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-cache, no-transform",
         "X-Lesson-Id": createdLesson.id,
         "X-Credits-Remaining": String(remainingCredits),
+        "X-Cache": "MISS",
       },
     });
   } catch (error) {

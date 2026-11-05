@@ -239,8 +239,22 @@ model ResearchProject {
 model CatalogCache {
   id          String   @id @default(cuid())
   cacheKey    String   @unique
-  nodeType    String   // CHILDREN | SYLLABUS
+  nodeType    String   // CHILDREN | SYLLABUS | QUIZ | FLASHCARDS
   payloadJson String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model LessonCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  subject   String
+  topic     String
+  mode      String
+  level     String
+  language  String
+  content   String
+  hitCount  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

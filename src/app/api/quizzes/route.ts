@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,17 @@ import {
 import { getCurrentUser, requireAuthUser } from "@/lib/auth";
 import { CREDIT_COSTS, refundCredits, spendCredits } from "@/lib/credits";
 import { handleApiError } from "@/lib/api-error";
+
+function buildQuizCacheKey(params: {
+  topic: string;
+  count: number;
+  level: string;
+  language: string;
+}): string {
+  const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, " ");
+  const raw = `quiz:v1|${norm(params.topic)}|${params.count}|${norm(params.level)}|${norm(params.language)}`;
+  return `quiz:${crypto.createHash("sha256").update(raw).digest("hex")}`;
+}
 
 export async function GET() {
   await connection();
@@ -55,26 +67,95 @@ export async function POST(req: NextRequest) {
     }
 
     const count = Math.max(3, Math.min(Number(questionCount) || 10, 25));
+    const cleanTopic = String(topic || "").trim();
+    const isCacheable = Boolean(
+      cleanTopic.length >= 3 &&
+        !String(sourceContent || "").trim() &&
+        !lessonId &&
+        req.headers.get("x-no-cache") !== "1"
+    );
+
+    const cacheKey = isCacheable
+      ? buildQuizCacheKey({ topic: cleanTopic, count, level, language })
+      : "";
+
+    let cachedPayload: { title?: string; questions?: unknown[] } | null = null;
+    if (isCacheable) {
+      const [cachedRow, existingUserQuiz] = await Promise.all([
+        prisma.catalogCache
+          .findUnique({ where: { cacheKey } })
+          .catch(() => null),
+        prisma.quiz
+          .findFirst({
+            where: {
+              userId: user.id,
+              topic: cleanTopic,
+              level,
+              language,
+            },
+            select: { id: true },
+          })
+          .catch(() => null),
+      ]);
+
+      // Serve from global cache if another learner generated it AND this learner hasn't already taken it
+      if (cachedRow && !existingUserQuiz) {
+        try {
+          const parsedCache = JSON.parse(cachedRow.payloadJson);
+          if (
+            Array.isArray(parsedCache?.questions) &&
+            parsedCache.questions.length >= 3
+          ) {
+            cachedPayload = parsedCache;
+          }
+        } catch {
+          cachedPayload = null;
+        }
+      }
+    }
+
     const headerKey =
       process.env.NODE_ENV !== "production" || user.isAdmin
         ? req.headers.get("x-gemini-api-key")
         : null;
-    const ai = createGeminiClient(headerKey);
+    const ai = cachedPayload ? null : createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
-    const languageName = getLanguageName(language);
-    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
       cost: CREDIT_COSTS.QUIZ,
-      description: `Quiz (${count} Qs): ${(topic || "Custom").slice(0, 60)}`,
+      description: `Quiz (${count} Qs): ${(cleanTopic || "Custom").slice(0, 60)}`,
+      metadata: { cached: Boolean(cachedPayload) },
     });
     chargedUserId = user.id;
 
-    const response = await ai.models.generateContent({
+    if (cachedPayload && Array.isArray(cachedPayload.questions)) {
+      const created = await prisma.quiz.create({
+        data: {
+          userId: user.id,
+          title: cachedPayload.title || `${cleanTopic || "Practice"} Quiz`,
+          topic: cleanTopic || "Custom Material",
+          language,
+          level,
+          questionsJson: JSON.stringify(cachedPayload.questions),
+          totalQuestions: cachedPayload.questions.length,
+          lessonId: null,
+        },
+      });
+      return NextResponse.json({
+        quiz: created,
+        remainingCredits,
+        cached: true,
+      });
+    }
+
+    const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
+
+    const response = await ai!.models.generateContent({
       model,
       contents: `Generate an engaging, rigorous ${count}-question multiple-choice quiz in ${languageName} for a ${level}-level student.
-Topic: ${topic || "Provided Study Material"}
+Topic: ${cleanTopic || "Provided Study Material"}
 ${sourceContent ? `\nSource Material:\n${String(sourceContent).slice(0, 28000)}` : ""}
 
 Requirements:
@@ -91,12 +172,29 @@ ${languageDirective}`,
 
     const parsed = JSON.parse(response.text || "{}");
     const questions = Array.isArray(parsed.questions) ? parsed.questions : [];
+    const quizTitle = parsed.title || `${cleanTopic || "Practice"} Quiz`;
+
+    if (isCacheable && cacheKey && questions.length >= 3) {
+      await prisma.catalogCache
+        .upsert({
+          where: { cacheKey },
+          create: {
+            cacheKey,
+            nodeType: "QUIZ",
+            payloadJson: JSON.stringify({ title: quizTitle, questions }),
+          },
+          update: {
+            payloadJson: JSON.stringify({ title: quizTitle, questions }),
+          },
+        })
+        .catch(() => null);
+    }
 
     const created = await prisma.quiz.create({
       data: {
         userId: user.id,
-        title: parsed.title || `${topic || "Practice"} Quiz`,
-        topic: topic || "Custom Material",
+        title: quizTitle,
+        topic: cleanTopic || "Custom Material",
         language,
         level,
         questionsJson: JSON.stringify(questions),
@@ -105,7 +203,7 @@ ${languageDirective}`,
       },
     });
 
-    return NextResponse.json({ quiz: created, remainingCredits });
+    return NextResponse.json({ quiz: created, remainingCredits, cached: false });
   } catch (error) {
     if (chargedUserId) {
       await refundCredits({
