@@ -4,10 +4,13 @@ export const CREDIT_COSTS = {
   DOUBT: 1,
   ASSISTANT: 1,
   FLASHCARDS: 1,
+  RESEARCH_MENTOR: 1,
   QUIZ: 2,
   LESSON: 2,
+  RESEARCH_PROJECT: 3,
   SOLVE_PAPER: 4,
   COURSE: 4,
+  PROGRAM: 4,
 } as const;
 
 export interface CreditPack {

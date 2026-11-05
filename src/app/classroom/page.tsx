@@ -117,6 +117,9 @@ function ClassroomInner() {
   const [courseContext, setCourseContext] = useState<{
     courseId?: string;
     chapterId?: string;
+    programId?: string;
+    programTopicId?: string;
+    curriculumContext?: string;
   }>({});
 
   // SpeechSynthesis & Gemini AI Neural TTS narrator state
@@ -519,6 +522,11 @@ function ClassroomInner() {
     const qSubject = searchParams.get("subject");
     const qCourseId = searchParams.get("courseId") || undefined;
     const qChapterId = searchParams.get("chapterId") || undefined;
+    const qProgramId = searchParams.get("programId") || undefined;
+    const qProgramTopicId = searchParams.get("programTopicId") || undefined;
+    const qCurriculum = searchParams.get("curriculum") || undefined;
+    const qLevel = searchParams.get("level");
+    const qLang = searchParams.get("lang");
 
     if (qTab && ["topic", "upload", "url", "paste"].includes(qTab)) {
       setSourceTab(qTab);
@@ -526,8 +534,19 @@ function ClassroomInner() {
     if (qMode) setMode(qMode);
     if (qTopic) setTopic(qTopic);
     if (qSubject) setSubject(qSubject);
-    if (qCourseId || qChapterId) {
-      setCourseContext({ courseId: qCourseId, chapterId: qChapterId });
+    if (qLevel) {
+      setLevel(qLevel);
+      if (qLevel.includes("KG")) setSpeakingRate(0.9);
+    }
+    if (qLang) setLanguage(qLang);
+    if (qCourseId || qChapterId || qProgramId || qProgramTopicId || qCurriculum) {
+      setCourseContext({
+        courseId: qCourseId,
+        chapterId: qChapterId,
+        programId: qProgramId,
+        programTopicId: qProgramTopicId,
+        curriculumContext: qCurriculum,
+      });
     }
 
     if (qLessonId) {
@@ -660,10 +679,23 @@ function ClassroomInner() {
 
   // Generate & Stream Lesson onto Blackboard
   const startTeaching = useCallback(
-    async (overrideMode?: string, overrideTopic?: string, overrideSubject?: string) => {
+    async (
+      overrideMode?: string,
+      overrideTopic?: string,
+      overrideSubject?: string,
+      overrideExtras?: {
+        lang?: string;
+        level?: string;
+        programId?: string;
+        programTopicId?: string;
+        curriculumContext?: string;
+      }
+    ) => {
       const activeMode = overrideMode || mode;
       const activeTopic = (overrideTopic ?? topic).trim();
       const activeSubject = (overrideSubject ?? subject).trim() || "General";
+      const activeLanguage = overrideExtras?.lang || language;
+      const activeLevel = overrideExtras?.level || level;
 
       let sourceContent = "";
       if (sourceTab === "paste") {
@@ -720,12 +752,22 @@ function ClassroomInner() {
             topic: displayTitle,
             subject: activeSubject,
             mode: activeMode,
-            sourceType: courseContext.courseId ? "course" : sourceTab,
+            sourceType:
+              courseContext.courseId ||
+              courseContext.programId ||
+              overrideExtras?.programId
+                ? "course"
+                : sourceTab,
             sourceContent,
-            language,
-            level,
+            language: activeLanguage,
+            level: activeLevel,
             courseId: courseContext.courseId,
             chapterId: courseContext.chapterId,
+            programId: overrideExtras?.programId || courseContext.programId,
+            programTopicId:
+              overrideExtras?.programTopicId || courseContext.programTopicId,
+            curriculumContext:
+              overrideExtras?.curriculumContext || courseContext.curriculumContext,
             model: getStoredModel(),
             attachment,
           }),
@@ -802,7 +844,13 @@ function ClassroomInner() {
 
     if (autostart === "1" && qTopic && !autostartTriggeredRef.current) {
       autostartTriggeredRef.current = true;
-      startTeaching(qMode, qTopic, qSubject);
+      startTeaching(qMode, qTopic, qSubject, {
+        lang: searchParams.get("lang") || undefined,
+        level: searchParams.get("level") || undefined,
+        programId: searchParams.get("programId") || undefined,
+        programTopicId: searchParams.get("programTopicId") || undefined,
+        curriculumContext: searchParams.get("curriculum") || undefined,
+      });
     }
   }, [searchParams, startTeaching]);
 

@@ -21,6 +21,8 @@ import {
   LogOut,
   Coins,
   ShieldCheck,
+  Compass,
+  FlaskConical,
 } from "lucide-react";
 import {
   getStoredApiKey,
@@ -36,7 +38,9 @@ import { InstallAppButton } from "./InstallAppButton";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/academy", label: "Syllabus Academy", icon: Compass },
   { href: "/classroom", label: "Classroom", icon: Presentation },
+  { href: "/research", label: "Research & Projects", icon: FlaskConical },
   { href: "/courses", label: "Course Builder", icon: GraduationCap },
   { href: "/practice", label: "Quiz & Cards", icon: BrainCircuit },
   { href: "/library", label: "Saved Library", icon: Library },

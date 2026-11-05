@@ -21,6 +21,9 @@ import {
   Gift,
   Volume2,
   Coins,
+  Compass,
+  FlaskConical,
+  Globe2,
 } from "lucide-react";
 import {
   promptApiKeyModal,
@@ -63,6 +66,23 @@ interface DashboardData {
     subject: string;
     level: string;
     coverGradient: string;
+    progressPercent: number;
+  }>;
+  learningPrograms?: Array<{
+    id: string;
+    title: string;
+    trackType: string;
+    country: string;
+    boardOrBody: string;
+    gradeOrExam: string;
+    progressPercent: number;
+    coverGradient: string;
+  }>;
+  researchProjects?: Array<{
+    id: string;
+    title: string;
+    tier: string;
+    domain: string;
     progressPercent: number;
   }>;
 }
@@ -367,6 +387,145 @@ export default function DashboardPage() {
             </div>
             <div className="text-xs text-slate-400">Learning Streak</div>
           </div>
+        </div>
+      </section>
+
+      {/* Structured Global Academy & Research Lab Hub (Additive) */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Global Syllabus & Competitive Exam Academy Card */}
+        <div className="rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/30 p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+              <Globe2 className="h-3 w-3" />
+              <span>195+ Countries • KG to Doctoral • All Exams</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <Compass className="h-5 w-5 text-cyan-400" />
+                Structured Syllabus &amp; Exam Academy
+              </h2>
+              <Link
+                href="/academy"
+                className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 shrink-0"
+              >
+                Open Academy →
+              </Link>
+            </div>
+            <p className="text-xs text-slate-400">
+              Choose any Country → School/University Board (CBSE, ICSE, State Boards, IB, AP, GCSE, MIT...) or Competitive Exam (JEE, NEET, UPSC, SAT, GRE, MCAT, Gaokao...) for a complete chapter-by-chapter Voice Blackboard syllabus.
+            </p>
+          </div>
+
+          {data?.learningPrograms && data.learningPrograms.length > 0 ? (
+            <div className="space-y-2.5">
+              {data.learningPrograms.slice(0, 2).map((prog) => (
+                <Link
+                  key={prog.id}
+                  href={`/academy?id=${prog.id}`}
+                  className="block rounded-xl border border-white/10 bg-slate-950/70 p-3.5 hover:border-cyan-400/40 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-semibold text-cyan-300">
+                        {prog.country} • {prog.gradeOrExam}
+                      </span>
+                      <h3 className="text-sm font-bold text-white line-clamp-1">
+                        {prog.title}
+                      </h3>
+                    </div>
+                    <span className="text-xs font-extrabold text-cyan-300">
+                      {prog.progressPercent}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${prog.coverGradient}`}
+                      style={{ width: `${prog.progressPercent}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <Link
+                href="/academy"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:brightness-110 transition"
+              >
+                <Compass className="h-4 w-4" />
+                <span>Enroll in Country / Board / Competitive Exam Syllabus</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Project, Thesis & MIT-Level Research Lab Card */}
+        <div className="rounded-3xl border border-violet-400/25 bg-gradient-to-br from-slate-900 via-slate-900 to-violet-950/30 p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/15 border border-violet-400/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-300">
+              <FlaskConical className="h-3 w-3" />
+              <span>School Science Fair → B.Tech Capstone → PhD / MIT Lab</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <FlaskConical className="h-5 w-5 text-violet-400" />
+                Project, Thesis &amp; Research Studio
+              </h2>
+              <Link
+                href="/research"
+                className="text-xs font-semibold text-violet-400 hover:text-violet-300 shrink-0"
+              >
+                Open Research Lab →
+              </Link>
+            </div>
+            <p className="text-xs text-slate-400">
+              Guided 6-milestone mentorship from problem formulation &amp; literature prerequisites to system architecture, IEEE/LaTeX thesis drafting, and live AI Viva Committee Defense.
+            </p>
+          </div>
+
+          {data?.researchProjects && data.researchProjects.length > 0 ? (
+            <div className="space-y-2.5">
+              {data.researchProjects.slice(0, 2).map((proj) => (
+                <Link
+                  key={proj.id}
+                  href="/research"
+                  className="block rounded-xl border border-white/10 bg-slate-950/70 p-3.5 hover:border-violet-400/40 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-semibold text-violet-300">
+                        {proj.tier}
+                      </span>
+                      <h3 className="text-sm font-bold text-white line-clamp-1">
+                        {proj.title}
+                      </h3>
+                    </div>
+                    <span className="text-xs font-extrabold text-violet-300">
+                      {proj.progressPercent}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                      style={{ width: `${proj.progressPercent}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <Link
+                href="/research"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 transition"
+              >
+                <FlaskConical className="h-4 w-4" />
+                <span>Start a Structured Project or Research Thesis</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

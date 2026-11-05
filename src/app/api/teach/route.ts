@@ -8,6 +8,7 @@ import {
 import { requireAuthUser } from "@/lib/auth";
 import { CREDIT_COSTS, refundCredits, spendCredits } from "@/lib/credits";
 import { handleApiError } from "@/lib/api-error";
+import { countAllTopicsInSubjects } from "@/app/api/academy/[id]/route";
 
 export async function POST(req: NextRequest) {
   let chargedUserId: string | null = null;
@@ -26,6 +27,9 @@ export async function POST(req: NextRequest) {
       level = "Intermediate",
       courseId,
       chapterId,
+      programId,
+      programTopicId,
+      curriculumContext = "",
       model: requestedModel,
       attachment,
     } = body;
@@ -63,6 +67,7 @@ export async function POST(req: NextRequest) {
       level,
       languageCode: language,
       subject,
+      curriculumContext: curriculumContext ? String(curriculumContext) : undefined,
     });
 
     let userPrompt = "";
@@ -117,6 +122,8 @@ export async function POST(req: NextRequest) {
         content: "",
         courseId: courseId || null,
         chapterId: chapterId || null,
+        programId: programId || null,
+        programTopicId: programTopicId || null,
       },
     });
 
@@ -179,6 +186,36 @@ export async function POST(req: NextRequest) {
                   where: { id: courseId },
                   data: {
                     completedChaptersJson: JSON.stringify(completed),
+                    progressPercent,
+                  },
+                });
+              }
+            }
+          }
+
+          if (programId && programTopicId) {
+            const program = await prisma.learningProgram.findFirst({
+              where: { id: programId, userId: user.id },
+            });
+            if (program) {
+              const completedTopics: string[] = JSON.parse(
+                program.completedTopicsJson || "[]"
+              );
+              if (!completedTopics.includes(programTopicId)) {
+                completedTopics.push(programTopicId);
+                const subjects = JSON.parse(program.subjectsJson || "[]");
+                const totalTopics = countAllTopicsInSubjects(subjects);
+                const progressPercent =
+                  totalTopics > 0
+                    ? Math.min(
+                        100,
+                        Math.round((completedTopics.length / totalTopics) * 100)
+                      )
+                    : 0;
+                await prisma.learningProgram.update({
+                  where: { id: programId },
+                  data: {
+                    completedTopicsJson: JSON.stringify(completedTopics),
                     progressPercent,
                   },
                 });

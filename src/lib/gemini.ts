@@ -124,9 +124,26 @@ export function buildTeachingSystemPrompt(params: {
   level: string;
   languageCode: string;
   subject?: string;
+  curriculumContext?: string;
 }): string {
   const languageDirective = buildLanguageDirective(params.languageCode);
   const subjectCtx = params.subject ? ` specializing in ${params.subject}` : "";
+  const syllabusLine = params.curriculumContext
+    ? `\n- CURRICULUM / EXAM ALIGNMENT: Align terminology, depth, examples, and exam tips strictly to: **${params.curriculumContext}**.`
+    : "";
+
+  let pedagogyGuidance = `- Pitch explanations precisely for a ${params.level}-level learner.`;
+  if (params.level.includes("KG") || params.level.includes("Early")) {
+    pedagogyGuidance = `- PEDAGOGY (KG / EARLY CHILDHOOD WONDER MODE, AGES 4–7): Speak like the warmest, most joyful kindergarten teacher! Use very short, musical sentences, playful sound words, friendly animals/toys/stars analogies, rhymes, and interactive "Can you clap/count with me?" prompts. Avoid intimidating jargon or dense algebra.`;
+  } else if (params.level.includes("Primary") || params.level.includes("Middle")) {
+    pedagogyGuidance = `- PEDAGOGY (SCHOOL GRADES 3–8): Use vivid real-life curiosity hooks, step-by-step visual reasoning, simple hands-on home experiments, and encouraging school-friendly examples.`;
+  } else if (params.level === "Intermediate") {
+    pedagogyGuidance = `- PEDAGOGY (BOARD & HIGH SCHOOL RIGOR): Cover official definitions, step-by-step derivations, worked numerical/conceptual problems, and high-scoring board-exam presentation tips.`;
+  } else if (params.level === "Advanced") {
+    pedagogyGuidance = `- PEDAGOGY (UNIVERSITY & COMPETITIVE EXAM DEPTH): Include rigorous mathematical derivations, subtle conceptual traps, multi-concept problem solving, and high-speed competitive exam insights.`;
+  } else if (params.level === "Expert") {
+    pedagogyGuidance = `- PEDAGOGY (DOCTORAL / MIT RESEARCH RIGOR): Teach from first principles with formal mathematical precision, proofs/derivations, complexity or physical bounds, state-of-the-art trade-offs, and open research frontiers—zero hand-waving.`;
+  }
 
   const mathAndDiagramRules = `
 FORMATTING RULES (CRITICAL):
@@ -134,7 +151,7 @@ FORMATTING RULES (CRITICAL):
 - Use proper LaTeX for ALL mathematical notation: $...$ for inline math and $$...$$ on its own lines for block equations.
 - For multi-line derivations, use \\begin{aligned} ... \\end{aligned} inside $$...$$.
 - Where a concept benefits from a visual mental model, process flow, or hierarchy, include ONE clean \`\`\`mermaid\`\`\` diagram using \`flowchart TD\` or \`flowchart LR\` (always wrap node labels containing parentheses or special characters in double quotes, e.g. A["Force (N)"]).
-- Pitch explanations precisely for a ${params.level}-level learner.
+${pedagogyGuidance}${syllabusLine}
 
 ${languageDirective}`;
 
@@ -260,4 +277,180 @@ export const FLASHCARD_JSON_SCHEMA = {
     },
   },
   required: ["title", "cards"],
+};
+
+export const DISCOVERY_OPTIONS_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    items: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "Official boards, universities, exams, or subjects matching the query.",
+    },
+  },
+  required: ["items"],
+};
+
+export const PROGRAM_SYLLABUS_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    title: { type: Type.STRING, description: "Official structured program title." },
+    overview: {
+      type: Type.STRING,
+      description: "2-3 sentence executive summary of the curriculum or competitive exam roadmap.",
+    },
+    examPattern: {
+      type: Type.OBJECT,
+      properties: {
+        duration: { type: Type.STRING, description: "Exam duration or academic term span" },
+        totalMarks: { type: Type.STRING, description: "Total marks / grading scale" },
+        markingScheme: { type: Type.STRING, description: "Marking scheme, weightage, or negative marking rules" },
+        sectionsSummary: { type: Type.STRING, description: "Breakdown of papers, sections, or theory/practical split" },
+        keyStrategy: { type: Type.STRING, description: "High-impact preparation strategy for top scores" },
+      },
+      required: ["duration", "totalMarks", "markingScheme", "sectionsSummary", "keyStrategy"],
+    },
+    subjects: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: "Unique subject id e.g. subj-1" },
+          name: { type: Type.STRING, description: "Official Subject or Paper name" },
+          code: { type: Type.STRING, description: "Official subject/paper code if applicable, else short tag" },
+          units: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.STRING, description: "Unique unit id e.g. unit-1-1" },
+                title: { type: Type.STRING, description: "Official Unit or Section name" },
+                chapters: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING, description: "Unique chapter id e.g. ch-1-1-1" },
+                      chapterNumber: { type: Type.INTEGER, description: "1-based chapter number" },
+                      title: { type: Type.STRING, description: "Official chapter title" },
+                      weightage: { type: Type.STRING, description: "Approx marks/weightage or priority e.g. '8 Marks' or 'High-Yield'" },
+                      summary: { type: Type.STRING, description: "1-sentence scope of this chapter" },
+                      topics: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            id: { type: Type.STRING, description: "Unique topic id e.g. top-1-1-1-1" },
+                            title: { type: Type.STRING, description: "Specific syllabus sub-topic title" },
+                            summary: { type: Type.STRING, description: "Short learning outcome" },
+                            tag: { type: Type.STRING, description: "Core | High-Yield | Derivation | Numerical | Practical" },
+                            estimatedMinutes: { type: Type.INTEGER, description: "Study minutes (10-35)" },
+                          },
+                          required: ["id", "title", "summary", "tag", "estimatedMinutes"],
+                        },
+                      },
+                    },
+                    required: ["id", "chapterNumber", "title", "weightage", "summary", "topics"],
+                  },
+                },
+              },
+              required: ["id", "title", "chapters"],
+            },
+          },
+        },
+        required: ["id", "name", "code", "units"],
+      },
+    },
+  },
+  required: ["title", "overview", "examPattern", "subjects"],
+};
+
+export const CHAPTER_EXPANSION_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    topics: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: "Unique micro-topic id" },
+          title: { type: Type.STRING, description: "Granular official syllabus micro-topic" },
+          summary: { type: Type.STRING, description: "Exact concepts, formulas, or skills to master" },
+          tag: { type: Type.STRING, description: "Core | High-Yield | Derivation | Numerical | Proof | Activity" },
+          estimatedMinutes: { type: Type.INTEGER, description: "Minutes (10-30)" },
+        },
+        required: ["id", "title", "summary", "tag", "estimatedMinutes"],
+      },
+    },
+  },
+  required: ["topics"],
+};
+
+export const RESEARCH_BLUEPRINT_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    title: { type: Type.STRING, description: "Refined academic/project title." },
+    abstractDraft: {
+      type: Type.STRING,
+      description: "Crisp 4-5 sentence project/research abstract framing problem, method, and expected impact.",
+    },
+    noveltyHypothesis: {
+      type: Type.STRING,
+      description: "Clear research hypothesis, engineering novelty, or scientific value proposition.",
+    },
+    prerequisiteTopics: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "4 to 6 foundational topics/math/tools the learner can click to learn on the Voice Blackboard.",
+    },
+    stages: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: "stage-1 through stage-6" },
+          stageNumber: { type: Type.INTEGER, description: "1 to 6" },
+          title: { type: Type.STRING, description: "Milestone title" },
+          objective: { type: Type.STRING, description: "What must be achieved in this stage" },
+          deliverables: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Concrete artifacts/outputs to produce",
+          },
+          guidingQuestions: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Key technical/scientific questions to answer",
+          },
+          suggestedMethods: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Recommended algorithms, tools, datasets, lab methods, or frameworks",
+          },
+        },
+        required: [
+          "id",
+          "stageNumber",
+          "title",
+          "objective",
+          "deliverables",
+          "guidingQuestions",
+          "suggestedMethods",
+        ],
+      },
+    },
+    sampleVivaQuestions: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "5 sharp defense/viva questions an examiner, professor, or MIT reviewer would ask.",
+    },
+  },
+  required: [
+    "title",
+    "abstractDraft",
+    "noveltyHypothesis",
+    "prerequisiteTopics",
+    "stages",
+    "sampleVivaQuestions",
+  ],
 };

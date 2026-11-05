@@ -26,6 +26,8 @@ export async function GET() {
         },
         recentLessons: [],
         courses: [],
+        learningPrograms: [],
+        researchProjects: [],
       });
     }
 
@@ -34,6 +36,8 @@ export async function GET() {
       totalCourses,
       recentLessons,
       courses,
+      learningPrograms,
+      researchProjects,
       quizAttempts,
       flashcardSets,
     ] = await Promise.all([
@@ -58,6 +62,33 @@ export async function GET() {
         where: { userId: user.id },
         orderBy: { updatedAt: "desc" },
         take: 4,
+      }),
+      prisma.learningProgram.findMany({
+        where: { userId: user.id },
+        orderBy: { updatedAt: "desc" },
+        take: 4,
+        select: {
+          id: true,
+          title: true,
+          trackType: true,
+          country: true,
+          boardOrBody: true,
+          gradeOrExam: true,
+          progressPercent: true,
+          coverGradient: true,
+        },
+      }),
+      prisma.researchProject.findMany({
+        where: { userId: user.id },
+        orderBy: { updatedAt: "desc" },
+        take: 3,
+        select: {
+          id: true,
+          title: true,
+          tier: true,
+          domain: true,
+          progressPercent: true,
+        },
       }),
       prisma.quizAttempt.findMany({
         where: { quiz: { userId: user.id } },
@@ -106,6 +137,8 @@ export async function GET() {
       },
       recentLessons,
       courses,
+      learningPrograms,
+      researchProjects,
     });
   } catch (error) {
     console.error("Dashboard GET error:", error);

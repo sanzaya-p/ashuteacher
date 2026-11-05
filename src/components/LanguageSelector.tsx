@@ -14,6 +14,7 @@ import {
 interface LanguageSelectorProps {
   value: string;
   onChange: (langCode: string) => void;
+  label?: string;
   selectClassName?: string;
   showBrowserFilter?: boolean;
   showScriptPicker?: boolean;
@@ -24,6 +25,7 @@ const CUSTOM_SENTINEL = "__custom_language__";
 export function LanguageSelector({
   value,
   onChange,
+  label,
   selectClassName = "w-full rounded-xl border border-white/10 bg-slate-950/80 px-2.5 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none",
   showBrowserFilter = true,
   showScriptPicker = true,
@@ -120,6 +122,11 @@ export function LanguageSelector({
 
   return (
     <div className="space-y-1.5">
+      {label && (
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+          {label}
+        </label>
+      )}
       <select
         value={selectValue}
         onChange={(e) => handleSelectChange(e.target.value)}

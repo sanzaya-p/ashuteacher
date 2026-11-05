@@ -104,7 +104,17 @@ function PracticeInner() {
 
   useEffect(() => {
     const qTab = searchParams.get("tab");
+    const qTopic = searchParams.get("topic");
+    const qLevel = searchParams.get("level");
+    const qLang = searchParams.get("lang");
     if (qTab === "flashcards") setActiveTab("flashcards");
+    if (qTab === "quizzes") setActiveTab("quizzes");
+    if (qTopic) {
+      setQuizTopic(qTopic);
+      setDeckTopic(qTopic);
+    }
+    if (qLevel) setQuizLevel(qLevel);
+    if (qLang) setQuizLang(qLang);
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);

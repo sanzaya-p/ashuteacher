@@ -29,12 +29,14 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  courses       Course[]
-  lessons       Lesson[]
-  quizzes       Quiz[]
-  flashcardSets FlashcardSet[]
-  transactions  CreditTransaction[]
-  paymentOrders PaymentOrder[]
+  courses          Course[]
+  lessons          Lesson[]
+  quizzes          Quiz[]
+  flashcardSets    FlashcardSet[]
+  learningPrograms LearningProgram[]
+  researchProjects ResearchProject[]
+  transactions     CreditTransaction[]
+  paymentOrders    PaymentOrder[]
 }
 
 model CreditTransaction {
@@ -105,14 +107,17 @@ model Lesson {
   level         String   @default("Intermediate")
   content       String
   notes         String   @default("")
-  isFavorite    Boolean  @default(false)
-  courseId      String?
-  chapterId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isFavorite     Boolean  @default(false)
+  courseId       String?
+  chapterId      String?
+  programId      String?
+  programTopicId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course        Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  program       LearningProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
   messages      DoubtMessage[]
   quizzes       Quiz[]
   flashcardSets FlashcardSet[]
@@ -179,6 +184,54 @@ model FlashcardSet {
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+}
+
+model LearningProgram {
+  id                  String   @id @default(cuid())
+  userId              String
+  trackType           String   @default("CURRICULUM") // CURRICULUM | COMPETITIVE_EXAM | SKILL_PATH
+  country             String   @default("India")
+  boardOrBody         String   @default("CBSE")
+  gradeOrExam         String   @default("Class 12")
+  streamOrFocus       String   @default("")
+  pedagogyStage       String   @default("Intermediate")
+  language            String   @default("en-US")
+  title               String
+  overview            String
+  examPatternJson     String   @default("{}")
+  subjectsJson        String
+  completedTopicsJson String   @default("[]")
+  progressPercent     Int      @default(0)
+  targetDate          String?
+  coverGradient       String   @default("from-cyan-500 to-blue-600")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([userId, updatedAt])
+}
+
+model ResearchProject {
+  id                  String   @id @default(cuid())
+  userId              String
+  title               String
+  tier                String   @default("Undergraduate Capstone")
+  domain              String   @default("Computer Science & AI")
+  language            String   @default("en-US")
+  problemStatement    String
+  blueprintJson       String
+  completedStagesJson String   @default("[]")
+  stageNotesJson      String   @default("{}")
+  vivaHistoryJson     String   @default("[]")
+  progressPercent     Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, updatedAt])
 }

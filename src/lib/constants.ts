@@ -339,10 +339,12 @@ export function findBrowserVoicesForLanguage<T extends { lang: string }>(
 }
 
 export const STUDENT_LEVELS = [
+  { id: "KG & Early Wonder", label: "KG / Early Child", desc: "Playful stories, rhymes, simple words & curiosity (Ages 4–7)" },
+  { id: "Primary & Middle School", label: "School (Classes 3–8)", desc: "Clear foundations, fun visual analogies & activity examples" },
   { id: "Beginner", label: "Beginner", desc: "Intuitive analogies & zero jargon" },
-  { id: "Intermediate", label: "Intermediate", desc: "High school / undergrad core concepts" },
-  { id: "Advanced", label: "Advanced", desc: "Rigorous derivations & deep theory" },
-  { id: "Expert", label: "Expert", desc: "Graduate-level & research depth" },
+  { id: "Intermediate", label: "High School / Board (9–12)", desc: "Board-aligned concepts, NCERT/IB/AP rigor & worked problems" },
+  { id: "Advanced", label: "University & Competitive", desc: "Rigorous derivations, JEE/GRE/GATE/MCAT depth & edge cases" },
+  { id: "Expert", label: "Doctoral / MIT Researcher", desc: "First-principles proofs, state-of-the-art theory & research rigor" },
 ] as const;
 
 export const TEACHING_MODES = [
