@@ -125,11 +125,15 @@ export function buildTeachingSystemPrompt(params: {
   languageCode: string;
   subject?: string;
   curriculumContext?: string;
+  fullChapter?: boolean;
 }): string {
   const languageDirective = buildLanguageDirective(params.languageCode);
   const subjectCtx = params.subject ? ` specializing in ${params.subject}` : "";
   const syllabusLine = params.curriculumContext
     ? `\n- CURRICULUM / EXAM ALIGNMENT: Align terminology, depth, examples, and exam tips strictly to: **${params.curriculumContext}**.`
+    : "";
+  const fullChapterLine = params.fullChapter
+    ? `\n- FULL-CHAPTER MASTER LECTURE REQUIREMENT (CRITICAL): You are teaching an ENTIRE official syllabus chapter in one complete session! Cover EVERY single syllabus sub-topic provided in the prompt systematically section-by-section with thorough explanations, formal definitions, complete derivations/algorithms/proofs, worked numericals/examples, and end-of-chapter exam practice questions. Never skip or gloss over sub-topics!`
     : "";
 
   let pedagogyGuidance = `- Pitch explanations precisely for a ${params.level}-level learner.`;
@@ -151,7 +155,7 @@ FORMATTING RULES (CRITICAL):
 - Use proper LaTeX for ALL mathematical notation: $...$ for inline math and $$...$$ on its own lines for block equations.
 - For multi-line derivations, use \\begin{aligned} ... \\end{aligned} inside $$...$$.
 - Where a concept benefits from a visual mental model, process flow, or hierarchy, include ONE clean \`\`\`mermaid\`\`\` diagram using \`flowchart TD\` or \`flowchart LR\` (always wrap node labels containing parentheses or special characters in double quotes, e.g. A["Force (N)"]).
-${pedagogyGuidance}${syllabusLine}
+${pedagogyGuidance}${syllabusLine}${fullChapterLine}
 
 ${languageDirective}`;
 
@@ -453,4 +457,100 @@ export const RESEARCH_BLUEPRINT_SCHEMA = {
     "stages",
     "sampleVivaQuestions",
   ],
+};
+
+export const TREE_CHILDREN_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    stepLabel: {
+      type: Type.STRING,
+      description: "Clear UI label for this dropdown box (e.g. 'Qualification Level', 'Degree / Programme', 'Course / Paper Code', 'Exam Stage', 'Official Paper').",
+    },
+    placeholder: {
+      type: Type.STRING,
+      description: "Short placeholder e.g. 'Select a programme...'",
+    },
+    isPaperLevel: {
+      type: Type.BOOLEAN,
+      description: "TRUE only when the items in this list are individual teachable Subjects, Courses (like MCS-201), or Exam Papers (like GS Paper II) whose next step is displaying Chapters!",
+    },
+    items: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: "Clean unique identifier" },
+          code: { type: Type.STRING, description: "Official course/paper code if applicable (e.g. 'MCS-201', '042', 'GS-II'), else empty string" },
+          label: { type: Type.STRING, description: "Official name (include code if applicable, e.g. 'MCS-201: Programming in C and Python')" },
+          badge: { type: Type.STRING, description: "Short helpful tag e.g. 'Sem 1', 'Core', 'Optional', '100 Marks'" },
+        },
+        required: ["id", "code", "label", "badge"],
+      },
+    },
+  },
+  required: ["stepLabel", "placeholder", "isPaperLevel", "items"],
+};
+
+export const PAPER_SYLLABUS_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    paperTitle: { type: Type.STRING, description: "Official full title of the selected Course, Subject, or Exam Paper." },
+    paperCode: { type: Type.STRING, description: "Official code (e.g. 'MCS-211', '042', 'GS-II') or short tag." },
+    overview: { type: Type.STRING, description: "2-sentence overview of this paper's official scope and objectives." },
+    pedagogyStage: {
+      type: Type.STRING,
+      description: "One of: 'KG & Early Wonder' | 'Primary & Middle School' | 'Intermediate' | 'Advanced' | 'Expert'",
+    },
+    examPattern: {
+      type: Type.OBJECT,
+      properties: {
+        duration: { type: Type.STRING },
+        totalMarks: { type: Type.STRING },
+        markingScheme: { type: Type.STRING },
+        sectionsSummary: { type: Type.STRING },
+        keyStrategy: { type: Type.STRING },
+      },
+      required: ["duration", "totalMarks", "markingScheme", "sectionsSummary", "keyStrategy"],
+    },
+    units: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: "block-1, unit-2, etc." },
+          unitTitle: { type: Type.STRING, description: "Official Block, Module, or Section title (e.g. 'Block 1: Algorithm Design Techniques')" },
+          chapters: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.STRING, description: "ch-1, ch-2, etc." },
+                chapterNumber: { type: Type.INTEGER, description: "Sequential chapter/unit number (1, 2, 3...)" },
+                title: { type: Type.STRING, description: "Official Chapter / Unit title" },
+                weightage: { type: Type.STRING, description: "Weightage or priority e.g. 'Block 1 • High-Yield' or '12 Marks'" },
+                estimatedMinutes: { type: Type.INTEGER, description: "Full chapter study duration in minutes (25-60)" },
+                summary: { type: Type.STRING, description: "1-sentence summary of the chapter" },
+                syllabusTopics: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: "Complete list of 4 to 8 official syllabus topics covered inside this chapter",
+                },
+              },
+              required: [
+                "id",
+                "chapterNumber",
+                "title",
+                "weightage",
+                "estimatedMinutes",
+                "summary",
+                "syllabusTopics",
+              ],
+            },
+          },
+        },
+        required: ["id", "unitTitle", "chapters"],
+      },
+    },
+  },
+  required: ["paperTitle", "paperCode", "overview", "pedagogyStage", "examPattern", "units"],
 };

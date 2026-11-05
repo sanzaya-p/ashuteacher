@@ -38,6 +38,142 @@ export async function POST(req: NextRequest) {
   try {
     const user = await requireAuthUser();
     const body = await req.json();
+
+    // Fast 0-credit Enrollment/Pinning from the Dynamic Cascading Explorer!
+    if (body.pinPaperSyllabus) {
+      const {
+        country = "India",
+        domain = "UNIVERSITY",
+        institution = "",
+        programLabel = "",
+        paperSyllabus,
+        language = "en-US",
+      } = body.pinPaperSyllabus;
+
+      if (!paperSyllabus || !Array.isArray(paperSyllabus.units)) {
+        return NextResponse.json(
+          { error: "Invalid paper syllabus payload" },
+          { status: 400 }
+        );
+      }
+
+      const subjId = `paper-${Date.now()}`;
+      const newSubject = {
+        id: subjId,
+        name: paperSyllabus.paperTitle || "Selected Paper",
+        code: paperSyllabus.paperCode || "",
+        units: paperSyllabus.units.map(
+          (
+            u: {
+              id?: string;
+              unitTitle: string;
+              chapters: Array<{
+                id?: string;
+                chapterNumber: number;
+                title: string;
+                weightage?: string;
+                estimatedMinutes?: number;
+                summary: string;
+                syllabusTopics: string[];
+              }>;
+            },
+            uIdx: number
+          ) => ({
+            id: `${subjId}-u${uIdx + 1}`,
+            title: u.unitTitle,
+            chapters: (u.chapters || []).map((ch, cIdx) => {
+              const chId = `${subjId}-u${uIdx + 1}-c${cIdx + 1}`;
+              return {
+                id: chId,
+                chapterNumber: ch.chapterNumber || cIdx + 1,
+                title: ch.title,
+                weightage: ch.weightage || "",
+                summary: ch.summary || "",
+                expanded: true,
+                topics: [
+                  {
+                    id: `${chId}-full`,
+                    title: `Full Chapter ${ch.chapterNumber || cIdx + 1}: ${ch.title}`,
+                    summary: Array.isArray(ch.syllabusTopics)
+                      ? ch.syllabusTopics.join(" • ")
+                      : ch.summary,
+                    tag: "Full Chapter",
+                    estimatedMinutes: ch.estimatedMinutes || 35,
+                  },
+                ],
+              };
+            }),
+          })
+        ),
+      };
+
+      // Check if user already has an enrolled program for this exact Institution + ProgramLabel so papers group cleanly (e.g. MCS-201 + MCS-211 under IGNOU MCA)
+      const groupTitle = programLabel
+        ? `${institution} — ${programLabel}`
+        : `${institution} — ${paperSyllabus.paperTitle}`;
+
+      const existing = programLabel
+        ? await prisma.learningProgram.findFirst({
+            where: {
+              userId: user.id,
+              country,
+              boardOrBody: institution,
+              gradeOrExam: programLabel,
+            },
+          })
+        : null;
+
+      if (existing) {
+        const existingSubjects = JSON.parse(existing.subjectsJson || "[]");
+        const alreadyIdx = existingSubjects.findIndex(
+          (s: { name?: string }) =>
+            String(s.name || "").toLowerCase() ===
+            String(newSubject.name || "").toLowerCase()
+        );
+        if (alreadyIdx >= 0) {
+          existingSubjects[alreadyIdx] = newSubject;
+        } else {
+          existingSubjects.push(newSubject);
+        }
+        const updated = await prisma.learningProgram.update({
+          where: { id: existing.id },
+          data: {
+            subjectsJson: JSON.stringify(existingSubjects),
+            language,
+          },
+        });
+        return NextResponse.json({ program: updated, appended: true });
+      }
+
+      const count = await prisma.learningProgram.count({
+        where: { userId: user.id },
+      });
+      const gradient = COURSE_GRADIENTS[count % COURSE_GRADIENTS.length];
+
+      const created = await prisma.learningProgram.create({
+        data: {
+          userId: user.id,
+          trackType:
+            domain === "COMPETITIVE_EXAM" ? "COMPETITIVE_EXAM" : "CURRICULUM",
+          country,
+          boardOrBody: institution,
+          gradeOrExam: programLabel || paperSyllabus.paperTitle,
+          streamOrFocus: paperSyllabus.paperCode || "",
+          pedagogyStage: paperSyllabus.pedagogyStage || "Advanced",
+          language,
+          title: groupTitle,
+          overview: paperSyllabus.overview || "",
+          examPatternJson: JSON.stringify(paperSyllabus.examPattern || {}),
+          subjectsJson: JSON.stringify([newSubject]),
+          completedTopicsJson: "[]",
+          progressPercent: 0,
+          coverGradient: gradient,
+        },
+      });
+
+      return NextResponse.json({ program: created, appended: false });
+    }
+
     const {
       trackType = "CURRICULUM", // CURRICULUM | COMPETITIVE_EXAM | SKILL_PATH
       country = "India",

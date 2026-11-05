@@ -120,6 +120,8 @@ function ClassroomInner() {
     programId?: string;
     programTopicId?: string;
     curriculumContext?: string;
+    fullChapter?: boolean;
+    chapterOutline?: string;
   }>({});
 
   // SpeechSynthesis & Gemini AI Neural TTS narrator state
@@ -525,6 +527,12 @@ function ClassroomInner() {
     const qProgramId = searchParams.get("programId") || undefined;
     const qProgramTopicId = searchParams.get("programTopicId") || undefined;
     const qCurriculum = searchParams.get("curriculum") || undefined;
+    const qFullChapter = searchParams.get("fullChapter") === "1";
+    let storedOutline: string | undefined = undefined;
+    if (qFullChapter && typeof window !== "undefined") {
+      storedOutline =
+        window.sessionStorage.getItem("ashuteacher_chapter_outline") || undefined;
+    }
     const qLevel = searchParams.get("level");
     const qLang = searchParams.get("lang");
 
@@ -539,13 +547,22 @@ function ClassroomInner() {
       if (qLevel.includes("KG")) setSpeakingRate(0.9);
     }
     if (qLang) setLanguage(qLang);
-    if (qCourseId || qChapterId || qProgramId || qProgramTopicId || qCurriculum) {
+    if (
+      qCourseId ||
+      qChapterId ||
+      qProgramId ||
+      qProgramTopicId ||
+      qCurriculum ||
+      qFullChapter
+    ) {
       setCourseContext({
         courseId: qCourseId,
         chapterId: qChapterId,
         programId: qProgramId,
         programTopicId: qProgramTopicId,
         curriculumContext: qCurriculum,
+        fullChapter: qFullChapter,
+        chapterOutline: storedOutline,
       });
     }
 
@@ -689,6 +706,8 @@ function ClassroomInner() {
         programId?: string;
         programTopicId?: string;
         curriculumContext?: string;
+        fullChapter?: boolean;
+        chapterOutline?: string;
       }
     ) => {
       const activeMode = overrideMode || mode;
@@ -768,6 +787,11 @@ function ClassroomInner() {
               overrideExtras?.programTopicId || courseContext.programTopicId,
             curriculumContext:
               overrideExtras?.curriculumContext || courseContext.curriculumContext,
+            fullChapter: Boolean(
+              overrideExtras?.fullChapter ?? courseContext.fullChapter
+            ),
+            chapterOutline:
+              overrideExtras?.chapterOutline || courseContext.chapterOutline || "",
             model: getStoredModel(),
             attachment,
           }),
@@ -844,12 +868,19 @@ function ClassroomInner() {
 
     if (autostart === "1" && qTopic && !autostartTriggeredRef.current) {
       autostartTriggeredRef.current = true;
+      const isFullCh = searchParams.get("fullChapter") === "1";
+      const outline =
+        isFullCh && typeof window !== "undefined"
+          ? window.sessionStorage.getItem("ashuteacher_chapter_outline") || undefined
+          : undefined;
       startTeaching(qMode, qTopic, qSubject, {
         lang: searchParams.get("lang") || undefined,
         level: searchParams.get("level") || undefined,
         programId: searchParams.get("programId") || undefined,
         programTopicId: searchParams.get("programTopicId") || undefined,
         curriculumContext: searchParams.get("curriculum") || undefined,
+        fullChapter: isFullCh,
+        chapterOutline: outline,
       });
     }
   }, [searchParams, startTeaching]);

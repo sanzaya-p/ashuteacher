@@ -2,7 +2,7 @@ export interface ProgramTopic {
   id: string;
   title: string;
   summary: string;
-  tag?: string; // e.g. "High-Yield" | "Derivation" | "Numerical" | "Activity" | "Proof"
+  tag?: string;
   estimatedMinutes: number;
 }
 
@@ -37,6 +37,45 @@ export interface ExamPatternInfo {
   keyStrategy?: string;
 }
 
+export interface TreeOptionItem {
+  id: string;
+  code?: string;
+  label: string;
+  badge?: string;
+}
+
+export interface TreeChildrenPayload {
+  stepLabel: string;
+  placeholder: string;
+  isPaperLevel: boolean;
+  items: TreeOptionItem[];
+}
+
+export interface PaperSyllabusChapter {
+  id: string;
+  chapterNumber: number;
+  title: string;
+  weightage?: string;
+  estimatedMinutes: number;
+  summary: string;
+  syllabusTopics: string[];
+}
+
+export interface PaperSyllabusUnit {
+  id: string;
+  unitTitle: string;
+  chapters: PaperSyllabusChapter[];
+}
+
+export interface PaperSyllabusPayload {
+  paperTitle: string;
+  paperCode: string;
+  overview: string;
+  pedagogyStage: string;
+  examPattern: ExamPatternInfo;
+  units: PaperSyllabusUnit[];
+}
+
 export interface ResearchStage {
   id: string;
   stageNumber: number;
@@ -56,8 +95,8 @@ export interface ResearchBlueprint {
 }
 
 export const WORLD_COUNTRIES: string[] = [
-  "Global / International",
   "India",
+  "Global / International",
   "United States",
   "United Kingdom",
   "Canada",
@@ -74,62 +113,210 @@ export const WORLD_COUNTRIES: string[] = [
   "South Africa",
   "Kenya",
   "Brazil",
-  "Mexico",
   "Bangladesh",
   "Nepal",
   "Sri Lanka",
-  "Indonesia",
-  "Malaysia",
-  "Philippines",
-  "Vietnam",
-  "Thailand",
-  "Switzerland",
-  "Netherlands",
-  "Sweden",
-  "Italy",
-  "Spain",
-  "Ireland",
-  "New Zealand",
-  "Egypt",
-  "Ghana",
-  "Pakistan",
-  "Russia",
-  "Turkey",
-  "Israel",
+  // Full A-Z world countries
+  "Afghanistan",
+  "Albania",
+  "Algeria",
   "Argentina",
+  "Armenia",
+  "Austria",
+  "Azerbaijan",
+  "Bahrain",
+  "Belarus",
+  "Belgium",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brunei",
+  "Bulgaria",
+  "Cambodia",
+  "Cameroon",
   "Chile",
   "Colombia",
-  "Poland",
-  "Finland",
-  "Norway",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czechia",
   "Denmark",
-  "Belgium",
-  "Austria",
-  "Portugal",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "Estonia",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "Georgia",
+  "Ghana",
   "Greece",
-  "Qatar",
+  "Guatemala",
+  "Hungary",
+  "Iceland",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Jamaica",
+  "Jordan",
+  "Kazakhstan",
   "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Libya",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malaysia",
+  "Maldives",
+  "Malta",
+  "Mauritius",
+  "Mexico",
+  "Mongolia",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Netherlands",
+  "New Zealand",
+  "Norway",
   "Oman",
+  "Pakistan",
+  "Panama",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Senegal",
+  "Serbia",
+  "Slovakia",
+  "Slovenia",
+  "Spain",
+  "Sudan",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Uganda",
+  "Ukraine",
+  "Uruguay",
+  "Uzbekistan",
+  "Venezuela",
+  "Vietnam",
+  "Zambia",
+  "Zimbabwe",
 ];
 
-export const BOARDS_BY_COUNTRY: Record<string, string[]> = {
-  "Global / International": [
-    "IB Diploma Programme (IBDP)",
-    "IB Middle Years Programme (MYP)",
-    "IB Primary Years Programme (PYP)",
-    "Cambridge International AS & A Levels",
-    "Cambridge IGCSE / O-Level",
-    "Cambridge Primary & Lower Secondary",
-    "MIT OpenCourseWare / Global University STEM",
-    "Edexcel International (Pearson)",
+export type AcademyDomain =
+  | "UNIVERSITY"
+  | "SCHOOL_BOARD"
+  | "COMPETITIVE_EXAM"
+  | "CERTIFICATION";
+
+export const UNIVERSITIES_BY_COUNTRY: Record<string, string[]> = {
+  India: [
+    "IGNOU (Indira Gandhi National Open University)",
+    "University of Delhi (DU — NEP / UGCF)",
+    "IIT System (Indian Institutes of Technology)",
+    "NIT / AICTE B.Tech Model Curriculum",
+    "BPUT Odisha (Biju Patnaik University of Technology)",
+    "Utkal University / Sambalpur University / Berhampur University (Odisha)",
+    "JNU (Jawaharlal Nehru University)",
+    "BHU (Banaras Hindu University)",
+    "Anna University (Chennai)",
+    "University of Mumbai",
+    "University of Calcutta",
+    "Savitribai Phule Pune University (SPPU)",
+    "VTU (Visvesvaraya Technological University)",
+    "AKTU (Dr. A.P.J. Abdul Kalam Technical University)",
+    "NMC MBBS / AIIMS Medical Curriculum",
+    "UGC Model NEP-2020 Curriculum (BA / BSc / BCom / MA / MSc)",
+    "IISc Bangalore (Research & Integrated PhD)",
   ],
+  "United States": [
+    "MIT (Massachusetts Institute of Technology)",
+    "Stanford University",
+    "Harvard University",
+    "UC Berkeley (University of California)",
+    "Carnegie Mellon University (CMU)",
+    "Caltech (California Institute of Technology)",
+    "Georgia Tech",
+    "University of Texas / State University System",
+  ],
+  "United Kingdom": [
+    "The Open University (UK)",
+    "University of Oxford",
+    "University of Cambridge",
+    "Imperial College London",
+    "UCL (University College London)",
+    "University of Edinburgh",
+    "London School of Economics (LSE)",
+  ],
+  "Global / International": [
+    "MIT OpenCourseWare (Global)",
+    "ACM / IEEE Global Computer Science Curriculum",
+    "University of London International Programmes",
+    "Bologna Process European University Standard",
+  ],
+  Canada: [
+    "University of Toronto",
+    "University of British Columbia (UBC)",
+    "McGill University",
+    "University of Waterloo",
+  ],
+  Australia: [
+    "University of Melbourne",
+    "University of Sydney",
+    "Australian National University (ANU)",
+    "UNSW Sydney",
+  ],
+  Singapore: [
+    "NUS (National University of Singapore)",
+    "NTU (Nanyang Technological University)",
+  ],
+  Germany: [
+    "TU Munich (TUM)",
+    "RWTH Aachen University",
+    "ETH / German TU9 Engineering Standard",
+    "FernUniversität in Hagen (Open University)",
+  ],
+  China: [
+    "Tsinghua University",
+    "Peking University",
+    "Zhejiang / Shanghai Jiao Tong University",
+  ],
+  Japan: [
+    "The University of Tokyo (Todai)",
+    "Kyoto University",
+    "The Open University of Japan",
+  ],
+};
+
+export const BOARDS_BY_COUNTRY: Record<string, string[]> = {
   India: [
     "CBSE (Central Board of Secondary Education)",
-    "CISCE — ICSE (Up to Class 10) / ISC (Class 11–12)",
+    "CISCE — ICSE (KG–Class 10) & ISC (Class 11–12)",
     "NCERT National Curriculum Framework",
-    "CHSE / BSE Odisha (Odisha State Board)",
+    "BSE / CHSE Odisha (Odisha State Board)",
     "NIOS (National Institute of Open Schooling)",
-    "IGNOU (Indira Gandhi National Open University)",
     "MSBSHSE (Maharashtra State Board)",
     "UPMSP (Uttar Pradesh Board)",
     "Tamil Nadu State Board (TNDGE)",
@@ -140,96 +327,147 @@ export const BOARDS_BY_COUNTRY: Record<string, string[]> = {
     "RBSE (Rajasthan Board)",
     "GSEB (Gujarat Board)",
     "TSBIE / BIEAP (Telangana & Andhra Pradesh)",
-    "AICTE / B.Tech Engineering University Syllabus",
-    "NMC / MBBS Medical University Curriculum",
-    "UGC Undergraduate / Postgraduate (NEP 2020)",
-    "IIT / IISc Honours & Research Curriculum",
+    "PSEB / HBSE / MPBSE / JKBOSE / SEBA Assam",
+  ],
+  "Global / International": [
+    "IB Primary Years Programme (PYP — Ages 3–12)",
+    "IB Middle Years Programme (MYP — Ages 11–16)",
+    "IB Diploma Programme (IBDP — Ages 16–19)",
+    "Cambridge Primary & Lower Secondary",
+    "Cambridge IGCSE / O-Level",
+    "Cambridge International AS & A Levels",
+    "Pearson Edexcel International GCSE & A-Levels",
   ],
   "United States": [
-    "US Common Core State Standards (K–12)",
-    "Next Generation Science Standards (NGSS)",
-    "College Board AP (Advanced Placement)",
-    "Honors High School Curriculum",
-    "US Accredited Undergraduate (BS / BA)",
-    "MIT / Stanford / Ivy League Engineering & Science",
-    "US Graduate / PhD Coursework",
+    "US Common Core State Standards (Kindergarten – Grade 12)",
+    "Next Generation Science Standards (NGSS K–12)",
+    "College Board AP (Advanced Placement Courses)",
+    "Texas TEKS / California / New York Regents K–12",
   ],
   "United Kingdom": [
-    "UK National Curriculum (EYFS & Key Stages 1–3)",
-    "GCSE (AQA / Edexcel / OCR)",
-    "GCE A-Levels (AQA / Edexcel / OCR)",
-    "Scottish SQA (National 5 / Highers / Advanced Highers)",
-    "BTEC National Diploma",
-    "UK Russell Group / Oxbridge University",
+    "UK National Curriculum (Early Years EYFS & Key Stages 1–3)",
+    "GCSE (AQA / Edexcel / OCR — Years 10–11)",
+    "GCE A-Levels (AQA / Edexcel / OCR — Years 12–13)",
+    "Scottish SQA (Curriculum for Excellence / National 5 / Highers)",
   ],
   Canada: [
-    "Ontario Curriculum (OSSD — K–12)",
-    "British Columbia Curriculum",
-    "Alberta Education K–12",
-    "Quebec Ministère de l'Éducation (CEGEP)",
-    "Canadian U15 University Curriculum",
+    "Ontario Curriculum (Kindergarten – Grade 12 OSSD)",
+    "British Columbia K–12 Curriculum",
+    "Alberta K–12 Curriculum",
   ],
   Australia: [
     "Australian Curriculum (Foundation – Year 10)",
-    "NSW HSC (Higher School Certificate)",
-    "Victoria VCE",
-    "Queensland QCE / WACE / SACE",
-    "Group of Eight (Go8) University Curriculum",
+    "NSW HSC / Victoria VCE / Queensland QCE (Years 11–12)",
   ],
   Singapore: [
-    "Singapore MOE Primary (PSLE)",
-    "Singapore-Cambridge GCE O-Level / SEC",
-    "Singapore-Cambridge GCE A-Level (JC)",
-    "NUS / NTU University Curriculum",
+    "Singapore MOE Primary (P1–P6 / PSLE)",
+    "Singapore MOE Secondary (GCE O-Level / SEC)",
+    "Singapore Junior College (GCE A-Level)",
   ],
   Germany: [
-    "Gymnasium / Abitur (KMK Standards)",
-    "Realschule / Hauptschule",
-    "TU9 / German Technical University (Bachelor / Master)",
+    "Grundschule (Grades 1–4) & Gymnasium / Abitur (Grades 5–12/13)",
+    "Realschule / Gesamtschule",
   ],
   France: [
-    "Éducation Nationale (École / Collège)",
-    "Lycée — Baccalauréat Général & Technologique",
-    "Classes Préparatoires (CPGE)",
-    "Grandes Écoles / French University (Licence / Master)",
+    "Éducation Nationale — Maternelle, Élémentaire & Collège",
+    "Lycée — Baccalauréat Général & Spécialités",
   ],
-  Japan: [
-    "MEXT National Curriculum (Elementary / Junior High / High School)",
-    "Japanese National University (Todai / Kyodai STEM)",
+};
+
+export const EXAMS_BY_COUNTRY: Record<string, string[]> = {
+  India: [
+    "UPSC Civil Services Examination (CSE — IAS / IPS / IFS)",
+    "JEE Main (NTA Engineering Entrance)",
+    "JEE Advanced (IIT Entrance)",
+    "NEET UG (Medical Entrance)",
+    "GATE (Graduate Aptitude Test in Engineering)",
+    "CUET UG & CUET PG (Central Universities Entrance)",
+    "CAT (Common Admission Test — IIM MBA)",
+    "OPSC OAS (Odisha Civil Services Examination)",
+    "State PSCs (UPPSC / BPSC / MPSC / WBCS / TNPSC / KPSC / RAS)",
+    "CLAT (Common Law Admission Test)",
+    "NDA & NA / CDS (Defence Services)",
+    "SSC CGL / CHSL (Staff Selection Commission)",
+    "IBPS PO / SBI PO / RBI Grade B (Banking & Finance)",
+    "UGC NET / CSIR NET (JRF & Assistant Professor)",
+    "ICAI CA (Foundation / Intermediate / Final)",
+    "ICSI CS / ICMAI CMA",
+    "RRB NTPC / RRB JE / ESE (Engineering Services)",
+    "NEET PG / INI-CET (Medical PG)",
+    "Olympiads (IOQM / RMO / INMO / NSEP / NSEC / NSO)",
+    "CTET / OSSTET / State TET (Teaching Eligibility)",
+  ],
+  "Global / International": [
+    "GRE General & GRE Subject Tests",
+    "GMAT Focus Edition",
+    "SAT (Digital SAT)",
+    "ACT",
+    "IELTS Academic & General Training",
+    "TOEFL iBT",
+    "CFA (Chartered Financial Analyst — Levels I, II, III)",
+    "FRM (Financial Risk Manager — Part I & II)",
+    "ACCA / USCPA Global Accounting",
+    "International Olympiads (IMO / IPhO / IChO / IOI / IBO)",
+    "JLPT (Japanese-Language Proficiency N5–N1)",
+    "DELF / DALF (French) & Goethe-Zertifikat (German)",
+  ],
+  "United States": [
+    "SAT (Digital SAT)",
+    "ACT",
+    "MCAT (Medical College Admission Test)",
+    "USMLE (Step 1, Step 2 CK, Step 3)",
+    "LSAT (Law School Admission Test)",
+    "GRE General & Subject Tests",
+    "GMAT Focus Edition",
+    "AP (Advanced Placement) Examinations",
+    "FE & PE Engineering Licensure Exams",
+    "USCPA (Uniform CPA Examination)",
+    "Bar Exam (UBE / MBE) & NCLEX-RN",
+    "AMC 8 / AMC 10 / AMC 12 / AIME / Putnam",
+  ],
+  "United Kingdom": [
+    "UCAT (University Clinical Aptitude Test)",
+    "LNAT (National Admissions Test for Law)",
+    "TMUA / MAT / STEP (Oxbridge Mathematics & CS)",
+    "ESAT / PAT (Oxbridge Engineering & Physics)",
+    "11+ Selective Entrance Exam",
+    "PLAB 1 & 2 / UKMLA & MRCP",
+    "SQE 1 & SQE 2 (Solicitors Qualifying Examination)",
   ],
   China: [
-    "MOE Compulsory Education & Senior High Curriculum",
-    "Chinese Double First-Class University (Tsinghua / Peking)",
+    "Gaokao (National College Entrance Examination)",
+    "Kaoyan (National Postgraduate Entrance Examination)",
+    "Guokao (National Civil Service Examination)",
   ],
-  "United Arab Emirates": [
-    "UAE Ministry of Education (MOE) Stream",
-    "CBSE Gulf / International Indian Schools",
-    "British (IGCSE / A-Level) & IB UAE Schools",
-    "American Curriculum UAE",
+  Japan: [
+    "Common Test for University Admissions (Kyotsu Test)",
+    "National Civil Service Exam Japan",
+    "JLPT (Levels N5–N1)",
   ],
-  Nigeria: [
-    "NERDC / WAEC (WASSCE) Senior Secondary",
-    "NECO Curriculum",
-    "NUC Accredited Nigerian University",
+  "South Korea": [
+    "CSAT / Suneung (College Scholastic Ability Test)",
+    "PSAT / Civil Service Exam Korea",
+    "TOPIK I & II",
   ],
-  Bangladesh: [
-    "NCTB National Curriculum (SSC & HSC)",
-    "English Version / Madrasah / University UGC",
-  ],
-  Nepal: [
-    "CDC / NEB National Examinations Board (SEE & Class 11–12)",
-    "Tribhuvan / Kathmandu University",
-  ],
-  "Sri Lanka": [
-    "NIE Sri Lanka GCE O-Level & GCE A-Level",
-    "Sri Lankan State University UGC",
+};
+
+export const CERTIFICATIONS_BY_COUNTRY: Record<string, string[]> = {
+  "Global / International": [
+    "AWS Certified Solutions Architect / AI Practitioner",
+    "Google Cloud Professional Architect / ML Engineer",
+    "Microsoft Azure Solutions Architect / AI Engineer",
+    "Linux Foundation CKA / CKAD (Kubernetes)",
+    "Cisco CCNA / CCNP & CompTIA Security+ / OSCP",
+    "PMP (Project Management Professional)",
+    "Full-Stack Web, AI & Systems Engineering Mastery",
+    "Data Science, Deep Learning & Generative AI Track",
   ],
 };
 
 export interface AcademicGradeOption {
   id: string;
   label: string;
-  group: "Early Childhood" | "Primary & Middle" | "High School / Board" | "Higher Education & Research";
+  group: string;
   pedagogyStage: string;
 }
 
@@ -238,284 +476,15 @@ export const ACADEMIC_GRADES: AcademicGradeOption[] = [
   { id: "Class 1 / Grade 1", label: "Class 1 / Grade 1", group: "Early Childhood", pedagogyStage: "KG & Early Wonder" },
   { id: "Class 2 / Grade 2", label: "Class 2 / Grade 2", group: "Early Childhood", pedagogyStage: "KG & Early Wonder" },
   { id: "Class 3 / Grade 3", label: "Class 3 / Grade 3", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
-  { id: "Class 4 / Grade 4", label: "Class 4 / Grade 4", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
-  { id: "Class 5 / Grade 5", label: "Class 5 / Grade 5", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
   { id: "Class 6 / Grade 6", label: "Class 6 / Grade 6", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
-  { id: "Class 7 / Grade 7", label: "Class 7 / Grade 7", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
   { id: "Class 8 / Grade 8", label: "Class 8 / Grade 8", group: "Primary & Middle", pedagogyStage: "Primary & Middle School" },
-  { id: "Class 9 / Grade 9", label: "Class 9 / Grade 9 (Freshman)", group: "High School / Board", pedagogyStage: "Intermediate" },
-  { id: "Class 10 / Grade 10 (Board / GCSE)", label: "Class 10 / Grade 10 (Board / Matric / GCSE)", group: "High School / Board", pedagogyStage: "Intermediate" },
-  { id: "Class 11 / Grade 11 (AS / Junior)", label: "Class 11 / Grade 11 (Plus-Two Yr 1 / AS-Level)", group: "High School / Board", pedagogyStage: "Intermediate" },
-  { id: "Class 12 / Grade 12 (Board / A-Level / Senior)", label: "Class 12 / Grade 12 (Board / A-Level / IB Year 2)", group: "High School / Board", pedagogyStage: "Intermediate" },
-  { id: "Undergraduate — Year 1 (Sem 1–2)", label: "🎓 Undergraduate — Year 1 (Semesters 1–2)", group: "Higher Education & Research", pedagogyStage: "Advanced" },
-  { id: "Undergraduate — Year 2 (Sem 3–4)", label: "🎓 Undergraduate — Year 2 (Semesters 3–4)", group: "Higher Education & Research", pedagogyStage: "Advanced" },
-  { id: "Undergraduate — Year 3 (Sem 5–6)", label: "🎓 Undergraduate — Year 3 (Semesters 5–6)", group: "Higher Education & Research", pedagogyStage: "Advanced" },
-  { id: "Undergraduate — Year 4 / Honours (Sem 7–8)", label: "🎓 Undergraduate — Year 4 / Final Year", group: "Higher Education & Research", pedagogyStage: "Advanced" },
-  { id: "Postgraduate / Master's (M.Sc / M.Tech / MBA / MA)", label: "🏛️ Postgraduate / Master's Degree", group: "Higher Education & Research", pedagogyStage: "Expert" },
-  { id: "Doctoral / PhD / MIT Research Level", label: "🔬 Doctoral / PhD / MIT-Level Frontier Research", group: "Higher Education & Research", pedagogyStage: "Expert" },
+  { id: "Class 10 / Grade 10 (Board / GCSE)", label: "Class 10 / Grade 10 (Board / GCSE)", group: "High School / Board", pedagogyStage: "Intermediate" },
+  { id: "Class 11 / Grade 11 (AS / Junior)", label: "Class 11 / Grade 11", group: "High School / Board", pedagogyStage: "Intermediate" },
+  { id: "Class 12 / Grade 12 (Board / A-Level / Senior)", label: "Class 12 / Grade 12", group: "High School / Board", pedagogyStage: "Intermediate" },
+  { id: "Undergraduate", label: "Undergraduate", group: "Higher Education & Research", pedagogyStage: "Advanced" },
+  { id: "Postgraduate / Master's", label: "Postgraduate / Master's", group: "Higher Education & Research", pedagogyStage: "Expert" },
+  { id: "Doctoral / PhD / MIT Research Level", label: "Doctoral / PhD / MIT Research", group: "Higher Education & Research", pedagogyStage: "Expert" },
 ];
-
-export interface StreamPreset {
-  id: string;
-  label: string;
-  subjects: string[];
-}
-
-export function getStreamPresetsForGrade(gradeId: string): StreamPreset[] {
-  if (gradeId.includes("KG") || gradeId.includes("Class 1 ") || gradeId.includes("Class 2 ")) {
-    return [
-      {
-        id: "early-all",
-        label: "🌈 Complete Early Wonder Pack",
-        subjects: [
-          "Numbers, Counting & Shapes Fun",
-          "Phonics, Reading & Storytelling",
-          "Nature, Animals & World Around Us",
-          "Logic Puzzles & Creative Curiosity",
-        ],
-      },
-    ];
-  }
-
-  if (
-    gradeId.includes("Class 3") ||
-    gradeId.includes("Class 4") ||
-    gradeId.includes("Class 5")
-  ) {
-    return [
-      {
-        id: "primary-core",
-        label: "📘 Full Primary Core Subjects",
-        subjects: [
-          "Mathematics",
-          "Environmental Studies (EVS) / General Science",
-          "English Language & Grammar",
-          "Computer & Logical Thinking",
-        ],
-      },
-    ];
-  }
-
-  if (
-    gradeId.includes("Class 6") ||
-    gradeId.includes("Class 7") ||
-    gradeId.includes("Class 8") ||
-    gradeId.includes("Class 9") ||
-    gradeId.includes("Class 10")
-  ) {
-    return [
-      {
-        id: "sec-all",
-        label: "📚 Complete All-Subject Board Track",
-        subjects: [
-          "Mathematics",
-          "Science (Physics, Chemistry & Biology)",
-          "Social Science (History, Geography, Civics & Economics)",
-          "English Literature & Communicative Grammar",
-          "Computer Applications / Artificial Intelligence",
-        ],
-      },
-      {
-        id: "sec-stem",
-        label: "🔬 Science & Mathematics Focus",
-        subjects: ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science"],
-      },
-    ];
-  }
-
-  if (gradeId.includes("Class 11") || gradeId.includes("Class 12")) {
-    return [
-      {
-        id: "pcm",
-        label: "⚛️ Science — PCM + CS (Engineering / Physical Sciences)",
-        subjects: ["Physics", "Chemistry", "Mathematics", "Computer Science", "English Core"],
-      },
-      {
-        id: "pcb",
-        label: "🧬 Science — PCB (Medical / Life Sciences)",
-        subjects: ["Physics", "Chemistry", "Biology", "English Core"],
-      },
-      {
-        id: "pcmb",
-        label: "🔬 Science — PCMB (Full 4-Science Stream)",
-        subjects: ["Physics", "Chemistry", "Mathematics", "Biology"],
-      },
-      {
-        id: "commerce",
-        label: "📊 Commerce & Finance Stream",
-        subjects: ["Accountancy", "Business Studies", "Economics", "Applied Mathematics", "English Core"],
-      },
-      {
-        id: "humanities",
-        label: "🌍 Humanities / Arts Stream",
-        subjects: ["History", "Political Science", "Geography", "Economics", "Sociology / Psychology"],
-      },
-    ];
-  }
-
-  // Higher Ed / Undergraduate / Master's / Doctoral
-  return [
-    {
-      id: "cs-ai",
-      label: "💻 Computer Science, AI & Systems",
-      subjects: [
-        "Data Structures & Algorithms",
-        "Operating Systems & Computer Networks",
-        "Database Systems",
-        "Machine Learning & Deep Learning",
-      ],
-    },
-    {
-      id: "ece-ee",
-      label: "⚡ Electrical, Electronics & VLSI",
-      subjects: [
-        "Signals & Systems",
-        "Analog & Digital Electronics",
-        "Control Systems",
-        "Electromagnetics & Communication",
-      ],
-    },
-    {
-      id: "mech-civil",
-      label: "⚙️ Mechanical & Core Engineering",
-      subjects: [
-        "Engineering Mechanics & Strength of Materials",
-        "Thermodynamics & Fluid Mechanics",
-        "Heat Transfer & Machine Design",
-      ],
-    },
-    {
-      id: "pure-math-phys",
-      label: "📐 Pure Mathematics & Theoretical Physics",
-      subjects: [
-        "Linear Algebra & Multivariable Calculus",
-        "Real & Complex Analysis",
-        "Classical & Quantum Mechanics",
-        "Statistical Mechanics & Electrodynamics",
-      ],
-    },
-    {
-      id: "med-bio",
-      label: "🩺 Medicine (MBBS / Pre-Med) & Biotechnology",
-      subjects: [
-        "Human Anatomy & Physiology",
-        "Biochemistry & Molecular Biology",
-        "Pathology, Pharmacology & Microbiology",
-      ],
-    },
-    {
-      id: "econ-mba",
-      label: "📈 Economics, Finance & Management (MBA / BBA)",
-      subjects: [
-        "Microeconomics & Macroeconomics",
-        "Corporate Finance & Financial Accounting",
-        "Econometrics & Quantitative Methods",
-        "Strategic Management",
-      ],
-    },
-  ];
-}
-
-export const EXAMS_BY_COUNTRY: Record<string, string[]> = {
-  "Global / International": [
-    "GRE (Graduate Record Examinations)",
-    "GMAT Focus Edition",
-    "SAT (Scholastic Assessment Test)",
-    "ACT",
-    "IELTS Academic & General",
-    "TOEFL iBT",
-    "CFA (Chartered Financial Analyst — Level I / II / III)",
-    "FRM (Financial Risk Manager)",
-    "ACCA / CPA Global Accounting",
-    "PMP (Project Management Professional)",
-    "International Mathematical / Physics / Informatics Olympiad (IMO / IPhO / IOI)",
-    "AWS / Google Cloud / Azure Solutions Architect",
-    "JLPT (Japanese-Language Proficiency N5–N1)",
-    "DELF / DALF (French) & Goethe-Zertifikat (German)",
-  ],
-  India: [
-    "JEE Main (NTA Engineering Entrance)",
-    "JEE Advanced (IIT Entrance)",
-    "NEET UG (Medical Entrance)",
-    "CUET UG / PG (Central Universities Entrance)",
-    "UPSC Civil Services — IAS / IPS (Prelims + Mains)",
-    "GATE (Graduate Aptitude Test in Engineering)",
-    "CAT (Common Admission Test — IIM MBA)",
-    "CLAT (Common Law Admission Test)",
-    "NDA & NA (National Defence Academy)",
-    "CDS (Combined Defence Services)",
-    "SSC CGL (Staff Selection Commission)",
-    "IBPS PO / SBI PO (Banking Exams)",
-    "RRB NTPC / Railways",
-    "UGC NET / CSIR NET (JRF & Assistant Professor)",
-    "ICAI CA (Foundation / Intermediate / Final)",
-    "OPSC OAS (Odisha Civil Services)",
-    "State PSC (UPPSC / BPSC / MPSC / WBCS / KPSC / TNPSC)",
-    "IISER IAT /KVPY / Olympiads (IOQM / NSEP / NSEC)",
-    "CTET / State TET (Teaching Eligibility)",
-  ],
-  "United States": [
-    "SAT (Digital SAT)",
-    "ACT",
-    "MCAT (Medical College Admission Test)",
-    "USMLE Step 1 / Step 2 CK",
-    "LSAT (Law School Admission Test)",
-    "GRE General & Subject Tests",
-    "GMAT Focus Edition",
-    "AP (Advanced Placement) Exams",
-    "FE / PE Engineering Licensure Exam",
-    "USCPA (Certified Public Accountant)",
-    "NCLEX-RN (Nursing Licensure)",
-    "AMC 10 / AMC 12 / AIME (Math Competitions)",
-  ],
-  "United Kingdom": [
-    "UCAT (University Clinical Aptitude Test)",
-    "LNAT (National Admissions Test for Law)",
-    "TMUA / MAT / STEP (Oxbridge Mathematics & CS)",
-    "ESAT / PAT (Oxford & Cambridge Engineering/Physics)",
-    "11+ Grammar School Entrance",
-    "PLAB 1 & 2 / UKMLA (Medical Licensing)",
-    "SQE (Solicitors Qualifying Examination)",
-  ],
-  China: [
-    "Gaokao (National College Entrance Examination)",
-    "Kaoyan (National Postgraduate Entrance Examination)",
-    "Guokao (National Civil Service Exam)",
-  ],
-  Japan: [
-    "Common Test for University Admissions (Kyotsu Test)",
-    "Todai / Imperial University Secondary Exam",
-    "EJU (Examination for Japanese University Admission)",
-    "JLPT (N5–N1)",
-  ],
-  "South Korea": [
-    "CSAT / Suneung (College Scholastic Ability Test)",
-    "TOPIK (Test of Proficiency in Korean)",
-  ],
-  France: [
-    "Concours Grandes Écoles (Polytechnique / ENS / Centrale)",
-    "PASS / LAS (Medical Entrance)",
-  ],
-  Germany: [
-    "TMS (Test für Medizinische Studiengänge)",
-    "TestAS (Test for Academic Studies)",
-    "Staatsexamen (Medicine / Law)",
-  ],
-  Australia: [
-    "GAMSAT (Graduate Medical School Admissions Test)",
-    "UCAT ANZ",
-    "NAPLAN & Selective School Placement",
-  ],
-  Canada: [
-    "MCAT Canada",
-    "LSAT Canada",
-    "CASPer & MCCQE (Medical Council of Canada)",
-  ],
-  Singapore: [
-    "PSLE (Primary School Leaving Examination)",
-    "GCE O-Level & GCE A-Level Singapore",
-  ],
-};
 
 export const RESEARCH_TIERS = [
   {

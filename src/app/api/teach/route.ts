@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
       programId,
       programTopicId,
       curriculumContext = "",
+      fullChapter = false,
+      chapterOutline = "",
       model: requestedModel,
       attachment,
     } = body;
@@ -68,27 +70,49 @@ export async function POST(req: NextRequest) {
       languageCode: language,
       subject,
       curriculumContext: curriculumContext ? String(curriculumContext) : undefined,
+      fullChapter: Boolean(fullChapter),
     });
+
+    const chapterSyllabusBlock =
+      fullChapter && chapterOutline
+        ? `\nCOMPLETE OFFICIAL CHAPTER SYLLABUS TOPICS TO TEACH IN FULL (Teach EVERY topic below thoroughly in sequence in this single master lecture — do not skip any):\n${String(
+            chapterOutline
+          )}\n`
+        : "";
 
     let userPrompt = "";
     if (mode === "solve") {
-      userPrompt = `Solve all questions/problems thoroughly from the material below.\nTopic/Title: ${effectiveTitle}\n\n${
+      userPrompt = `Solve all questions/problems thoroughly (and work through representative exam/university problems for every sub-topic if teaching a chapter) from the material below.\nTopic/Title: ${effectiveTitle}${chapterSyllabusBlock}\n\n${
         sourceContent
           ? `Extracted Text:\n${sourceContent}`
+          : chapterOutline
+          ? "Generate and solve step-by-step university/exam-grade numericals & questions covering every topic in the chapter syllabus above."
           : "Inspect the attached document/image carefully."
       }`;
     } else if (mode === "story") {
-      userPrompt = `Create an unforgettable educational story teaching:\nTopic: ${effectiveTitle}${
+      userPrompt = `Create an unforgettable educational story teaching the ${
+        fullChapter ? "ENTIRE chapter and all its syllabus concepts" : "topic"
+      }:\nTopic: ${effectiveTitle}${
         subject ? ` (${subject})` : ""
-      }\n\n${sourceContent ? `Reference Material:\n${sourceContent}` : ""}`;
+      }${chapterSyllabusBlock}\n\n${
+        sourceContent ? `Reference Material:\n${sourceContent}` : ""
+      }`;
     } else if (mode === "cheatsheet") {
-      userPrompt = `Create a comprehensive, structured Formula & Principle Cheat Sheet for:\nTopic: ${effectiveTitle}${
+      userPrompt = `Create a comprehensive, structured Formula & Principle Cheat Sheet covering ${
+        fullChapter ? "every single topic of this entire chapter" : "this topic"
+      }:\nTopic: ${effectiveTitle}${
         subject ? ` (${subject})` : ""
-      }\n\n${sourceContent ? `Source Material:\n${sourceContent}` : ""}`;
+      }${chapterSyllabusBlock}\n\n${
+        sourceContent ? `Source Material:\n${sourceContent}` : ""
+      }`;
     } else {
-      userPrompt = `Teach an engaging, comprehensive blackboard lesson on:\nTopic: ${effectiveTitle}${
-        subject ? `\nSubject: ${subject}` : ""
-      }\n\n${
+      userPrompt = `Teach an engaging, comprehensive ${
+        fullChapter
+          ? "END-TO-END FULL-CHAPTER blackboard lecture covering every sub-topic of"
+          : "blackboard lesson on"
+      }:\nTopic: ${effectiveTitle}${
+        subject ? `\nSubject / Paper: ${subject}` : ""
+      }${chapterSyllabusBlock}\n\n${
         sourceContent
           ? `Base your lesson thoroughly on this source material (expanding and clarifying concepts where helpful):\n\n${sourceContent}`
           : ""

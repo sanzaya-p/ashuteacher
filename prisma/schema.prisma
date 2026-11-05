@@ -235,3 +235,12 @@ model ResearchProject {
 
   @@index([userId, updatedAt])
 }
+
+model CatalogCache {
+  id          String   @id @default(cuid())
+  cacheKey    String   @unique
+  nodeType    String   // CHILDREN | SYLLABUS
+  payloadJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
