@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
+  buildLanguageDirective,
   COURSE_SYLLABUS_SCHEMA,
   createGeminiClient,
   getLanguageName,
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
     const ai = createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
     const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
@@ -72,7 +74,9 @@ export async function POST(req: NextRequest) {
       model,
       contents: `Design a structured, progressive ${moduleCount}-module course curriculum (with 3–4 chapters per module) for a ${level}-level learner in ${languageName}.
 Learning Goal / Topic: "${goal}"${subject ? `\nSubject Area: ${subject}` : ""}
-Ensure module IDs are mod-1, mod-2... and chapter IDs are unique like ch-1-1, ch-1-2, etc.`,
+Ensure module IDs are mod-1, mod-2... and chapter IDs are unique like ch-1-1, ch-1-2, etc.
+
+${languageDirective}`,
       config: {
         responseMimeType: "application/json",
         responseJsonSchema: COURSE_SYLLABUS_SCHEMA,

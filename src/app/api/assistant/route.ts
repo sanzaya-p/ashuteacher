@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import {
+  buildLanguageDirective,
   createGeminiClient,
-  getLanguageName,
   resolveModelName,
 } from "@/lib/gemini";
 import { requireAuthUser } from "@/lib/auth";
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         : null;
     const ai = createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
-    const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    const systemInstruction = `You are a brilliant teaching assistant. Respond strictly in ${languageName} at the ${level} level. Use clean GitHub-Flavored Markdown and proper LaTeX ($...$ for inline math, $$...$$ for block equations).`;
+    const systemInstruction = `You are a brilliant teaching assistant pitched at the ${level} level. Use clean GitHub-Flavored Markdown and proper LaTeX ($...$ for inline math, $$...$$ for block equations).\n\n${languageDirective}`;
 
     const responseStream = await ai.models.generateContentStream({
       model,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
+  buildLanguageDirective,
   createGeminiClient,
   FLASHCARD_JSON_SCHEMA,
   getLanguageName,
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
     const ai = createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
     const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
@@ -71,7 +73,9 @@ export async function POST(req: NextRequest) {
       contents: `Create ${count} high-retention active-recall flashcards in ${languageName} for a ${level}-level student.
 Topic: ${topic || "Study Material"}
 ${sourceContent ? `\nSource Material:\n${String(sourceContent).slice(0, 28000)}` : ""}
-Use $...$ LaTeX for mathematical expressions where needed.`,
+Use $...$ LaTeX for mathematical expressions where needed.
+
+${languageDirective}`,
       config: {
         responseMimeType: "application/json",
         responseJsonSchema: FLASHCARD_JSON_SCHEMA,

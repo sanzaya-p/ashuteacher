@@ -1,24 +1,45 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { SUPPORTED_LANGUAGES } from "./constants";
+import { SUPPORTED_LANGUAGES, parseLanguageAndScript } from "./constants";
 
 export function getLanguageName(langCode: string): string {
-  const raw = (langCode || "").trim();
-  if (!raw) return "English (US)";
-  if (raw.startsWith("custom:")) {
-    return raw.slice("custom:".length).trim() || "English";
+  const parsed = parseLanguageAndScript(langCode);
+  const rawBase = parsed.baseCode;
+  if (!rawBase) return "English (US)";
+  if (rawBase.startsWith("custom:")) {
+    return parsed.languageName || "English";
   }
   const matched = SUPPORTED_LANGUAGES.find(
-    (l) => l.code.toLowerCase() === raw.toLowerCase()
+    (l) => l.code.toLowerCase() === rawBase.toLowerCase()
   );
   if (matched) return matched.name;
   try {
     const dn = new Intl.DisplayNames(["en"], { type: "language" });
-    const resolved = dn.of(raw);
+    const resolved = dn.of(rawBase);
     if (resolved) return resolved;
   } catch {
     // Ignore invalid BCP-47 tags and pass raw string through
   }
-  return raw;
+  return parsed.languageName;
+}
+
+export function buildLanguageDirective(langCode: string): string {
+  const parsed = parseLanguageAndScript(langCode);
+  const langName = getLanguageName(langCode);
+  const isExplicitRoman =
+    parsed.baseCode === "hinglish" || parsed.scriptMode === "roman";
+
+  if (isExplicitRoman) {
+    return `LANGUAGE & SCRIPT DIRECTIVE (CRITICAL):
+- Language: Teach in natural, conversational ${langName}.
+- Writing Script: Write in clean Romanized Latin script (phonetic ${langName} in English letters) as requested by the learner.`;
+  }
+
+  return `LANGUAGE & WRITING SCRIPT DIRECTIVE (CRITICAL — STRICTLY ENFORCE):
+- Spoken Language / Dialect: Teach ENTIRELY in authentic ${langName} (including all section headings, explanations, analogies, and questions).${
+    parsed.dialectHint ? `\n- Regional Dialect Authenticity: ${parsed.dialectHint}` : ""
+  }
+- Mandatory Writing Script: Write ALL prose, headings, and explanations in ${parsed.effectiveScriptLabel}.
+- STRICT SCRIPT PURITY & ANTI-ROMANIZATION RULE: If the target script is non-Latin (such as Odia ଓଡ଼ିଆ, Devanagari देवनागरी, Bengali বাংলা, Ol Chiki ᱚᱞ ᱪᱤᱠᱤ, Tamil, Telugu, Kannada, Malayalam, Gujarati, Gurmukhi, Urdu/Arabic, CJK, Cyrillic, etc.), NEVER write sentences in Romanized English letters/transliteration (for example, NEVER write "Aji aame padhma" in Latin letters when teaching in Sambalpuri/Odia — write "ଆଜି ଆମେ ପଢ଼୍ମା" in Odia script!), and NEVER mix stray words from another Indian script (for example, never drop a Devanagari word like "कलम" inside an Odia-script sentence). Only mathematical LaTeX ($x$, $\\frac{dy}{dx}$), code syntax, and brief English technical terms in parentheses (e.g., ଅବକଳନ (Differentiation)) may use Latin letters.`;
 }
 
 const FALLBACK_MODELS = [
@@ -104,16 +125,18 @@ export function buildTeachingSystemPrompt(params: {
   languageCode: string;
   subject?: string;
 }): string {
-  const languageName = getLanguageName(params.languageCode);
+  const languageDirective = buildLanguageDirective(params.languageCode);
   const subjectCtx = params.subject ? ` specializing in ${params.subject}` : "";
 
   const mathAndDiagramRules = `
 FORMATTING RULES (CRITICAL):
-- Format cleanly in GitHub-Flavored Markdown with clear headings (##, ###), bullet points, bold key terms, and tables where helpful.
+- Format cleanly in GitHub-Flavored Markdown with clear headings (##, ###), bullet points, bold key terms, and tables where helpful. Translate all section headings naturally into the target language and script!
 - Use proper LaTeX for ALL mathematical notation: $...$ for inline math and $$...$$ on its own lines for block equations.
 - For multi-line derivations, use \\begin{aligned} ... \\end{aligned} inside $$...$$.
 - Where a concept benefits from a visual mental model, process flow, or hierarchy, include ONE clean \`\`\`mermaid\`\`\` diagram using \`flowchart TD\` or \`flowchart LR\` (always wrap node labels containing parentheses or special characters in double quotes, e.g. A["Force (N)"]).
-- Write the ENTIRE response in ${languageName}, pitched precisely for a ${params.level}-level learner.`;
+- Pitch explanations precisely for a ${params.level}-level learner.
+
+${languageDirective}`;
 
   switch (params.mode) {
     case "story":

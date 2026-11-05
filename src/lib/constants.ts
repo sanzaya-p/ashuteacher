@@ -4,14 +4,41 @@ export interface SupportedLanguage {
   flag: string;
   group: "indian" | "international";
   /**
+   * Authentic native or parent derived script used on the blackboard by default
+   * (e.g. Sambalpuri -> "Odia script (ଓଡ଼ିଆ ଲିପି)", Bhojpuri -> "Devanagari script (देवनागरी लिपि)").
+   */
+  nativeScript?: string;
+  /**
+   * Optional linguistic guidance so regional languages/dialects retain authentic grammar & idioms.
+   */
+  dialectHint?: string;
+  /**
    * ONLY list fallback BCP-47 voice prefixes that use the EXACT SAME phonetic script
-   * (e.g. Devanagari -> hi-IN, Bengali-Assamese -> bn-IN).
+   * (e.g. Devanagari -> hi-IN, Odia -> or-IN, Bengali-Assamese -> bn-IN).
    * Never list cross-script fallbacks (e.g. Ol Chiki -> hi-IN), or browser TTS will
    * read only English words and silently skip all native script characters!
    */
   fallbackVoiceLangs?: string[];
   scriptFont?: string;
 }
+
+export const WRITING_SCRIPT_OPTIONS = [
+  { id: "auto", label: "Auto: Native / Derived Script (Recommended)", voiceLangs: [] as string[] },
+  { id: "odia", label: "Odia Script (ଓଡ଼ିଆ ଲିପି)", voiceLangs: ["or-IN"] },
+  { id: "devanagari", label: "Devanagari Script (देवनागरी लिपि)", voiceLangs: ["hi-IN", "mr-IN"] },
+  { id: "bengali", label: "Bengali-Assamese Script (বাংলা / অসমীয়া)", voiceLangs: ["bn-IN", "bn-BD"] },
+  { id: "olchiki", label: "Ol Chiki Script (ᱚᱞ ᱪᱤᱠᱤ)", voiceLangs: [] as string[] },
+  { id: "gurmukhi", label: "Gurmukhi Script (ਗੁਰਮੁਖੀ)", voiceLangs: ["pa-IN"] },
+  { id: "gujarati", label: "Gujarati Script (ગુજરાતી)", voiceLangs: ["gu-IN"] },
+  { id: "tamil", label: "Tamil Script (தமிழ்)", voiceLangs: ["ta-IN"] },
+  { id: "telugu", label: "Telugu Script (తెలుగు)", voiceLangs: ["te-IN"] },
+  { id: "kannada", label: "Kannada Script (ಕನ್ನಡ)", voiceLangs: ["kn-IN"] },
+  { id: "malayalam", label: "Malayalam Script (മലയാളം)", voiceLangs: ["ml-IN"] },
+  { id: "perso-arabic", label: "Perso-Arabic / Urdu Script (اردو / العربية)", voiceLangs: ["ur-IN", "ur-PK"] },
+  { id: "roman", label: "Romanized / Phonetic (Latin ABC)", voiceLangs: ["en-IN", "en-US"] },
+] as const;
+
+export type WritingScriptMode = (typeof WRITING_SCRIPT_OPTIONS)[number]["id"];
 
 export const AI_TTS_VOICES = [
   { id: "ai:Kore", voiceName: "Kore", label: "✨ AI Neural — Kore (Warm Professor)" },
@@ -20,31 +47,51 @@ export const AI_TTS_VOICES = [
 ] as const;
 
 export const INDIAN_LANGUAGES: SupportedLanguage[] = [
-  { code: "en-IN", name: "English (India)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["en-US", "en-GB"] },
-  { code: "hi-IN", name: "Hindi (हिन्दी)", flag: "🇮🇳", group: "indian" },
-  { code: "or-IN", name: "Odia (ଓଡ଼ିଆ)", flag: "🇮🇳", group: "indian", scriptFont: "'Noto Sans Oriya', sans-serif" },
-  { code: "bn-IN", name: "Bengali (বাংলা)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["bn-BD"] },
-  { code: "te-IN", name: "Telugu (తెలుగు)", flag: "🇮🇳", group: "indian" },
-  { code: "mr-IN", name: "Marathi (मराठी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "ta-IN", name: "Tamil (தமிழ்)", flag: "🇮🇳", group: "indian" },
-  { code: "gu-IN", name: "Gujarati (ગુજરાતી)", flag: "🇮🇳", group: "indian" },
-  { code: "ur-IN", name: "Urdu (اردو)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ur-PK"] },
-  { code: "kn-IN", name: "Kannada (ಕನ್ನಡ)", flag: "🇮🇳", group: "indian" },
-  { code: "ml-IN", name: "Malayalam (മലയാളം)", flag: "🇮🇳", group: "indian" },
-  { code: "pa-IN", name: "Punjabi (ਪੰਜਾਬੀ)", flag: "🇮🇳", group: "indian" },
-  { code: "as-IN", name: "Assamese (অসমীয়া)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["bn-IN", "bn-BD"] },
-  { code: "mai-IN", name: "Maithili (मैथिली)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "sa-IN", name: "Sanskrit (संस्कृतम्)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "ne-IN", name: "Nepali (नेपाली)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["ne-NP", "hi-IN"] },
-  { code: "kok-IN", name: "Konkani (कोंकणी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["mr-IN", "hi-IN"] },
-  { code: "doi-IN", name: "Dogri (डोगरी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "brx-IN", name: "Bodo (बड़ो)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "mni-IN", name: "Manipuri / Meitei (মৈতৈলোন্)", flag: "🇮🇳", group: "indian" },
-  { code: "sat-IN", name: "Santali (ᱥᱟᱱᱛᱟᱲᱤ)", flag: "🇮🇳", group: "indian" },
-  { code: "ks-IN", name: "Kashmiri (कश्मीरी / کٲشُر)", flag: "🇮🇳", group: "indian" },
-  { code: "sd-IN", name: "Sindhi (सिन्धी / سنڌي)", flag: "🇮🇳", group: "indian" },
-  { code: "bho-IN", name: "Bhojpuri (भोजपुरी)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["hi-IN"] },
-  { code: "hinglish", name: "Hinglish (Hindi + English Mix)", flag: "🇮🇳", group: "indian", fallbackVoiceLangs: ["en-IN", "hi-IN"] },
+  { code: "en-IN", name: "English (India)", flag: "🇮🇳", group: "indian", nativeScript: "English Latin alphabet", fallbackVoiceLangs: ["en-US", "en-GB"] },
+  { code: "hi-IN", name: "Hindi (हिन्दी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)" },
+  { code: "or-IN", name: "Odia (ଓଡ଼ିଆ)", flag: "🇮🇳", group: "indian", nativeScript: "Odia script (ଓଡ଼ିଆ ଲିପି)", scriptFont: "'Noto Sans Oriya', sans-serif" },
+  {
+    code: "spv-IN",
+    name: "Sambalpuri / Kosali (ସମ୍ବଲପୁରୀ)",
+    flag: "🇮🇳",
+    group: "indian",
+    nativeScript: "Odia script (ଓଡ଼ିଆ ଲିପି)",
+    dialectHint:
+      "Use authentic Western Odisha Sambalpuri/Kosali spoken grammar, vocabulary, and verb forms (e.g., କର୍ମା, ପଢ଼୍ମା, ଶିଖ୍ମା, ଜାନ୍ବା, ଅଛେ, ଗୁଟେ, ଇଟା, କେନ୍ତା, ତୁମର/ଆମର) written strictly in Odia script (ଓଡ଼ିଆ ଲିପି).",
+    fallbackVoiceLangs: ["or-IN"],
+    scriptFont: "'Noto Sans Oriya', sans-serif",
+  },
+  { code: "bn-IN", name: "Bengali (বাংলা)", flag: "🇮🇳", group: "indian", nativeScript: "Bengali script (বাংলা লিপি)", fallbackVoiceLangs: ["bn-BD"] },
+  { code: "te-IN", name: "Telugu (తెలుగు)", flag: "🇮🇳", group: "indian", nativeScript: "Telugu script (తెలుగు లిపి)" },
+  { code: "mr-IN", name: "Marathi (मराठी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "ta-IN", name: "Tamil (தமிழ்)", flag: "🇮🇳", group: "indian", nativeScript: "Tamil script (தமிழ் எழுத்து)" },
+  { code: "gu-IN", name: "Gujarati (ગુજરાતી)", flag: "🇮🇳", group: "indian", nativeScript: "Gujarati script (ગુજરાતી લિપિ)" },
+  { code: "ur-IN", name: "Urdu (اردو)", flag: "🇮🇳", group: "indian", nativeScript: "Urdu Perso-Arabic Nastaliq script (اردو)", fallbackVoiceLangs: ["ur-PK"] },
+  { code: "kn-IN", name: "Kannada (ಕನ್ನಡ)", flag: "🇮🇳", group: "indian", nativeScript: "Kannada script (ಕನ್ನಡ ಲಿಪಿ)" },
+  { code: "ml-IN", name: "Malayalam (മലയാളം)", flag: "🇮🇳", group: "indian", nativeScript: "Malayalam script (മലയാളലിപി)" },
+  { code: "pa-IN", name: "Punjabi (ਪੰਜਾਬੀ)", flag: "🇮🇳", group: "indian", nativeScript: "Gurmukhi script (ਗੁਰਮੁਖੀ)" },
+  { code: "as-IN", name: "Assamese (অসমীয়া)", flag: "🇮🇳", group: "indian", nativeScript: "Assamese script (অসমীয়া লিপি)", fallbackVoiceLangs: ["bn-IN", "bn-BD"] },
+  { code: "mai-IN", name: "Maithili (मैथिली)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "sa-IN", name: "Sanskrit (संस्कृतम्)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "ne-IN", name: "Nepali (नेपाली)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["ne-NP", "hi-IN"] },
+  { code: "kok-IN", name: "Konkani (कोंकणी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["mr-IN", "hi-IN"] },
+  { code: "doi-IN", name: "Dogri (डोगरी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "brx-IN", name: "Bodo (बड़ो)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "mni-IN", name: "Manipuri / Meitei (মৈতৈলোন্)", flag: "🇮🇳", group: "indian", nativeScript: "Bengali-Manipuri script (মৈতৈলোন্) or Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ)" },
+  { code: "sat-IN", name: "Santali (ᱥᱟᱱᱛᱟᱲᱤ)", flag: "🇮🇳", group: "indian", nativeScript: "Ol Chiki script (ᱚᱞ ᱪᱤᱠᱤ)" },
+  { code: "ks-IN", name: "Kashmiri (कश्मीरी / کٲشُر)", flag: "🇮🇳", group: "indian", nativeScript: "Perso-Arabic (کٲشُر) or Devanagari (कश्मीरी) script" },
+  { code: "sd-IN", name: "Sindhi (सिन्धी / سنڌي)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari (सिन्धी) or Perso-Arabic (سنڌي) script" },
+  { code: "bho-IN", name: "Bhojpuri (भोजपुरी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "hne-IN", name: "Chhattisgarhi (छत्तीसगढ़ी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "raj-IN", name: "Rajasthani / Marwari (राजस्थानी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "bgc-IN", name: "Haryanvi (हरियाणवी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "awa-IN", name: "Awadhi (अवधी)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "mag-IN", name: "Magahi (मगही)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "gbm-IN", name: "Garhwali / Kumaoni (गढ़वाली)", flag: "🇮🇳", group: "indian", nativeScript: "Devanagari script (देवनागरी लिपि)", fallbackVoiceLangs: ["hi-IN"] },
+  { code: "tcy-IN", name: "Tulu (ತುಳು)", flag: "🇮🇳", group: "indian", nativeScript: "Kannada script (ಕನ್ನಡ ಲಿಪಿ)", fallbackVoiceLangs: ["kn-IN"] },
+  { code: "lus-IN", name: "Mizo (Mizo ṭawng)", flag: "🇮🇳", group: "indian", nativeScript: "Mizo Roman alphabet" },
+  { code: "kha-IN", name: "Khasi (Ka Ktien Khasi)", flag: "🇮🇳", group: "indian", nativeScript: "Khasi Roman alphabet" },
+  { code: "hinglish", name: "Hinglish (Hindi + English Roman Mix)", flag: "🇮🇳", group: "indian", nativeScript: "Romanized Latin script (conversational Hinglish)", fallbackVoiceLangs: ["en-IN", "hi-IN"] },
 ];
 
 export const INTERNATIONAL_LANGUAGES: SupportedLanguage[] = [
@@ -115,33 +162,173 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   ...INTERNATIONAL_LANGUAGES,
 ];
 
+interface InferredDialectMeta {
+  nativeScript: string;
+  voiceLangs: string[];
+  dialectHint?: string;
+}
+
+export function inferCustomDialectMeta(rawName: string): InferredDialectMeta {
+  const lower = rawName.toLowerCase();
+
+  if (
+    /sambalpuri|kosali|kosli|desia|koraputia|baleswari|ganjamia|sundargadi|kalahandia|odia|oriya/.test(
+      lower
+    )
+  ) {
+    return {
+      nativeScript: "Odia script (ଓଡ଼ିଆ ଲିପି)",
+      voiceLangs: ["or-IN"],
+      dialectHint:
+        "Use authentic Western/regional Odisha dialect vocabulary, idioms, and verb endings (e.g., କର୍ମା, ପଢ଼୍ମା, ଶିଖ୍ମା, ଜାନ୍ବା, ଅଛେ, ଗୁଟେ, ଇଟା, କେନ୍ତା) written strictly in Odia script (ଓଡ଼ିଆ ଲିପି).",
+    };
+  }
+
+  if (
+    /bhojpuri|maithili|magahi|angika|bajjika|awadhi|braj|bundeli|bagheli|chhattisgarhi|rajasthani|marwari|mewari|dhundhari|harauti|mewati|malvi|nimadi|haryanvi|garhwali|kumaoni|jaunsari|pahari|kangri|mandeali|kullui|sadri|nagpuri|khortha|kurmali|panchpargania|halbi|gondi|bhili|ahirani|khandeshi|varhadi/.test(
+      lower
+    )
+  ) {
+    return {
+      nativeScript: "Devanagari script (देवनागरी लिपि)",
+      voiceLangs: ["hi-IN", "mr-IN"],
+    };
+  }
+
+  if (/tulu|kodava|coorgi|beary|havyaka|kundapura|badaga/.test(lower)) {
+    return {
+      nativeScript: "Kannada script (ಕನ್ನಡ ಲಿಪಿ)",
+      voiceLangs: ["kn-IN"],
+    };
+  }
+
+  if (/sylheti|chittagonian|rajbanshi|kamatapuri|chakma|bishnupriya|goalpariya/.test(lower)) {
+    return {
+      nativeScript: "Bengali-Assamese script (বাংলা / অসমীয়া লিপি)",
+      voiceLangs: ["bn-IN", "bn-BD"],
+    };
+  }
+
+  if (/saraiki|seraiki|hindko|pothwari|shahmukhi|balochi|brahui/.test(lower)) {
+    return {
+      nativeScript: "Perso-Arabic / Urdu script (اردو)",
+      voiceLangs: ["ur-IN", "ur-PK"],
+    };
+  }
+
+  if (/mizo|khasi|garo|nagamese|kokborok|ao|angami|sumi|lotha|tangkhul/.test(lower)) {
+    return {
+      nativeScript: "Native Roman / Latin orthography of the language",
+      voiceLangs: [],
+    };
+  }
+
+  return {
+    nativeScript:
+      "its authentic native writing system or the script of its parent/regional literary language (NEVER Romanized English transliteration unless Latin is the official native alphabet of that language)",
+    voiceLangs: [],
+  };
+}
+
+export interface ParsedLanguageSelection {
+  baseCode: string;
+  scriptMode: WritingScriptMode;
+  languageName: string;
+  effectiveScriptLabel: string;
+  dialectHint?: string;
+  voiceLangCandidates: string[];
+}
+
+export function encodeLanguageAndScript(
+  baseCode: string,
+  scriptMode: WritingScriptMode
+): string {
+  const cleanBase = (baseCode || "en-US").split("|script=")[0].trim() || "en-US";
+  if (!scriptMode || scriptMode === "auto") {
+    return cleanBase;
+  }
+  return `${cleanBase}|script=${scriptMode}`;
+}
+
+export function parseLanguageAndScript(rawCode: string): ParsedLanguageSelection {
+  const raw = (rawCode || "en-US").trim();
+  const [basePart, scriptPart] = raw.split("|script=");
+  const baseCode = (basePart || "en-US").trim();
+  const validScriptOption = WRITING_SCRIPT_OPTIONS.find(
+    (opt) => opt.id === scriptPart
+  );
+  const scriptMode: WritingScriptMode = validScriptOption ? validScriptOption.id : "auto";
+
+  let languageName = baseCode;
+  let defaultScriptLabel =
+    "the authentic native writing system or parent regional script traditionally used for this language";
+  let dialectHint: string | undefined;
+  let defaultVoiceCandidates: string[] = [];
+
+  if (baseCode.startsWith("custom:")) {
+    const customName = baseCode.slice("custom:".length).trim() || "English";
+    languageName = customName;
+    const inferred = inferCustomDialectMeta(customName);
+    defaultScriptLabel = inferred.nativeScript;
+    dialectHint = inferred.dialectHint;
+    defaultVoiceCandidates = inferred.voiceLangs;
+  } else {
+    const matched = SUPPORTED_LANGUAGES.find(
+      (l) => l.code.toLowerCase() === baseCode.toLowerCase()
+    );
+    if (matched) {
+      languageName = matched.name;
+      if (matched.nativeScript) {
+        defaultScriptLabel = matched.nativeScript;
+      }
+      dialectHint = matched.dialectHint;
+      defaultVoiceCandidates = [
+        matched.code,
+        matched.code.split("-")[0],
+        ...(matched.fallbackVoiceLangs || []),
+      ];
+    } else {
+      defaultVoiceCandidates = [baseCode, baseCode.split("-")[0]];
+    }
+  }
+
+  let effectiveScriptLabel = defaultScriptLabel;
+  let voiceLangCandidates = defaultVoiceCandidates;
+
+  if (scriptMode !== "auto" && validScriptOption) {
+    effectiveScriptLabel = validScriptOption.label;
+    voiceLangCandidates = [...validScriptOption.voiceLangs];
+  }
+
+  return {
+    baseCode,
+    scriptMode,
+    languageName,
+    effectiveScriptLabel,
+    dialectHint,
+    voiceLangCandidates: Array.from(
+      new Set(
+        voiceLangCandidates
+          .filter((c) => c && c !== "hinglish" && !c.startsWith("spv"))
+          .map((c) => c.replace(/_/g, "-").toLowerCase())
+      )
+    ),
+  };
+}
+
 /**
- * Returns browser SpeechSynthesisVoice[] that can genuinely pronounce the target language's script.
- * Returns [] when no compatible native/same-script browser voice is installed on the user's device
- * (e.g., Santali Ol Chiki `sat-IN`, Manipuri `mni-IN`, Custom dialects, or Odia on desktop Chrome).
+ * Returns browser SpeechSynthesisVoice[] that can genuinely pronounce the target language's written script.
+ * Returns [] when no compatible native/same-script browser voice is installed on the user's device.
  */
 export function findBrowserVoicesForLanguage<T extends { lang: string }>(
   voices: T[],
   languageCode: string
 ): T[] {
-  if (!voices.length || languageCode.startsWith("custom:")) {
-    return [];
-  }
-  const langEntry = SUPPORTED_LANGUAGES.find((l) => l.code === languageCode);
-  const baseLang = languageCode.split("-")[0];
-  const candidates = Array.from(
-    new Set(
-      [
-        languageCode,
-        baseLang,
-        ...(langEntry?.fallbackVoiceLangs || []),
-      ]
-        .filter((c) => c && c !== "hinglish")
-        .map((c) => c.replace(/_/g, "-").toLowerCase())
-    )
-  );
+  if (!voices.length) return [];
+  const parsed = parseLanguageAndScript(languageCode);
+  if (!parsed.voiceLangCandidates.length) return [];
 
-  for (const candidate of candidates) {
+  for (const candidate of parsed.voiceLangCandidates) {
     const matched = voices.filter((v) => {
       const norm = (v.lang || "").replace(/_/g, "-").toLowerCase();
       return norm === candidate || norm.startsWith(`${candidate}-`);

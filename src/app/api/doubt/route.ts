@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
+  buildLanguageDirective,
   createGeminiClient,
-  getLanguageName,
   resolveModelName,
 } from "@/lib/gemini";
 import { requireAuthUser } from "@/lib/auth";
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         : null;
     const ai = createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
-    const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
@@ -58,8 +58,9 @@ export async function POST(req: NextRequest) {
 
     const systemInstruction = `You are "AshuTeacher", a patient, encouraging, and crystal-clear tutor answering a student's live "Raised Hand" question during a lesson on "${topic}".
 Student Level: ${level}.
-Language: Respond strictly in ${languageName}.
 Formatting: Use concise Markdown and proper LaTeX ($...$ for inline math, $$...$$ for block equations). Address their exact confusion directly with an intuitive analogy or worked mini-example.
+
+${languageDirective}
 
 Current Blackboard Lesson Context:
 ${String(lessonContext).slice(0, 24000)}`;

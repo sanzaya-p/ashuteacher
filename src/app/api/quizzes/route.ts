@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
+  buildLanguageDirective,
   createGeminiClient,
   getLanguageName,
   QUIZ_JSON_SCHEMA,
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
     const ai = createGeminiClient(headerKey);
     const model = resolveModelName(requestedModel || user.preferredModel);
     const languageName = getLanguageName(language);
+    const languageDirective = buildLanguageDirective(language);
 
     const { remainingCredits } = await spendCredits({
       userId: user.id,
@@ -78,7 +80,9 @@ ${sourceContent ? `\nSource Material:\n${String(sourceContent).slice(0, 28000)}`
 Requirements:
 - Each question MUST have exactly 4 distinct options and a 0-based correctIndex (0, 1, 2, or 3).
 - Use $...$ inline LaTeX for all mathematical formulas, variables, or equations.
-- Provide a thorough, educational step-by-step explanation for every question.`,
+- Provide a thorough, educational step-by-step explanation for every question.
+
+${languageDirective}`,
       config: {
         responseMimeType: "application/json",
         responseJsonSchema: QUIZ_JSON_SCHEMA,

@@ -49,9 +49,9 @@ import {
 import {
   AI_TTS_VOICES,
   STUDENT_LEVELS,
-  SUPPORTED_LANGUAGES,
   TEACHING_MODES,
   findBrowserVoicesForLanguage,
+  parseLanguageAndScript,
 } from "@/lib/constants";
 import { markdownToSpeechSegments } from "@/lib/speech";
 import { apiFetch, getStoredModel } from "@/lib/client-api";
@@ -232,14 +232,15 @@ function ClassroomInner() {
   );
   const hasNativeBrowserVoice = voicesForLanguage.length > 0;
 
-  const activeLanguageDisplay = useMemo(() => {
-    if (language.startsWith("custom:")) {
-      return language.slice("custom:".length).trim() || "Custom Dialect";
-    }
-    return (
-      SUPPORTED_LANGUAGES.find((l) => l.code === language)?.name || language
-    );
-  }, [language]);
+  const parsedLanguage = useMemo(
+    () => parseLanguageAndScript(language),
+    [language]
+  );
+
+  const activeLanguageDisplay = useMemo(
+    () => parsedLanguage.languageName,
+    [parsedLanguage]
+  );
 
   useEffect(() => {
     if (hasNativeBrowserVoice) {
@@ -472,7 +473,8 @@ function ClassroomInner() {
       if (chosen) utter.voice = chosen;
       utter.lang =
         chosen?.lang ||
-        (language === "hinglish" ? "en-IN" : language);
+        parsedLanguage.voiceLangCandidates[0] ||
+        "en-IN";
       utter.rate = speakingRate;
 
       utter.onend = () => {
@@ -500,7 +502,7 @@ function ClassroomInner() {
       voicesForLanguage,
       hasNativeBrowserVoice,
       selectedVoiceName,
-      language,
+      parsedLanguage,
       activeLanguageDisplay,
       speakingRate,
       stopSpeaking,
@@ -1038,9 +1040,11 @@ function ClassroomInner() {
       start: () => void;
     };
     recognition.lang =
-      language.startsWith("custom:") || language === "hinglish"
+      parsedLanguage.voiceLangCandidates[0] ||
+      (parsedLanguage.baseCode.startsWith("custom:") ||
+      parsedLanguage.baseCode === "hinglish"
         ? "en-IN"
-        : language;
+        : parsedLanguage.baseCode);
     recognition.interimResults = false;
     setIsListeningMic(true);
 
