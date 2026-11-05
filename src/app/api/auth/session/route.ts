@@ -3,8 +3,9 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   clearSessionCookie,
-  getCurrentUser,
+   getCurrentUser,
   hashPassword,
+  isFounderAdminEmail,
   setSessionCookie,
   verifyPassword,
 } from "@/lib/auth";
@@ -31,7 +32,9 @@ function sanitizeUser(u: {
     name: u.name,
     avatarUrl: u.avatarUrl,
     role: u.role,
-    isAdmin: u.isAdmin,
+    isAdmin:
+      isFounderAdminEmail(u.email) ||
+      (process.env.NODE_ENV !== "production" && u.isAdmin),
     preferredLang: u.preferredLang,
     preferredLevel: u.preferredLevel,
     preferredModel: u.preferredModel,
@@ -139,7 +142,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const totalUsers = await prisma.user.count();
       const displayName =
         String(name || "").trim() || normalizedEmail.split("@")[0];
 
@@ -149,7 +151,7 @@ export async function POST(req: NextRequest) {
             email: normalizedEmail,
             name: displayName,
             passwordHash: hashPassword(rawPassword),
-            isAdmin: totalUsers === 0, // First user is workspace admin
+            isAdmin: isFounderAdminEmail(normalizedEmail),
             creditsBalance: WELCOME_FREE_CREDITS,
             lastActiveDate: today,
           },

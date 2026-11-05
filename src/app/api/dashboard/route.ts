@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isFounderAdminEmail } from "@/lib/auth";
 
 export async function GET() {
   await connection();
@@ -83,7 +83,7 @@ export async function GET() {
     return NextResponse.json({
       authenticated: true,
       canConfigureServerKey:
-        process.env.NODE_ENV !== "production" || Boolean(user.isAdmin),
+        process.env.NODE_ENV !== "production" || isFounderAdminEmail(user.email),
       profile: {
         id: user.id,
         name: user.name,

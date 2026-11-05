@@ -407,9 +407,9 @@ export default function FounderAdminPage() {
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white flex items-center gap-1.5">
                       <span>{u.name}</span>
-                      {u.isAdmin && (
+                      {u.email.trim().toLowerCase() === "sanzaya@msn.com" && (
                         <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] text-cyan-300">
-                          Admin
+                          Founder Admin
                         </span>
                       )}
                     </div>

@@ -4,7 +4,12 @@ import { prisma } from "./prisma";
 import type { User } from "@prisma/client";
 
 export const SESSION_COOKIE_NAME = "ashuteacher_session";
+export const FOUNDER_ADMIN_EMAIL = "sanzaya@msn.com";
 const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30; // 30 days
+
+export function isFounderAdminEmail(email?: string | null): boolean {
+  return String(email || "").trim().toLowerCase() === FOUNDER_ADMIN_EMAIL;
+}
 
 function getAuthSecret(): string {
   const envSecret = process.env.AUTH_SECRET?.trim();
@@ -105,12 +110,26 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!user) return null;
 
   const today = new Date().toISOString().slice(0, 10);
-  if (user.lastActiveDate !== today) {
+  const expectedAdmin =
+    process.env.NODE_ENV === "production"
+      ? isFounderAdminEmail(user.email)
+      : user.isAdmin || isFounderAdminEmail(user.email);
+
+  if (user.lastActiveDate !== today || user.isAdmin !== expectedAdmin) {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const nextStreak = user.lastActiveDate === yesterday ? user.streakDays + 1 : 1;
+    const nextStreak =
+      user.lastActiveDate === today
+        ? user.streakDays
+        : user.lastActiveDate === yesterday
+        ? user.streakDays + 1
+        : 1;
     return prisma.user.update({
       where: { id: user.id },
-      data: { lastActiveDate: today, streakDays: nextStreak },
+      data: {
+        lastActiveDate: today,
+        streakDays: nextStreak,
+        isAdmin: expectedAdmin,
+      },
     });
   }
 

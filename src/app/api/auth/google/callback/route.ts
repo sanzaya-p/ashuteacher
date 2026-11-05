@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { setSessionCookie } from "@/lib/auth";
+import { isFounderAdminEmail, setSessionCookie } from "@/lib/auth";
 import { WELCOME_FREE_CREDITS } from "@/lib/credits";
 
 export async function GET(req: NextRequest) {
@@ -56,7 +56,6 @@ export async function GET(req: NextRequest) {
 
     let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      const totalUsers = await prisma.user.count();
       user = await prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: {
@@ -64,7 +63,7 @@ export async function GET(req: NextRequest) {
             name: profile.name || email.split("@")[0],
             avatarUrl: profile.picture || null,
             googleId: profile.sub || null,
-            isAdmin: totalUsers === 0,
+            isAdmin: isFounderAdminEmail(email),
             creditsBalance: WELCOME_FREE_CREDITS,
             lastActiveDate: today,
           },

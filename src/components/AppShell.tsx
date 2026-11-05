@@ -128,14 +128,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setCanConfigKey(Boolean(data.canConfigureServerKey));
         setAuthenticated(Boolean(data.authenticated));
         if (data.profile) {
-          const emailLower = String(data.profile.email || "").toLowerCase();
-          setIsAdminUser(
-            Boolean(
-              data.profile.isAdmin ||
-                emailLower === "sanzaya@msn.com" ||
-                emailLower === "spatel@ignou.ac.in"
-            )
-          );
+          const emailLower = String(data.profile.email || "").trim().toLowerCase();
+          setIsAdminUser(emailLower === "sanzaya@msn.com");
           setProfileInfo({
             name: data.profile.name,
             email: data.profile.email,

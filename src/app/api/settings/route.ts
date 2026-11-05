@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createGeminiClient, resolveModelName } from "@/lib/gemini";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isFounderAdminEmail } from "@/lib/auth";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -11,7 +11,8 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     const envKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    const isAdminOrDev = Boolean(user?.isAdmin || process.env.NODE_ENV !== "production");
+    const isFounder = isFounderAdminEmail(user?.email);
+    const isAdminOrDev = Boolean(isFounder || process.env.NODE_ENV !== "production");
 
     return NextResponse.json({
       authenticated: Boolean(user),
@@ -29,7 +30,7 @@ export async function GET() {
             name: user.name,
             avatarUrl: user.avatarUrl,
             role: user.role,
-            isAdmin: user.isAdmin,
+            isAdmin: isFounder,
             preferredLang: user.preferredLang,
             preferredLevel: user.preferredLevel,
             preferredModel: user.preferredModel,
@@ -49,7 +50,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
-    const isAdminOrDev = Boolean(user?.isAdmin || process.env.NODE_ENV !== "production");
+    const isAdminOrDev = Boolean(
+      isFounderAdminEmail(user?.email) || process.env.NODE_ENV !== "production"
+    );
     const body = await req.json();
     const {
       name,

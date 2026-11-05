@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthUser } from "@/lib/auth";
+import {
+  FOUNDER_ADMIN_EMAIL,
+  isFounderAdminEmail,
+  requireAuthUser,
+} from "@/lib/auth";
 import { handleApiError } from "@/lib/api-error";
-
-const OWNER_EMAILS = new Set(["sanzaya@msn.com", "spatel@ignou.ac.in"]);
 
 async function requireAdmin() {
   const user = await requireAuthUser();
-  const isOwnerEmail = OWNER_EMAILS.has(user.email.toLowerCase());
-  if (!user.isAdmin && !isOwnerEmail) {
-    throw new Error("FORBIDDEN: Founder Admin access required.");
+  if (!isFounderAdminEmail(user.email)) {
+    throw new Error(
+      `FORBIDDEN: Founder Admin Console is strictly restricted to ${FOUNDER_ADMIN_EMAIL}.`
+    );
   }
-  if (!user.isAdmin && isOwnerEmail) {
+  if (!user.isAdmin) {
     await prisma.user.update({
       where: { id: user.id },
       data: { isAdmin: true },
