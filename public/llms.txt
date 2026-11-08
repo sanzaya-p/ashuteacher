@@ -1,0 +1,16 @@
+# AshuTeacher
+
+> Interactive AI Voice Blackboard, 195+ Country Cascading Syllabus & Competitive Exam Academy (KG to Doctoral/MIT), Step-by-Step Exam Paper Solver, 6-Milestone Research & Live Viva Defense Lab, and 3D Flashcard/Quiz Platform in 100+ Global & Regional Languages.
+
+- Live Web App: https://ashuteacher.vercel.app
+- Direct Free Android APK: https://ashuteacher.vercel.app/downloads/AshuTeacher.apk
+- Open-Source Repository: https://github.com/sanzaya-p/ashuteacher
+- Pricing: Freemium / Pay-Per-Use (30 Free Study Credits on sign-up, no credit card required; zero recurring subscription lock-in).
+
+## Core Modules
+
+- [AI Voice Blackboard Classroom](https://ashuteacher.vercel.app/classroom): Live streaming blackboard with LaTeX math, synchronized voice teacher, mid-lesson "Raise Hand" doubt clearing, PDF/photo exam paper solver, Story Mode, and Formula Cheat Sheets in English, Hindi, Odia, Sambalpuri, Santali (Ol Chiki), Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Spanish, French, Arabic, Mandarin, and 100+ languages.
+- [Global Syllabus & Competitive Exam Academy](https://ashuteacher.vercel.app/academy): 6-level cascading curriculum explorer across 195+ countries covering CBSE, ICSE, NIOS, IGNOU (Certificates, Diplomas, Bachelor's, Master's MCA/MBA/MA, Doctoral), UPSC CSE, JEE, NEET, GATE, SSC, SAT, AP, IB, Cambridge GCSE/A-Levels, and MIT/University courses with 1-click Full-Chapter Master Lectures.
+- [Capstone, Thesis & Viva Defense Lab](https://ashuteacher.vercel.app/research): 6-milestone research blueprint architect (Problem Formulation, Literature Gap, Methodology, Implementation, Evaluation, Paper Structure) + interactive AI Viva Voce Examiner defense simulator.
+- [Course & Roadmap Architect](https://ashuteacher.vercel.app/courses): Custom multi-module syllabus generator with automatic chapter completion tracking.
+- [Quiz & 3D Flashcard Practice Arena](https://ashuteacher.vercel.app/practice): Auto-generated MCQ mock tests with LaTeX step-by-step solutions and 3D active-recall flashcards.
