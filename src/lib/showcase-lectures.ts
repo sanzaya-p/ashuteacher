@@ -321,6 +321,171 @@ $$a = \\frac{F}{m} = \\frac{20}{5} = 4\\,\\text{m/s}^2$$
 
 **ଉତ୍ତର:** ବସ୍ତୁଟିର ତ୍ୱରଣ $4\\,\\text{m/s}^2$ ହେବ!`,
   },
+  {
+    slug: "espanol-calculo-derivadas",
+    title: "Cálculo Diferencial e Integral: Límites, Derivadas y Teorema Fundamental",
+    subject: "Matemáticas (PAU / UNAM / ICFES)",
+    language: "es-ES",
+    languageBadge: "Español • LATAM & España",
+    level: "Intermediate",
+    badge: "Demo en Español",
+    content: `# Cálculo Diferencial e Integral: Límites, Derivadas y Teorema Fundamental
+
+¡Bienvenidos a la pizarra interactiva! Este tema es clave en **Selectividad (PAU / EBAU)**, **UNAM / EXANI-II**, **ICFES Saber 11**, **PAES** y el primer año universitario.
+
+---
+
+## 1. Definición Formal de la Derivada
+
+La derivada de una función $f(x)$ mide la **tasa de cambio instantánea** (la pendiente de la recta tangente en el punto $x$):
+
+$$f'(x) = \\lim_{h \\to 0} \\frac{f(x + h) - f(x)}{h}$$
+
+### Reglas Esenciales de Derivación
+- **Regla de la potencia:** $\\frac{d}{dx}(x^n) = n x^{n-1}$
+- **Regla de la cadena:** $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$
+- **Producto:** $(u \\cdot v)' = u'v + uv'$
+
+---
+
+## 2. Teorema Fundamental del Cálculo (Newton–Leibniz)
+
+La derivación y la integración definida son operaciones inversas. Si $F'(x) = f(x)$ es continua en $[a, b]$:
+
+$$\\int_a^b f(x)\\,dx = F(b) - F(a)$$
+
+---
+
+## 3. Ejercicio Resuelto de Examen
+
+**Problema:** Calcula el área bajo la parábola $f(x) = 3x^2 + 2x$ entre $x = 0$ y $x = 2$.
+
+**Solución paso a paso:**
+1. Hallamos la primitiva $F(x)$:
+   $$F(x) = \\int (3x^2 + 2x)\\,dx = x^3 + x^2$$
+2. Evaluamos en los límites $[0, 2]$:
+   $$\\text{Área} = F(2) - F(0) = (2^3 + 2^2) - 0 = 8 + 4 = 12\\,\\text{u}^2$$`,
+  },
+  {
+    slug: "portugues-enem-cinematica",
+    title: "Física para o ENEM e FUVEST: Cinemática, MRUV e Queda Livre",
+    subject: "Física (ENEM & Vestibular)",
+    language: "pt-BR",
+    languageBadge: "Português • Brasil",
+    level: "Intermediate",
+    badge: "Demo ENEM Brasil",
+    content: `# Física para o ENEM e FUVEST: Cinemática e MRUV
+
+Olá, futuros aprovados no **ENEM, FUVEST e UNICAMP**! Cinemática é um dos assuntos mais cobrados na prova de Ciências da Natureza. Vamos dominar todas as equações no quadro!
+
+---
+
+## 1. Movimento Retilíneo Uniformemente Variado (MRUV)
+
+No MRUV, a aceleração escalar $a$ é **constante e diferente de zero**:
+
+1. **Função horária da velocidade:**
+   $$v = v_0 + a \\cdot t$$
+2. **Função horária da posição ("Sorvetão"):**
+   $$S = S_0 + v_0 t + \\frac{1}{2} a t^2$$
+3. **Equação de Torricelli (sem o tempo $t$!):**
+   $$v^2 = v_0^2 + 2 a \\Delta S$$
+
+---
+
+## 2. Questão Clássica Estilo ENEM Resolvida
+
+**Problema:** Um motorista a $20\\,\\text{m/s}$ ($72\\,\\text{km/h}$) vê um obstáculo e freia com desaceleração constante $a = -5\\,\\text{m/s}^2$ até parar. Qual a distância percorrida na frenagem?
+
+**Resolução passo a passo:**
+Como o problema não informa o tempo $t$, usamos **Torricelli** com $v = 0$:
+
+$$0^2 = 20^2 + 2(-5)\\Delta S \\implies 10\\,\\Delta S = 400 \\implies \\Delta S = 40\\,\\text{m}$$
+
+**Resposta:** O carro percorre exatamente **$40\\,\\text{metros}$** até parar!`,
+  },
+  {
+    slug: "arabic-physics-newtons-laws",
+    title: "قوانين نيوتن للحركة وتطبيقاتها (الثانوية العامة والقدرات والتحصيلي)",
+    subject: "الفيزياء (Physics)",
+    language: "ar-SA",
+    languageBadge: "العربية • الشرق الأوسط",
+    level: "Intermediate",
+    badge: "شرح باللغة العربية",
+    content: `# قوانين نيوتن للحركة وتطبيقاتها في الامتحانات
+
+أهلاً بكم طلاب **الثانوية العامة، التوجيهي، واختبار التحصيلي**! سنتعلّم اليوم على السبورة التفاعلية قوانين نيوتن الثلاثة مع مسألة امتحانية محلولة خطوة بخطوة.
+
+---
+
+## ١. القانون الأول لنيوتن (قانون القصور الذاتي)
+
+يبقى الجسم الساكن ساكناً، ويبقى الجسم المتحرك في خط مستقيم بسرعة ثابتة ما لم تؤثر عليه **قوة محصلة خارجية**:
+
+$$\\sum \\vec{F} = 0 \\implies \\vec{v} = \\text{ثابت}$$
+
+---
+
+## ٢. القانون الثاني لنيوتن (العلاقة بين القوة والتسارع)
+
+تتناسب القوة المحصلة المؤثرة على جسم طردياً مع تسارعه ($\\vec{a}$) وباتجاهها:
+
+$$\\vec{F}_{\\text{net}} = m \\cdot \\vec{a}$$
+
+حيث $m$ الكتلة بوحدة الكيلوغرام ($\\text{kg}$)، والتسارع بوحدة $\\text{m/s}^2$، والقوة بوحدة **نيوتن ($\\text{N}$)**.
+
+---
+
+## ٣. مسألة تدريبية محلولة
+
+**سؤال:** أثرت قوة أفقية مقدارها $30\\,\\text{N}$ على صندوق كتلته $6\\,\\text{kg}$ على سطح أملس. احسب تسارع الصندوق وسرعته بعد $4$ ثوانٍ من السكون.
+
+**الحل:**
+1. التسارع من قانون نيوتن الثاني:
+   $$a = \\frac{F}{m} = \\frac{30}{6} = 5\\,\\text{m/s}^2$$
+2. السرعة النهائية ($v_0 = 0$):
+   $$v = v_0 + a t = 0 + 5 \\times 4 = 20\\,\\text{m/s}$$`,
+  },
+  {
+    slug: "indonesia-utbk-eksponen-logaritma",
+    title: "Penalaran Matematika UTBK SNBT: Eksponen, Logaritma & Deret",
+    subject: "Matematika (UTBK SNBT)",
+    language: "id-ID",
+    languageBadge: "Bahasa Indonesia",
+    level: "Intermediate",
+    badge: "Demo UTBK SNBT",
+    content: `# Matematika UTBK SNBT: Sifat Eksponen & Logaritma
+
+Halo pejuang **PTN & UTBK SNBT**! Mari kita kuasai konsep inti **Eksponen dan Logaritma** langsung di papan tulis interaktif agar bisa menjawab soal kurang dari 60 detik!
+
+---
+
+## 1. Hubungan Dasar Eksponen & Logaritma
+
+Untuk $a > 0,\\, a \\neq 1,$ dan $b > 0$:
+
+$$a^c = b \\iff \\log_a b = c$$
+
+### Sifat-Sifat Penting yang Wajib Hafal:
+1. $\\log_a(x \\cdot y) = \\log_a x + \\log_a y$
+2. $\\log_a\\!\\left(\\frac{x}{y}\\right) = \\log_a x - \\log_a y$
+3. $\\log_{a^m}(b^n) = \\frac{n}{m}\\,\\log_a b$
+4. **Sifat Berantai:** $\\log_a b \\cdot \\log_b c = \\log_a c$
+
+---
+
+## 2. Pembahasan Soal Tipe UTBK
+
+**Soal:** Jika $\\log_2 3 = p$ dan $\\log_3 5 = q$, tentukan nilai dari $\\log_2 45$ dalam $p$ dan $q$!
+
+**Langkah Penyelesaian:**
+1. Faktorkan $45 = 9 \\times 5 = 3^2 \\times 5$:
+   $$\\log_2 45 = \\log_2(3^2 \\times 5) = \\log_2(3^2) + \\log_2 5$$
+2. Gunakan sifat berantai $\\log_2 5 = \\log_2 3 \\cdot \\log_3 5 = p \\cdot q$:
+   $$\\log_2 45 = 2p + pq = p(2 + q)$$
+
+**Jawaban:** **$p(2 + q)$**!`,
+  },
 ];
 
 export function findShowcaseLecture(

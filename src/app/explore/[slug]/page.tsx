@@ -34,9 +34,13 @@ export async function generateMetadata({
   return {
     title: page.title,
     description: page.metaDescription,
+    alternates: {
+      canonical: `https://ashuteacher.vercel.app/explore/${page.slug}`,
+    },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
+      locale: page.htmlLang || "en_US",
     },
   };
 }
@@ -73,6 +77,8 @@ export default async function ExploreLandingPage({
     "@type": "Course",
     name: page.h1,
     description: page.metaDescription,
+    inLanguage: page.htmlLang || "en",
+    isAccessibleForFree: true,
     provider: {
       "@type": "Organization",
       name: "AshuTeacher",
@@ -81,7 +87,11 @@ export default async function ExploreLandingPage({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10 space-y-10">
+    <div
+      lang={page.htmlLang || "en"}
+      dir={page.isRtl ? "rtl" : "ltr"}
+      className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10 space-y-10"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

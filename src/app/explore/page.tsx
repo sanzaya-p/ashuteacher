@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 const CATEGORIES: Array<SeoCategory> = [
+  "World National Exams (Localized)",
   "IGNOU & Distance Learning",
   "Competitive Exams",
   "School & Boards",

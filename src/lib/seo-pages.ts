@@ -1,6 +1,15 @@
 export interface SeoLandingPage {
   slug: string;
-  category: "IGNOU & Distance Learning" | "Competitive Exams" | "School & Boards" | "Global & University" | "Regional Languages" | "Research & Exam Tools";
+  category:
+    | "IGNOU & Distance Learning"
+    | "Competitive Exams"
+    | "School & Boards"
+    | "Global & University"
+    | "Regional Languages"
+    | "World National Exams (Localized)"
+    | "Research & Exam Tools";
+  htmlLang?: string;
+  isRtl?: boolean;
   title: string;
   metaDescription: string;
   heroBadge: string;
@@ -543,6 +552,500 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
     ],
     faqs: [
       { q: "Can I generate quizzes and flashcards from my own pasted notes?", a: "Yes! Open Quiz & Cards (/practice), paste up to 28,000 characters of notes or textbook text, and generate custom MCQs or 3D flashcards in seconds." },
+    ],
+  },
+  // ==================== WORLD NATIONAL EXAMS (LOCALIZED IN NATIVE SEARCH LANGUAGES) ====================
+  {
+    slug: "professor-ia-gratuito-enem-vestibular-fuvest-brasil",
+    category: "World National Exams (Localized)",
+    htmlLang: "pt-BR",
+    title: "Professor de IA Gratuito com Quadro e Voz para ENEM, FUVEST e UNICAMP",
+    metaDescription:
+      "Estude Matemática, Física, Química, Biologia e Redação para o ENEM, FUVEST e Vestibulares em um quadro negro interativo com voz em Português. Ganhe 30 créditos grátis!",
+    heroBadge: "🇧🇷 Brasil • ENEM, FUVEST, UNICAMP & ITA",
+    h1: "Professor de IA com Quadro Negro e Voz para o ENEM e Vestibular",
+    subtitle:
+      "Chega de respostas frias em texto. Veja fórmulas, cálculos e resoluções de provas antigas do ENEM escritos passo a passo no quadro enquanto um professor explica tudo em Português!",
+    defaultLanguage: "pt-BR",
+    defaultLevel: "Intermediate",
+    subjectLabel: "ENEM & Vestibular",
+    featuredChapters: [
+      { title: "Física para o ENEM e FUVEST: Cinemática, MRUV e Queda Livre", summary: "Equação de Torricelli, gráficos de movimento e questões clássicas resolvidas passo a passo." },
+      { title: "Matemática no ENEM: Funções, Geometria Espacial, Escalas e Estatística", summary: "As 5 áreas mais recorrentes na prova de Matemática e suas Tecnologias." },
+      { title: "Química & Biologia: Estequiometria, Eletroquímica, Ecologia e Genética", summary: "Cálculos estequiométricos rápidos, pilhas de Daniell e ciclos biogeoquímicos." },
+    ],
+    highlights: [
+      "Envie foto ou PDF de qualquer questão do ENEM / FUVEST para resolução completa em LaTeX",
+      "Simulados de múltipla escolha e Flashcards 3D automáticos para revisão ativa",
+      "30 Créditos de Estudo Grátis no cadastro (sem cartão de crédito)",
+    ],
+    faqs: [
+      { q: "O AshuTeacher resolve questões de provas anteriores do ENEM em PDF ou foto?", a: "Sim! Basta enviar a foto ou PDF da prova no modo Resolvedor de Provas (/classroom?mode=solve) para ver cada etapa explicada." },
+    ],
+  },
+  {
+    slug: "profesor-ia-gratis-pau-ebau-unam-icfes-paes-espanol",
+    category: "World National Exams (Localized)",
+    htmlLang: "es",
+    title: "Profesor de IA Gratis con Pizarra y Voz — Selectividad PAU, UNAM, ICFES y PAES",
+    metaDescription:
+      "Aprende Matemáticas, Física, Química, Cálculo y Universidad en una pizarra interactiva con voz en Español para PAU/EBAU (España), UNAM/EXANI-II (México), ICFES (Colombia) y PAES (Chile).",
+    heroBadge: "🇪🇸 🇲🇽 🇨🇴 🇦🇷 🇨🇱 Español • PAU, UNAM, ICFES & PAES",
+    h1: "Tu Profesor de Inteligencia Artificial con Pizarra y Voz en Español",
+    subtitle:
+      "Mira cómo las derivadas, integrales, leyes físicas y problemas de examen se escriben paso a paso en la pizarra mientras el profesor te habla y responde tus dudas al instante.",
+    defaultLanguage: "es-ES",
+    defaultLevel: "Intermediate",
+    subjectLabel: "Exámenes y Universidad",
+    featuredChapters: [
+      { title: "Cálculo Diferencial e Integral: Límites, Derivadas y Teorema Fundamental", summary: "Regla de la cadena, optimización e integrales definidas explicadas paso a paso." },
+      { title: "Álgebra Lineal yMatrices: Determinantes, Rango y Teorema de Rouché-Frobenius", summary: "Sistemas de ecuaciones lineales para Selectividad PAU e Ingeniería." },
+      { title: "Física y Química: Campo Electromagnético, Ondas y Equilibrio Químico", summary: "Problemas numéricos resueltos con unidades y fórmulas claras." },
+    ],
+    highlights: [
+      "Sube cualquier examen en PDF o captura de pantalla para obtener la solución paso a paso",
+      "Levanta la mano con micrófono o texto en mitad de la clase para aclarar dudas",
+      "30 créditos gratuitos al registrarte sin tarjeta bancaria",
+    ],
+    faqs: [
+      { q: "¿Sirve para exámenes de ingreso universitario en México, Colombia, España, Perú, Argentina y Chile?", a: "Sí: incluye explorador curricular para los 195+ países, desde primaria y bachillerato hasta ingeniería y doctorado." },
+    ],
+  },
+  {
+    slug: "muallim-dhaka-istinai-majani-thanaweya-qudurat-tawjihi-arabic",
+    category: "World National Exams (Localized)",
+    htmlLang: "ar",
+    isRtl: true,
+    title: "معلم ذكاء اصطناعي مجاني بالصوت والسبورة — الثانوية العامة، القدرات والتحصيلي والتوجيهي",
+    metaDescription:
+      "منصة السبورة الذكية الناطقة باللغة العربية لشرح الرياضيات، الفيزياء، الكيمياء والأحياء وحل أسئلة الثانوية العامة، اختبار القدرات والتحصيلي، التوجيهي والبكالوريا مجاناً.",
+    heroBadge: "🇸🇦 🇪🇬 🇦🇪 🇯🇴 🇲🇦 العربية • الثانوية العامة والقدرات والتحصيلي",
+    h1: "معلمك الخصوصي بالذكاء الاصطناعي بالصوت والسبورة التفاعلية",
+    subtitle:
+      "شاهد المعادلات الرياضية والقوانين الفيزيائية تُكتب خطوة بخطوة على السبورة مع شرح صوتي واضح باللغة العربية الفصحى، وارفع صورة أي سؤال امتحاني لحلّه فوراً.",
+    defaultLanguage: "ar-SA",
+    defaultLevel: "Intermediate",
+    subjectLabel: "الثانوية والقدرات والجامعة",
+    featuredChapters: [
+      { title: "قوانين نيوتن للحركة وتطبيقاتها (الثانوية العامة والقدرات والتحصيلي)", summary: "شرح القصور الذاتي والقوة والتسارع مع حل مسائل تدريبية خطوة بخطوة." },
+      { title: "القدرات الكمي والرياضيات: الأسس، الجذور، النسب المئوية والتفاضل والتكامل", summary: "استراتيجيات الحل السريع لاختبارات قياس القدرات والتحصيلي والثانوية." },
+    ],
+    highlights: [
+      "يدعم الكتابة العربية الصحيحة مع تنسيق معادلات الرياضيات LaTeX بدقة عالية",
+      "حل أوراق الامتحانات المصورة وملفات PDF خطوة بخطوة",
+      "٣٠ رصيداً دراسياً مجانياً فور التسجيل بدون بطاقة ائتمانية",
+    ],
+    faqs: [
+      { q: "هل يدعم مناهج مصر والسعودية والإمارات والأردن والمغرب؟", a: "نعم، يضم مستكشف المناهج أكثر من ١٩٥ دولة من رياض الأطفال وحتى الجامعة والدراسات العليا." },
+    ],
+  },
+  {
+    slug: "professeur-ia-gratuit-baccalaureat-brevet-prepa-francais",
+    category: "World National Exams (Localized)",
+    htmlLang: "fr",
+    title: "Professeur IA Gratuit avec Tableau Noir Vocal — Baccalauréat, Brevet, Prépa & Université",
+    metaDescription:
+      "Révisez les Maths, la Physique-Chimie, la SVT, le Grand Oral du Bac, le Brevet et les concours CPGE sur un tableau interactif vocal en Français. 30 crédits offerts !",
+    heroBadge: "🇫🇷 🇨🇦 🇲🇦 🇸🇳 🇨🇮 Français • Bac, Brevet, CPGE & Licence",
+    h1: "Votre Professeur IA sur Tableau Noir Vocal en Français",
+    subtitle:
+      "Suivez chaque démonstration mathématique, corrigé d'annales du Bac et cours universitaire écrit en direct au tableau avec explication vocale synchronisée.",
+    defaultLanguage: "fr-FR",
+    defaultLevel: "Intermediate",
+    subjectLabel: "Baccalauréat & Supérieur",
+    featuredChapters: [
+      { title: "Spécialité Mathématiques Bac : Suites, Récurrence, Logarithme Népérien et Intégrales", summary: "Démonstrations par récurrence, limites et exercices types Bac corrigés." },
+      { title: "Physique-Chimie & CPGE : Thermodynamique, Ondes Mécaniques et Acides-Bases", summary: "Équations différentielles, circuit RC et dosages pH-métriques." },
+    ],
+    highlights: [
+      "Importez vos sujets d'annales PDF ou photos d'exercices pour un corrigé détaillé",
+      "Préparez votre Grand Oral ou soutenance de mémoire dans le Laboratoire Viva (/research)",
+      "Adapté aux programmes de France, Québec, Belgique, Suisse, Maroc, Sénégal et Côte d'Ivoire",
+    ],
+    faqs: [
+      { q: "L'inscription est-elle gratuite ?", a: "Oui, 30 crédits d'étude gratuits sont crédités immédiatement à l'inscription, sans carte bancaire ni abonnement obligatoire." },
+    ],
+  },
+  {
+    slug: "guru-ai-gratis-utbk-snbt-olimpiade-sma-indonesia",
+    category: "World National Exams (Localized)",
+    htmlLang: "id",
+    title: "Guru AI Gratis Papan Tulis Suara — Lulus UTBK SNBT, OSN, SMA & Kuliah",
+    metaDescription:
+      "Belajar Penalaran Matematika, Literasi, Fisika, Kimia & Biologi untuk UTBK SNBT, Kurikulum Merdeka SMA/SMP, dan Kuliah di papan tulis suara AI berbahasa Indonesia.",
+    heroBadge: "🇮🇩 Indonesia • UTBK SNBT, Kurikulum Merdeka & PTN",
+    h1: "Guru Privat AI dengan Papan Tulis Suara Bahasa Indonesia",
+    subtitle:
+      "Lihat rumus Matematika, Fisika, Kimia, dan pembahasan soal UTBK SNBT ditulis langkah demi langkah di papan tulis sambil dijelaskan dengan suara guru yang jernih.",
+    defaultLanguage: "id-ID",
+    defaultLevel: "Intermediate",
+    subjectLabel: "UTBK SNBT & Kuliah",
+    featuredChapters: [
+      { title: "Penalaran Matematika UTBK SNBT: Eksponen, Logaritma & Deret", summary: "Konsep inti dan trik cepat menjawab soal UTBK di bawah 60 detik." },
+      { title: "Fisika & Kimia SMA / OSN: Mekanika, Listrik Dinamis & Stoikiometri Larutan", summary: "Penurunan rumus lengkap dan latihan soal pilihan ganda interaktif." },
+    ],
+    highlights: [
+      "Upload foto atau PDF soal tryout UTBK / PR sekolah untuk pembahasan lengkap",
+      "Latihan kuis pilihan ganda & Flashcard 3D otomatis untuk hafalan konsep",
+      "Gratis 30 Kredit Belajar langsung saat daftar tanpa kartu kredit",
+    ],
+    faqs: [
+      { q: "Apakah mendukung persiapan Skripsi / Sidang Tugas Akhir mahasiswa?", a: "Ya! Gunakan fitur Research & Viva Lab (/research) untuk menyusun 6 tahap skripsi dan simulasi tanya-jawab sidang dosen penguji." },
+    ],
+  },
+  {
+    slug: "gia-su-ai-mien-phi-luyen-thi-thpt-quoc-gia-vietnam",
+    category: "World National Exams (Localized)",
+    htmlLang: "vi",
+    title: "Gia Sư AI Miễn Phí Bảng Đen Giọng Nói — Luyện Thi THPT Quốc Gia, ĐGNL & Đại Học",
+    metaDescription:
+      "Học Toán, Lý, Hóa, Sinh, Tiếng Anh luyện thi Tốt nghiệp THPT Quốc gia, Đánh giá năng lực (ĐGNL) và Đại học với bảng đen AI giảng bài bằng giọng nói Tiếng Việt.",
+    heroBadge: "🇻🇳 Việt Nam • THPT Quốc Gia, ĐGNL & Đại Học",
+    h1: "Gia Sư AI Bảng Đen Giọng Nói Tiếng Việt 24/7",
+    subtitle:
+      "Xem từng bước giải phương trình, khảo sát hàm số, vật lý dao động cơ và đề thi thử THPT được viết trực tiếp lên bảng kèm lời giảng dễ hiểu.",
+    defaultLanguage: "vi-VN",
+    defaultLevel: "Intermediate",
+    subjectLabel: "Luyện Thi THPT & ĐH",
+    featuredChapters: [
+      { title: "Toán 12 & Thi THPT: Khảo Sát Hàm Số, Nguyên Hàm Tích Phân & Hình Học Oxyz", summary: "Phương pháp giải nhanh trắc nghiệm và tự luận điểm 9+." },
+      { title: "Vật Lý & Hóa Học: Dao Động Điều Hòa, Dòng Điện Xoay Chiều & Este - Lipit", summary: "Hệ thống công thức trọng tâm và bài tập vận dụng cao." },
+    ],
+    highlights: [
+      "Tải ảnh chụp hoặc file PDF đề thi để AI giải chi tiết từng bước bằng công thức LaTeX",
+      "Tạo đề trắc nghiệm và thẻ ghi nhớ 3D (Flashcards) chỉ với 1 cú nhấp chuột",
+      "Tặng ngay 30 Tín chỉ học tập miễn phí khi đăng ký (không cần thẻ ngân hàng)",
+    ],
+    faqs: [
+      { q: "Ứng dụng có bản cài đặt cho điện thoại Android không?", a: "Có! Bạn có thể dùng trực tiếp trên trình duyệt hoặc tải file APK Android nhẹ, mượt ngay trên trang chủ." },
+    ],
+  },
+  {
+    slug: "ucretsiz-yapay-zeka-ogretmen-yks-tyt-ayt-lgs-kpss-turkiye",
+    category: "World National Exams (Localized)",
+    htmlLang: "tr",
+    title: "Ücretsiz Sesli Yapay Zeka Öğretmen ve Akıllı Tahta — YKS (TYT-AYT), LGS ve KPSS",
+    metaDescription:
+      "YKS (TYT & AYT), LGS, KPSS ve Üniversite Vize-Final sınavlarına Türkçe sesli akıllı kara tahta ve adım adım PDF/fotoğraf soru çözücü ile ücretsiz hazırlanın!",
+    heroBadge: "🇹🇷 Türkiye • YKS (TYT-AYT), LGS, KPSS & Üniversite",
+    h1: "YKS, LGS ve Üniversite İçin Sesli Yapay Zeka Akıllı Tahta",
+    subtitle:
+      "Matematik türev-integral, Fizik, Kimya ve Geometri sorularının adım adım tahtaya yazılarak Türkçe sesli anlatımını izleyin; çözemediğiniz sorunun fotoğrafını yükleyin!",
+    defaultLanguage: "tr-TR",
+    defaultLevel: "Intermediate",
+    subjectLabel: "YKS TYT-AYT & KPSS",
+    featuredChapters: [
+      { title: "AYT Matematik: Limit, Türev, İntegral ve Trigonometri Konu Anlatımı", summary: "ÖSYM tarzı çıkmış soru kalıpları ve grafik yorumlama taktikleri." },
+      { title: "TYT-AYT Fizik & Kimya: Kuvvet ve Hareket, Elektrik ve Kimyasal Denge", summary: "Formül özet kağıtları ve adım adım sayısal soru çözümleri." },
+    ],
+    highlights: [
+      "Yapamadığınız deneme sınavı sorusunun fotoğrafını veya PDF'ini yükleyin, tam çözüm alın",
+      "Anlamadığınız yerde 'El Kaldır' (Raise Hand) butonuyla öğretmene sesli soru sorun",
+      "Kayıt olan herkese kredi kartı gerekmeden 30 Ücretsiz Ders Kredisi",
+    ],
+    faqs: [
+      { q: "Üniversite mühendislik dersleri ve tez savunması için de uygun mu?", a: "Evet! Kalkülüs, Lineer Cebir, Algoritmalar ve canlı Tez Savunma (Viva) simülatörü mevcuttur." },
+    ],
+  },
+  {
+    slug: "waec-jamb-utme-neco-kcse-matric-ai-tutor-africa",
+    category: "World National Exams (Localized)",
+    htmlLang: "en",
+    title: "Free AI Voice Blackboard & Past Question Solver for WAEC, JAMB UTME, NECO, KCSE & Matric",
+    metaDescription:
+      "Score 300+ in JAMB UTME, A1 in WASSCE/WAEC & NECO, A in KCSE Kenya, and Distinctions in South Africa NSC Matric with a live AI Voice Blackboard & Past Paper Solver.",
+    heroBadge: "🇳🇬 🇬🇭 🇰🇪 🇿🇦 Africa • WAEC, JAMB, KCSE & Matric",
+    h1: "Africa's #1 AI Voice Blackboard for WAEC, JAMB UTME, KCSE & University",
+    subtitle:
+      "Master Mathematics, Further Maths, Physics, Chemistry, Biology, Economics, and University STEM on a data-light talking chalkboard — works smoothly on any Android phone!",
+    defaultLanguage: "en-US",
+    defaultLevel: "Intermediate",
+    subjectLabel: "WAEC / JAMB / KCSE / Matric",
+    featuredChapters: [
+      { title: "JAMB UTME & WASSCE Mathematics: Logarithms, Surds, Calculus & Probability", summary: "High-scoring past question patterns solved step-by-step without skipping lines." },
+      { title: "KCSE & NSC Matric Physical Sciences: Projectile Motion, Stoichiometry & Electrodynamics", summary: "Complete syllabus derivations, worked numericals, and timed CBT practice quizzes." },
+    ],
+    highlights: [
+      "Snap or upload WAEC, JAMB, NECO, KCSE, or Matric past papers for full step-by-step workings",
+      "Supports English, Swahili (Kiswahili), French, Arabic, Hausa, Yoruba & Igbo",
+      "Ultra-lightweight Android APK + 30 Free Study Credits instantly on sign-up",
+    ],
+    faqs: [
+      { q: "Does it help prepare for JAMB CBT mock tests?", a: "Yes! Open Quiz & Cards (/practice) to generate timed multiple-choice CBT drills with step-by-step explanations on any JAMB topic." },
+    ],
+  },
+  {
+    slug: "gaokao-kaoyan-mianfei-ai-yuyin-heiban-chinese",
+    category: "World National Exams (Localized)",
+    htmlLang: "zh",
+    title: "免费AI语音黑板导师 — 高考、考研、学测(GSAT)、A-Level与大学理工科解题神器",
+    metaDescription:
+      "告别枯燥纯文本聊天！在交互式AI语音黑板上一步步观看高等数学、高考物理化学、考研专业课与算法公式推导，支持上传试卷PDF拍照搜题与论文答辩模拟。",
+    heroBadge: "🇨🇳 🇹🇼 🇸🇬 中文 • 高考、考研、学测与大学STEM",
+    h1: "会写板书、会讲课的 AI 语音黑板私人导师",
+    subtitle:
+      "无论是高考压轴题、考研数学（高数/线代/概率论）、大学计算机算法，还是硕士博士毕业论文答辩模拟，每一行公式都在黑板上为您清晰推导并同步语音讲解。",
+    defaultLanguage: "zh-CN",
+    defaultLevel: "Advanced",
+    subjectLabel: "高考·考研·大学理工",
+    featuredChapters: [
+      { title: "高考与大学物理：法拉第电磁感应定律、洛伦兹力与带电粒子运动压轴题解析", summary: "完整受力分析、能量守恒推导与高分规范答题步骤。" },
+      { title: "考研数学与CS核心：泰勒展开、特征值SVD分解与Transformer自注意力机制", summary: "从第一性原理出发的严谨数学证明与例题精讲。" },
+    ],
+    highlights: [
+      "支持上传真题 PDF 或截图（Ctrl+V 粘贴），即刻生成满分标准板书解析",
+      "内置科研立项与 AI 毕业论文答辩模拟器 (/research)，助您从容应对导师提问",
+      "注册即送 30 免费学习积分（无需绑定信用卡，支持简体与繁体中文）",
+    ],
+    faqs: [
+      { q: "支持简体中文和繁体中文讲课吗？", a: "完全支持！在语言选择器中选择普通话（简体/繁体）或粤语，黑板板书与语音将全程使用地道中文。" },
+    ],
+  },
+  {
+    slug: "suneung-csat-muryo-ai-chilpan-tutor-korean",
+    category: "World National Exams (Localized)",
+    htmlLang: "ko",
+    title: "수능(CSAT)·내신·대학 전공 무료 AI 음성 칠판 튜터 및 기출문제 풀이",
+    metaDescription:
+      "수능 수학(미적분·확통·기하), 물리·화학·생명과학 과탐 및 대학 공학 전공을 실시간 수식 판서와 한국어 음성 강의로 배우고 PDF 기출문제를 완벽 해설하세요.",
+    heroBadge: "🇰🇷 대한민국 • 수능(CSAT), 내신 & 대학 전공",
+    h1: "칠판에 수식을 쓰며 설명해 주는 AI 음성 과외 선생님",
+    subtitle:
+      "킬러 문항 PDF나 사진을 올리면 단계별 LaTeX 수식 풀이를 판서해 주고, 수업 도중 언제든 손들기 버튼으로 질문할 수 있습니다.",
+    defaultLanguage: "ko-KR",
+    defaultLevel: "Advanced",
+    subjectLabel: "수능 & 대학 전공",
+    featuredChapters: [
+      { title: "수능 수학 미적분 킬러 대비: 합성함수의 미분가능성과 정적분 급수", summary: "평가원 기출 핵심 아이디어와 그래프 개형 추론 단계별 해설." },
+      { title: "대학 컴퓨터공학 & AI: 알고리즘 시간복잡도, 동적계획법(DP)과 트랜스포머", summary: "전공 시험 및 기술 면접 완벽 대비 강의." },
+    ],
+    highlights: [
+      "모의고사·기출문제 PDF 및 스크린샷 즉시 단계별 해설",
+      "자동 객관식 퀴즈 생성 및 3D 간격 반복 암기 카드 제공",
+      "신용카드 없이 가입 즉시 30 무료 학습 크레딧 지급",
+    ],
+    faqs: [
+      { q: "한국어 음성과 수식이 자연스럽게 연동되나요?", a: "네, LaTeX 수식을 칠판에 깔끔하게 렌더링하면서 한국어 음성으로 한 줄씩 짚어주며 강의합니다." },
+    ],
+  },
+  {
+    slug: "kyotsu-test-daigaku-juken-muryo-ai-kokuban-japanese",
+    category: "World National Exams (Localized)",
+    htmlLang: "ja",
+    title: "共通テスト・大学受験・理系専門対応 無料AI音声黒板チューター＆過去問解説",
+    metaDescription:
+      "大学入学共通テスト、国公立二次・私大入試（数学・物理・化学・英語）から大学の理工学・卒論口頭試問まで、AI先生が黒板に数式を書きながら日本語音声で徹底解説！",
+    heroBadge: "🇯🇵 日本 • 共通テスト・難関大受験・大学理系",
+    h1: "黒板に数式を書きながら声で教える AI 個別指導講師",
+    subtitle:
+      "過去問のPDFやスマホ写真をアップロードするだけで、記述式の採点基準に沿った途中式と解説を黒板に再現。いつでも質問して疑問をゼロにできます。",
+    defaultLanguage: "ja-JP",
+    defaultLevel: "Advanced",
+    subjectLabel: "共通テスト・大学受験",
+    featuredChapters: [
+      { title: "高校・大学受験数学：微分積分・ベクトル・確率漸化式の完全攻略", summary: "記述答案の書き方から共通テストの時短テクニックまで網羅。" },
+      { title: "物理・情報工学：電磁気学・量子力学入門・機械学習アルゴリズム", summary: "大学の定期試験・大学院入試（院試）レベルの厳密な導出にも対応。" },
+    ],
+    highlights: [
+      "過去問PDF・スクリーンショット（Ctrl+V）のステップバイステップ解答",
+      "卒論・修論の口頭試問（ディフェンス）AIシミュレーター搭載 (/research)",
+      "クレカ不要・無料登録だけで30学習クレジットを即時プレゼント",
+    ],
+    faqs: [
+      { q: "スマートフォンからでも利用できますか？", a: "はい、iPhone/iPadのブラウザ（PWA）およびAndroidアプリ（APK）の両方で快適にご利用いただけます。" },
+    ],
+  },
+  {
+    slug: "kostenloser-ki-lehrer-abitur-matura-studium-deutsch",
+    category: "World National Exams (Localized)",
+    htmlLang: "de",
+    title: "Kostenloser KI-Lehrer mit Sprach-Tafel für Abitur, Matura & Uni-Klausuren",
+    metaDescription:
+      "Mathematik, Physik, Chemie, Informatik & Altklausuren für Abitur (DE), Matura (AT/CH) und Studium Schritt für Schritt auf einer interaktiven KI-Sprachtafel lernen.",
+    heroBadge: "🇩🇪 🇦🇹 🇨🇭 Deutsch • Abitur, Matura & Universität",
+    h1: "Dein Interaktiver KI-Tutor mit Tafelbild & Sprachausgabe",
+    subtitle:
+      "Verfolge mathematische Beweise, Analysis, Stochastik und Altklausur-Lösungen live an der Tafel — inklusive mündlicher Kolloquium- & Thesis-Simulation.",
+    defaultLanguage: "de-DE",
+    defaultLevel: "Advanced",
+    subjectLabel: "Abitur, Matura & Uni",
+    featuredChapters: [
+      { title: "Mathe-Abitur & Analysis I: Kurvendiskussion, Integralrechnung & Lineare Algebra", summary: "Vollständige Herleitungen, Extremwertaufgaben und Vektorgeometrie." },
+      { title: "Informatik & Ingenieurstudium: Algorithmen, Thermodynamik & Elektrotechnik", summary: "Perfekt zur Klausurvorbereitung mit automatischen Karteikarten & MC-Tests." },
+    ],
+    highlights: [
+      "Übungsblätter & Altklausuren als PDF oder Foto hochladen und komplett vorrechnen lassen",
+      "Bachelor- & Masterarbeit Kolloquium-Simulator (/research)",
+      "30 Gratis-Lerncredits direkt nach der Anmeldung ohne Abo-Zwang",
+    ],
+    faqs: [
+      { q: "Ist ein monatliches Abo nötig?", a: "Nein! Du startest mit 30 kostenlosen Credits (ohne Kreditkarte) und lädst bei Bedarf nur winzige Pakete ohne Abo auf." },
+    ],
+  },
+  {
+    slug: "besplatnyj-ii-uchitel-ege-oge-ent-ekzameny-russian",
+    category: "World National Exams (Localized)",
+    htmlLang: "ru",
+    title: "Бесплатный ИИ-Репетитор с Голосовой Доской — Подготовка к ЕГЭ, ОГЭ, ЕНТ и Сессии",
+    metaDescription:
+      "Интерактивная голосовая ИИ-доска на русском языке: разбор профильной математики, физики, информатики и химии для ЕГЭ, ОГЭ, ЕНТ и университетских экзаменов по шагам.",
+    heroBadge: "🇷🇺 🇰🇿 Русский • ЕГЭ, ОГЭ, ЕНТ и ВУЗы",
+    h1: "Персональный ИИ-Преподаватель с Интерактивной Голосовой Доской",
+    subtitle:
+      "Смотрите, как формулы LaTeX, теоремы и задачи второй части ЕГЭ выводятся на школьной доске с живым голосовым объяснением на русском языке.",
+    defaultLanguage: "ru-RU",
+    defaultLevel: "Advanced",
+    subjectLabel: "ЕГЭ, ОГЭ и Университет",
+    featuredChapters: [
+      { title: "Профильная Математика ЕГЭ: Параметры, Стереометрия, Производная и Логарифмы", summary: "Пошаговое оформление заданий на максимальный первичный балл." },
+      { title: "Высшая Математика, Физика и Алгоритмы для Студентов ВУЗов", summary: "Матанализ, линейная алгебра, дифференциальные уравнения и подготовка к защите диплома." },
+    ],
+    highlights: [
+      "Загрузите фото или PDF варианта экзамена — получите подробное решение каждого пункта",
+      "Генератор тестов и 3D-карточек интервального повторения за 1 клик",
+      "30 бесплатных учебных кредитов сразу после регистрации",
+    ],
+    faqs: [
+      { q: "Можно ли задать вопрос голосом прямо во время урока?", a: "Да! Нажмите кнопку «Поднять руку», чтобы уточнить любой непонятный переход в формуле." },
+    ],
+  },
+  {
+    slug: "bangla-ai-voice-blackboard-hsc-ssc-bcs-wbchse",
+    category: "Regional Languages",
+    htmlLang: "bn",
+    title: "বাংলা এআই ভয়েস ব্ল্যাকবোর্ড শিক্ষক — SSC, HSC, ভর্তি পরীক্ষা, BCS ও মাধ্যমিক/উচ্চমাধ্যমিক",
+    metaDescription:
+      "খাঁটি বাংলা লিপিতে ও কণ্ঠে গণিত, পদার্থবিজ্ঞান, রসায়ন, জীববিজ্ঞান ও সাধারণ জ্ঞান শিখুন — বাংলাদেশের SSC, HSC, BUET/মেডিকেল, BCS এবং পশ্চিমবঙ্গের মাধ্যমিক/উচ্চমাধ্যমিকের জন্য।",
+    heroBadge: "🇧🇩 🇮🇳 বাংলা • HSC, SSC, BCS, WBCHSE ও JEE/NEET",
+    h1: "আপনার নিজস্ব বাংলা এআই ভয়েস ব্ল্যাকবোর্ড ক্লাসরুম",
+    subtitle:
+      "ইংরেজি অক্ষরে বাংলা নয় — সম্পূর্ণ শুদ্ধ বাংলা লিপিতে গাণিতিক সূত্র, উপপাদ্য এবং বোর্ড পরীক্ষার প্রশ্নপত্রের ধাপে ধাপে সমাধান দেখুন ও শুনুন!",
+    defaultLanguage: "bn-IN",
+    defaultLevel: "Intermediate",
+    subjectLabel: "বাংলা মাধ্যম শিক্ষা",
+    featuredChapters: [
+      { title: "উচ্চমাধ্যমিক ও HSC পদার্থবিজ্ঞান: নিউটনের গতিসূত্র, তড়িৎপ্রবাহ ও আলোকবিজ্ঞান", summary: "গাণিতিক সমস্যার সহজ সমাধান এবং পরীক্ষার সৃজনশীল ও সংক্ষিপ্ত প্রশ্নোত্তর।" },
+      { title: "গণিত ও BCS/চাকরি প্রস্তুতি: ক্যালকুলাস, ত্রিকোণমিতি এবং পাটিগণিত শর্টকাট", summary: "দ্রুত এমসিকিউ কুইজ এবং থ্রিডি ফ্ল্যাশকার্ড অনুশীলন।" },
+    ],
+    highlights: [
+      "যেকোনো সৃজনশীল প্রশ্ন বা পরীক্ষার PDF/ছবি আপলোড করে পূর্ণাঙ্গ সমাধান পান",
+      "বাংলাদেশ (NCTB / ভর্তি / BCS) এবং পশ্চিমবঙ্গ (WBBSE / WBCHSE) উভয় সিলেবাস অন্তর্ভুক্ত",
+      "সাইন-আপ করলেই ৩০টি ফ্রি স্টাডি ক্রেডিট (কোনো কার্ড লাগবে না)",
+    ],
+    faqs: [
+      { q: "এটি কি সম্পূর্ণ বাংলা অক্ষরে বোর্ডে লিখে পড়ায়?", a: "হ্যাঁ! AshuTeacher কঠোরভাবে খাঁটি বাংলা লিপি অনুসরণ করে এবং সাথে স্পষ্ট LaTeX গাণিতিক সমীকরণ দেখায়।" },
+    ],
+  },
+  {
+    slug: "urdu-ai-voice-blackboard-mdcat-fsc-matric-css",
+    category: "Regional Languages",
+    htmlLang: "ur",
+    isRtl: true,
+    title: "مفت اردو اے آئی وائس بلیک بورڈ ٹیچر — میٹرک، ایف ایس سی، MDCAT، ECAT اور CSS",
+    metaDescription:
+      "خالص اردو رسم الخط اور آواز میں فزکس، ریاضی، کیمسٹری، بائیولوجی اور مقابلے کے امتحانات (Matric, FSc, MDCAT, ECAT, CSS, बोर्ड) کی تیاری کریں۔ ۳۰ مفت کریڈٹس!",
+    heroBadge: "🇵🇰 🇮🇳 اردو • Matric, FSc, MDCAT, ECAT & Boards",
+    h1: "اردو زبان میں بولتا اور لکھتا ہوا اے آئی بلیک بورڈ استاد",
+    subtitle:
+      "مشکل فارمولے، ریاضی کے سوالات اور ماضی کے پرچے (Past Papers) خالص نستعلیق/اردو تحریر اور واضح آواز کے ساتھ مرحلہ وار سمجھیں۔",
+    defaultLanguage: "ur-PK",
+    defaultLevel: "Intermediate",
+    subjectLabel: "اردو میڈیم اکیڈمی",
+    featuredChapters: [
+      { title: "فزکس اور ریاضی (FSc / Matric): قوانینِ حرکت، برقی رو اور کیلکولس کے بنیادی اصول", summary: "امتحانی طرز کے حل شدہ عددی سوالات اور فارمولا شیٹس۔" },
+      { title: "ایم ڈی کیٹ (MDCAT) بائیولوجی اور کیمسٹری: سیل بائیولوجی، جینیات اور آرگینک ری ایکشنز", summary: "فوری ایم سی کیو ٹیسٹ اور تھری ڈی فلیش کارڈز کے ساتھ دہرائی۔" },
+    ],
+    highlights: [
+      "کسی بھی امتحانی پرچے کی تصویر یا PDF اپ لوڈ کر کے مکمل حل حاصل کریں",
+      "کلاس کے دوران ہاتھ اٹھا کر اردو میں اپنا سوال پوچھیں",
+      "رجسٹریشن پر فوری ۳۰ مفت اسٹڈی کریڈٹس (بغیر کسی بینک کارڈ کے)",
+    ],
+    faqs: [
+      { q: "کیا یہ اردو میڈیم اور انگلش میڈیم دونوں طلبہ کے لیے مفید ہے؟", a: "جی ہاں! آپ ایک کلک میں اردو یا انگریزی زبان منتخب کر سکتے ہیں اور تکنیکی اصطلاحات دونوں زبانوں میں سمجھ سکتے ہیں۔" },
+    ],
+  },
+  {
+    slug: "tamil-telugu-marathi-gujarati-kannada-malayalam-ai-tutor",
+    category: "Regional Languages",
+    htmlLang: "en-IN",
+    title: "Tamil (தமிழ்), Telugu (తెలుగు), Marathi (मराठी), Gujarati, Kannada & Malayalam AI Voice Blackboard",
+    metaDescription:
+      "Native-script AI Voice Blackboard for TNPSC/Samacheer (தமிழ்), EAPCET/APPSC/TSPSC (తెలుగు), MPSC/MHT-CET (मराठी), GUJCET/GPSC (ગુજરાતી), KCET (ಕನ್ನಡ) & KEAM/PSC (മലയാളം).",
+    heroBadge: "தமிழ் • తెలుగు • मराठी • ગુજરાતી • ಕನ್ನಡ • മലയാളം",
+    h1: "State Board, CET & State PSC AI Classroom in Pure Regional Scripts",
+    subtitle:
+      "Prepare for TN Samacheer Kalvi, TNPSC, AP/TS Inter & EAPCET, Maharashtra HSC/MHT-CET/MPSC, GSEB/GUJCET, Karnataka PUC/KCET, and Kerala HSE/KEAM in 100% pure native script.",
+    defaultLanguage: "ta-IN",
+    defaultLevel: "Intermediate",
+    subjectLabel: "South & West India State Hubs",
+    featuredChapters: [
+      { title: "தமிழ் (Tamil): TNPSC Group 1/2/4 பொது அறிவு, கணிதம் & 12th Physics/Biology", summary: "Pure தமிழ் script explanations for Tamil Nadu State Board, NEET Tamil & TNPSC." },
+      { title: "తెలుగు (Telugu): AP & TS EAPCET Maths/Physics, BIEAP/TSBIE Inter & APPSC/TSPSC", summary: "Step-by-step derivations and mock tests in authentic తెలుగు script." },
+      { title: "मराठी & ગુજરાતી: MHT-CET / MPSC आणि GUJCET / GPSC संपूर्ण अभ्यासक्रम", summary: "Board numericals, state polity/history, and active-recall flashcards." },
+      { title: "ಕನ್ನಡ & മലയാളം: Karnataka KCET/KPSC & Kerala KEAM/PSC Interactive Lectures", summary: "Crystal-clear STEM & competitive exam lectures in Kannada and Malayalam scripts." },
+    ],
+    highlights: [
+      "Zero Romanized gibberish — strict native Unicode script purity for every state language",
+      "Upload regional-medium board question papers (PDF/Photo) for native-language solutions",
+      "30 Free Study Credits on sign-up + ₹99 micro top-ups via UPI",
+    ],
+    faqs: [
+      { q: "Can I switch between my state language and English for engineering/medical entrance?", a: "Yes — switch anytime in 1 tap so you understand deep intuition in your mother tongue while mastering English technical terms." },
+    ],
+  },
+  {
+    slug: "upcat-cet-prc-board-exam-let-nursing-ai-reviewer-philippines",
+    category: "World National Exams (Localized)",
+    htmlLang: "en-PH",
+    title: "Free AI Voice Blackboard Reviewer — UPCAT, ACET, DCAT, Civil Service & PRC Board Exams (PH)",
+    metaDescription:
+      "Ace UPCAT, ACET, DCAT, USTET, Civil Service Exam, and PRC Licensure Board Exams (LET, PNLE Nursing, Engineering, CPA) in English or Tagalog/Filipino on AshuTeacher!",
+    heroBadge: "🇵🇭 Philippines • UPCAT, CETs, CSE & PRC Boards",
+    h1: "Interactive AI Voice Chalkboard Reviewer for Filipino Students & Board Takers",
+    subtitle:
+      "Review Math, Science, Abstract Reasoning, General Education, Professional Education (LET), Nursing Pharmacology, and Engineering Calculus with live voice explanations in English or Tagalog!",
+    defaultLanguage: "en-US",
+    defaultLevel: "Intermediate",
+    subjectLabel: "PH CETs & PRC Boards",
+    featuredChapters: [
+      { title: "UPCAT / College Entrance Math & Science: Functions, Trigonometry, Stoichiometry & Genetics", summary: "Fast mental-math techniques and high-yield Senior High STEM review." },
+      { title: "PRC LET, PNLE Nursing & Engineering Board Exam Intensive Drills", summary: "Generate 25-item situational board-style MCQs with rationales and 3D flashcards." },
+    ],
+    highlights: [
+      "Upload review center handouts or PDF mock questionnaires for step-by-step rationales",
+      "Supports both English and conversational Filipino / Tagalog explanations",
+      "30 Free Study Credits instantly on sign-up — no credit card required",
+    ],
+    faqs: [
+      { q: "Can it generate situational board-exam style multiple-choice questions with rationales?", a: "Yes! Open Quiz & Cards (/practice) to generate custom MCQ drills with complete step-by-step rationales for every item." },
+    ],
+  },
+  {
+    slug: "ai-tutor-matura-maturita-tcas-europe-asia-exams",
+    category: "World National Exams (Localized)",
+    htmlLang: "en",
+    title: "AI Voice Blackboard for Matura (Poland), Maturità & TOLC (Italy), TCAS (Thailand) & Global Exams",
+    metaDescription:
+      "Free interactive AI Voice Blackboard in Polish (Matura), Italian (Maturità & Test Medicina TOLC), Thai (TCAS TGAT/TPAT A-Level), Dutch (VWO), Swedish & 100+ languages.",
+    heroBadge: "🇵🇱 🇮🇹 🇹🇭 🇳🇱 Europe & Asia National Exams",
+    h1: "Every Country's National Exam — Taught in Its Native Language",
+    subtitle:
+      "Whether it's Polish Matura z Matematyki, Italian Maturità & TOLC-MED, Thai TCAS A-Level, Dutch Eindexamen VWO, or Romanian Bacalaureat — learn on a live voice blackboard.",
+    defaultLanguage: "en-US",
+    defaultLevel: "Intermediate",
+    subjectLabel: "Europe & Asia Exams",
+    featuredChapters: [
+      { title: "Matura Rozszerzona (Polska): Rachunek Różniczkowy, Wielomiany i Geometria Analityczna", summary: "Pełne rozwiązania zadań maturalnych krok po kroku po polsku." },
+      { title: "Maturità Scientifica & TOLC-MED (Italia): Studio di Funzione, Fisica, Biologia e Chimica", summary: "Spiegazioni vocali chiare alla lavagna e quiz simulati." },
+      { title: "TCAS A-Level & TGAT/TPAT (ประเทศไทย): คณิตศาสตร์ประยุกต์ ฟิสิกส์ และเคมี", summary: "สรุปสูตรและเฉลยข้อสอบทีละบรรทัดบนกระดานดำเสียงพูดภาษาไทย" },
+    ],
+    highlights: [
+      "195+ countries selectable in the 6-level Syllabus Explorer (/academy)",
+      "Upload past exam PDFs in Polish, Italian, Thai, Dutch, Turkish, Greek, or any language",
+      "Start free in 10 seconds with 30 Free Study Credits",
+    ],
+    faqs: [
+      { q: "How many languages and countries does AshuTeacher support?", a: "Over 100 global & regional languages and 195+ national school, university, and competitive exam systems worldwide." },
     ],
   },
 ];

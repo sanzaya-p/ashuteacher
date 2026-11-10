@@ -14,3 +14,24 @@
 - [Capstone, Thesis & Viva Defense Lab](https://ashuteacher.vercel.app/research): 6-milestone research blueprint architect (Problem Formulation, Literature Gap, Methodology, Implementation, Evaluation, Paper Structure) + interactive AI Viva Voce Examiner defense simulator.
 - [Course & Roadmap Architect](https://ashuteacher.vercel.app/courses): Custom multi-module syllabus generator with automatic chapter completion tracking.
 - [Quiz & 3D Flashcard Practice Arena](https://ashuteacher.vercel.app/practice): Auto-generated MCQ mock tests with LaTeX step-by-step solutions and 3D active-recall flashcards.
+
+## Global Localized Exam & Language Hubs (195+ Countries)
+
+- [Explore All Global Hubs](https://ashuteacher.vercel.app/explore)
+- [Brazil ENEM & Vestibular (Português)](https://ashuteacher.vercel.app/explore/professor-ia-gratuito-enem-vestibular-fuvest-brasil)
+- [Spain & LATAM Selectividad PAU, UNAM, ICFES, PAES (Español)](https://ashuteacher.vercel.app/explore/profesor-ia-gratis-pau-ebau-unam-icfes-paes-espanol)
+- [MENA Thanaweya Amma, Qudurat, Tahsili & Tawjihi (العربية)](https://ashuteacher.vercel.app/explore/muallim-dhaka-istinai-majani-thanaweya-qudurat-tawjihi-arabic)
+- [France & Francophonie Baccalauréat, Brevet & CPGE (Français)](https://ashuteacher.vercel.app/explore/professeur-ia-gratuit-baccalaureat-brevet-prepa-francais)
+- [Indonesia UTBK SNBT & Kurikulum Merdeka (Bahasa Indonesia)](https://ashuteacher.vercel.app/explore/guru-ai-gratis-utbk-snbt-olimpiade-sma-indonesia)
+- [Vietnam THPT Quốc Gia & Đại Học (Tiếng Việt)](https://ashuteacher.vercel.app/explore/gia-su-ai-mien-phi-luyen-thi-thpt-quoc-gia-vietnam)
+- [Turkey YKS TYT-AYT, LGS & KPSS (Türkçe)](https://ashuteacher.vercel.app/explore/ucretsiz-yapay-zeka-ogretmen-yks-tyt-ayt-lgs-kpss-turkiye)
+- [Africa WAEC, JAMB UTME, NECO, KCSE & Matric](https://ashuteacher.vercel.app/explore/waec-jamb-utme-neco-kcse-matric-ai-tutor-africa)
+- [China, Taiwan & Singapore Gaokao, Kaoyan & GSAT (中文)](https://ashuteacher.vercel.app/explore/gaokao-kaoyan-mianfei-ai-yuyin-heiban-chinese)
+- [South Korea CSAT Suneung (한국어)](https://ashuteacher.vercel.app/explore/suneung-csat-muryo-ai-chilpan-tutor-korean)
+- [Japan Kyotsu Test & University Entrance (日本語)](https://ashuteacher.vercel.app/explore/kyotsu-test-daigaku-juken-muryo-ai-kokuban-japanese)
+- [Germany, Austria & Switzerland Abitur & Matura (Deutsch)](https://ashuteacher.vercel.app/explore/kostenloser-ki-lehrer-abitur-matura-studium-deutsch)
+- [CIS EGE, OGE & ENT (Русский)](https://ashuteacher.vercel.app/explore/besplatnyj-ii-uchitel-ege-oge-ent-ekzameny-russian)
+- [Bangladesh & West Bengal SSC, HSC, BCS & WBCHSE (বাংলা)](https://ashuteacher.vercel.app/explore/bangla-ai-voice-blackboard-hsc-ssc-bcs-wbchse)
+- [Urdu Matric, FSc, MDCAT & CSS (اردو)](https://ashuteacher.vercel.app/explore/urdu-ai-voice-blackboard-mdcat-fsc-matric-css)
+- [Philippines UPCAT, CETs & PRC Board Exams](https://ashuteacher.vercel.app/explore/upcat-cet-prc-board-exam-let-nursing-ai-reviewer-philippines)
+- [India IGNOU MCA/MBA/BAG, UPSC, IIT-JEE, NEET, GATE, CBSE & 22 Indian Languages](https://ashuteacher.vercel.app/explore/ignou-mca-syllabus-ai-tutor)
