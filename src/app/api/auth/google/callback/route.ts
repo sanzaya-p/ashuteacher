@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isFounderAdminEmail, setSessionCookie } from "@/lib/auth";
-import { WELCOME_FREE_CREDITS } from "@/lib/credits";
+import { WELCOME_FREE_CREDITS, rewardClassmateReferral } from "@/lib/credits";
 
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
@@ -80,6 +80,12 @@ export async function GET(req: NextRequest) {
         });
         return created;
       });
+
+      const refCookie = cookieStore.get("ashu_ref")?.value;
+      if (refCookie) {
+        const rewarded = await rewardClassmateReferral(user.id, refCookie);
+        if (rewarded) user = rewarded;
+      }
     } else if (!user.googleId && profile.sub) {
       user = await prisma.user.update({
         where: { id: user.id },

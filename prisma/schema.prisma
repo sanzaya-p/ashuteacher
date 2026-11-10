@@ -23,10 +23,12 @@ model User {
   preferredModel String   @default("gemini-3-flash-preview")
   creditsBalance Int      @default(30)
   xpPoints       Int      @default(100)
-  streakDays     Int      @default(1)
-  lastActiveDate String   @default("")
-  planTier       String   @default("Starter")
-  createdAt      DateTime @default(now())
+  streakDays         Int      @default(1)
+  lastActiveDate     String   @default("")
+  planTier           String   @default("Starter")
+  referredById       String?
+  referralBonusCount Int      @default(0)
+  createdAt          DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   courses          Course[]
@@ -257,4 +259,18 @@ model LessonCache {
   hitCount  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model SiteVisit {
+  id           String   @id @default(cuid())
+  visitorHash  String
+  path         String
+  referrerHost String   @default("direct")
+  utmSource    String   @default("")
+  country      String   @default("GLOBAL")
+  refUserId    String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([referrerHost])
 }

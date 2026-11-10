@@ -43,6 +43,9 @@ export async function GET() {
       recentSignupsCount,
       cachedLessonsAgg,
       cachedCatalogNodesCount,
+      recentVisits,
+      totalVisitsCount,
+      referralSignupsCount,
     ] = await Promise.all([
       prisma.user.findMany({
         orderBy: { createdAt: "desc" },
@@ -100,7 +103,39 @@ export async function GET() {
         _sum: { hitCount: true },
       }),
       prisma.catalogCache.count(),
+      prisma.siteVisit.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 300,
+      }),
+      prisma.siteVisit.count(),
+      prisma.user.count({
+        where: { NOT: { referredById: null } },
+      }),
     ]);
+
+    const visits7d = recentVisits.filter(
+      (v) => new Date(v.createdAt).getTime() >= sevenDaysAgo.getTime()
+    );
+    const uniqueVisitors7d = new Set(visits7d.map((v) => v.visitorHash)).size;
+
+    const referrerMap: Record<string, number> = {};
+    const countryMap: Record<string, number> = {};
+    for (const v of recentVisits) {
+      const src = v.referrerHost || "direct";
+      referrerMap[src] = (referrerMap[src] || 0) + 1;
+      const c = v.country || "GLOBAL";
+      countryMap[c] = (countryMap[c] || 0) + 1;
+    }
+
+    const topReferrers = Object.entries(referrerMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([source, count]) => ({ source, count }));
+
+    const topCountries = Object.entries(countryMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([country, count]) => ({ country, count }));
 
     const totalUsers = await prisma.user.count();
     const cachedLessonsCount = cachedLessonsAgg._count._all || 0;
@@ -141,10 +176,17 @@ export async function GET() {
         cachedCatalogNodesCount,
         apiCallsSavedByCache,
         activeGeminiKeyPoolSize,
+        totalVisitsCount,
+        visits7dCount: visits7d.length,
+        uniqueVisitors7d,
+        referralSignupsCount,
       },
       users,
       paymentOrders,
       recentTransactions,
+      topReferrers,
+      topCountries,
+      recentVisits: recentVisits.slice(0, 100),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed";

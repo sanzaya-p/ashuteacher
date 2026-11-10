@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Compass,
   FlaskConical,
+  Globe,
 } from "lucide-react";
 import {
   getStoredApiKey,
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
   { href: "/research", label: "Research & Projects", icon: FlaskConical },
   { href: "/courses", label: "Course Builder", icon: GraduationCap },
   { href: "/practice", label: "Quiz & Cards", icon: BrainCircuit },
+  { href: "/explore", label: "Explore Study Hubs", icon: Globe },
   { href: "/library", label: "Saved Library", icon: Library },
   { href: "/pricing", label: "Credits & Pricing", icon: Coins },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -151,6 +153,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refreshStatus();
+
+    // Capture ?ref= classmate referral & log privacy-safe external traffic beacon once per tab session
+    if (typeof window !== "undefined") {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        const refParam = (sp.get("ref") || "").trim();
+        const utmSource = (sp.get("utm_source") || "").trim();
+        if (refParam) {
+          window.localStorage.setItem("ashu_ref", refParam);
+          document.cookie = `ashu_ref=${encodeURIComponent(refParam)}; path=/; max-age=2592000; samesite=lax`;
+        }
+        if (!window.sessionStorage.getItem("ashu_visit_logged")) {
+          window.sessionStorage.setItem("ashu_visit_logged", "1");
+          fetch("/api/analytics/visit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+            body: JSON.stringify({
+              path: window.location.pathname,
+              referrer: document.referrer || "",
+              utmSource,
+              refCode: refParam || window.localStorage.getItem("ashu_ref") || "",
+            }),
+          }).catch(() => null);
+        }
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+
     const unsubKey = subscribeKeyUpdated(() => refreshStatus());
     const unsubWallet = subscribeWalletUpdated((credits) => {
       if (typeof credits === "number") {

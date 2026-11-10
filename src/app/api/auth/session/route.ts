@@ -9,7 +9,8 @@ import {
   setSessionCookie,
   verifyPassword,
 } from "@/lib/auth";
-import { WELCOME_FREE_CREDITS } from "@/lib/credits";
+import { cookies } from "next/headers";
+import { WELCOME_FREE_CREDITS, rewardClassmateReferral } from "@/lib/credits";
 
 function sanitizeUser(u: {
   id: string;
@@ -68,7 +69,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { mode = "login", email, password, name } = body;
+    const { mode = "login", email, password, name, refCode } = body;
     const today = new Date().toISOString().slice(0, 10);
 
     // Instant Demo Login (Strictly disabled in production!)
@@ -170,8 +171,21 @@ export async function POST(req: NextRequest) {
         return u;
       });
 
+      const cookieStore = await cookies();
+      const effectiveRef =
+        String(refCode || "").trim() ||
+        cookieStore.get("ashu_ref")?.value ||
+        "";
+
+      const bonusUser = effectiveRef
+        ? await rewardClassmateReferral(createdUser.id, effectiveRef)
+        : null;
+
       await setSessionCookie(createdUser.id);
-      return NextResponse.json({ ok: true, user: sanitizeUser(createdUser) });
+      return NextResponse.json({
+        ok: true,
+        user: sanitizeUser(bonusUser || createdUser),
+      });
     }
 
     // Standard Email + Password Sign In

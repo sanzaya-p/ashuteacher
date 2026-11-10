@@ -126,6 +126,7 @@ export async function GET() {
         preferredLang: user.preferredLang,
         preferredLevel: user.preferredLevel,
         planTier: user.planTier,
+        referralBonusCount: user.referralBonusCount,
       },
       hasServerKey,
       stats: {

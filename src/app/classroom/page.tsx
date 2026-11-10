@@ -54,7 +54,7 @@ import {
   parseLanguageAndScript,
 } from "@/lib/constants";
 import { markdownToSpeechSegments } from "@/lib/speech";
-import { apiFetch, getStoredModel } from "@/lib/client-api";
+import { apiFetch, getStoredModel, promptAuthModal } from "@/lib/client-api";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
@@ -163,16 +163,20 @@ function ClassroomInner() {
   const [creatingQuiz, setCreatingQuiz] = useState(false);
   const [creatingCards, setCreatingCards] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [isGuestPreview, setIsGuestPreview] = useState(false);
 
   async function handleViralShare() {
     const activeTopic = (lessonTitle || topic || "Interactive AI Lesson").trim();
     const params = new URLSearchParams();
     params.set("topic", activeTopic);
+    params.set("autostart", "1");
     if (mode) params.set("mode", mode);
     if (subject.trim()) params.set("subject", subject.trim());
 
-    const shareUrl = `${window.location.origin}/classroom?${params.toString()}`;
-    const shareText = `I just studied "${activeTopic}" on AshuTeacher's AI Voice Blackboard! Sign up for 30 free study credits and try this lesson:`;
+    const shareUrl = lessonId
+      ? `${window.location.origin}/share/${lessonId}`
+      : `${window.location.origin}/classroom?${params.toString()}`;
+    const shareText = `🎓 Watch & listen to "${activeTopic}" on AshuTeacher's AI Voice Blackboard! Join via this link to get 35 Free Study Credits:`;
 
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
@@ -804,6 +808,7 @@ function ClassroomInner() {
 
         const newId = res.headers.get("X-Lesson-Id");
         if (newId) setLessonId(newId);
+        setIsGuestPreview(res.headers.get("X-Guest-Preview") === "1");
 
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
@@ -1819,6 +1824,23 @@ function ClassroomInner() {
 
         {/* Scrollable Blackboard Surface */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 print:p-0 print:overflow-visible">
+          {isGuestPreview && boardMarkdown && (
+            <div className="mx-auto max-w-4xl mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/20 via-cyan-500/15 to-blue-600/15 px-4 py-3.5 shadow-lg print:hidden">
+              <div className="text-xs sm:text-sm text-slate-100">
+                <span className="font-extrabold text-emerald-300">
+                  Free Live Demo Mode •{" "}
+                </span>
+                Loved how AshuTeacher writes &amp; speaks? Create your free account in 10s to get{" "}
+                <strong className="text-white">30 Free Study Credits</strong> for ANY topic, syllabus chapter, or exam PDF!
+              </div>
+              <button
+                onClick={promptAuthModal}
+                className="shrink-0 rounded-xl bg-emerald-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-300 transition"
+              >
+                Claim 30 Free Credits →
+              </button>
+            </div>
+          )}
           <div
             className={`mx-auto max-w-4xl min-h-full rounded-3xl p-6 sm:p-10 transition-colors ${boardSurfaceClass} ${
               useHandwritingFont ? "font-chalk-handwriting" : ""
@@ -1833,23 +1855,26 @@ function ClassroomInner() {
                   Your Smart Blackboard is Ready
                 </h2>
                 <p className="max-w-md text-sm opacity-75 leading-relaxed mb-6 font-sans">
-                  Enter any topic, upload a PDF or exam screenshot, or fetch a URL from the Lesson Studio on the left to begin a live interactive session.
+                  Enter any topic, upload a PDF or exam screenshot, or tap an instant free live demo below.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 font-sans">
                   {[
-                    "Schrödinger's Wave Equation",
-                    "Dynamic Programming Intuition",
-                    "Photosynthesis Calvin Cycle",
+                    { t: "Quantum Entanglement & Bell's Theorem", s: "Physics", l: "en-US" },
+                    { t: "IGNOU MCS-201: Asymptotic Complexity & Dynamic Programming", s: "IGNOU MCA", l: "en-US" },
+                    { t: "UPSC Indian Polity: Fundamental Rights (Articles 12–35)", s: "UPSC CSE", l: "en-US" },
+                    { t: "विद्युत धारा और ओम का नियम (Ohm's Law in Hindi)", s: "Physics", l: "hi-IN" },
                   ].map((sample) => (
                     <button
-                      key={sample}
+                      key={sample.t}
                       onClick={() => {
-                        setTopic(sample);
-                        startTeaching("lesson", sample, "STEM");
+                        setTopic(sample.t);
+                        setSubject(sample.s);
+                        setLanguage(sample.l);
+                        startTeaching("lesson", sample.t, sample.s, { lang: sample.l });
                       }}
                       className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-500/20 transition"
                     >
-                      Teach &ldquo;{sample}&rdquo; →
+                      ▶ {sample.t.length > 38 ? `${sample.t.slice(0, 38)}…` : sample.t}
                     </button>
                   ))}
                 </div>

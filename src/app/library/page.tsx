@@ -13,6 +13,7 @@ import {
   BookOpen,
   FileCheck2,
   ListChecks,
+  Share2,
 } from "lucide-react";
 
 interface LibraryLesson {
@@ -197,6 +198,21 @@ export default function LibraryPage() {
                     </span>
 
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/share/${item.id}`;
+                          const text = `🎓 Watch & listen to "${item.title}" (${item.subject}) on AshuTeacher's AI Voice Blackboard! Claim 35 Free Study Credits: ${shareUrl}`;
+                          window.open(
+                            `https://wa.me/?text=${encodeURIComponent(text)}`,
+                            "_blank",
+                            "noopener,noreferrer"
+                          );
+                        }}
+                        title="Share Public Lecture on WhatsApp (+10 Referral Credits)"
+                        className="rounded-lg p-1.5 text-emerald-400 hover:bg-emerald-500/15"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
                       <button
                         onClick={() => toggleFavorite(item.id, item.isFavorite)}
                         className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10"

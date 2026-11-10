@@ -24,6 +24,8 @@ import {
   Compass,
   FlaskConical,
   Globe2,
+  Share2,
+  Check,
 } from "lucide-react";
 import {
   promptApiKeyModal,
@@ -35,6 +37,7 @@ interface DashboardData {
   authenticated?: boolean;
   canConfigureServerKey?: boolean;
   profile: {
+    id?: string;
     name: string;
     role: string;
     creditsBalance?: number;
@@ -42,6 +45,7 @@ interface DashboardData {
     streakDays: number;
     preferredLang: string;
     preferredLevel: string;
+    referralBonusCount?: number;
   } | null;
   hasServerKey: boolean;
   stats: {
@@ -88,10 +92,12 @@ interface DashboardData {
 }
 
 const SAMPLE_TOPICS = [
-  { subject: "Physics", topic: "Quantum Entanglement & Bell's Theorem" },
-  { subject: "Mathematics", topic: "Fourier Transform & Signal Intuition" },
-  { subject: "Computer Science", topic: "How Transformer Attention Works" },
-  { subject: "Biology", topic: "CRISPR-Cas9 Gene Editing Mechanism" },
+  { subject: "IGNOU MCA (MCS-201)", topic: "IGNOU MCS-201: Asymptotic Complexity & Dynamic Programming", lang: "en-US", badge: "IGNOU Demo" },
+  { subject: "UPSC CSE GS Paper II", topic: "UPSC Indian Polity: Fundamental Rights (Articles 12–35)", lang: "en-US", badge: "UPSC Demo" },
+  { subject: "भौतिक विज्ञान (Physics)", topic: "विद्युत धारा और ओम का नियम (Ohm's Law in Hindi)", lang: "hi-IN", badge: "हिन्दी Demo" },
+  { subject: "ପଦାର୍ଥ ବିଜ୍ଞାନ (Physics)", topic: "ନିଉଟନ୍‌ଙ୍କ ଗତି ନିୟମ (Newton's Laws in Odia)", lang: "or-IN", badge: "ଓଡ଼ିଆ Demo" },
+  { subject: "Physics", topic: "Quantum Entanglement & Bell's Theorem", lang: "en-US", badge: "Physics Demo" },
+  { subject: "Computer Science", topic: "How Transformer Attention Works", lang: "en-US", badge: "AI Demo" },
 ];
 
 export default function DashboardPage() {
@@ -101,6 +107,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasLocalKey, setHasLocalKey] = useState(true);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   useEffect(() => {
     setHasLocalKey(Boolean(getStoredApiKey()));
@@ -252,9 +259,11 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Sample Topic Pills */}
+          {/* Sample Topic Pills (Zero-Login Instant Live Blackboard Demos!) */}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-400 mr-1">Try:</span>
+            <span className="text-xs font-semibold text-emerald-300 mr-1">
+              {isNewVisitor ? "▶ Watch Instant Free Demo (No Login):" : "Try Live:"}
+            </span>
             {SAMPLE_TOPICS.map((item) => (
               <button
                 key={item.topic}
@@ -262,19 +271,81 @@ export default function DashboardPage() {
                   const params = new URLSearchParams({
                     topic: item.topic,
                     subject: item.subject,
+                    lang: item.lang,
                     mode: "lesson",
                     autostart: "1",
                   });
                   router.push(`/classroom?${params.toString()}`);
                 }}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-200 transition"
+                className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-slate-200 hover:border-cyan-400/50 hover:bg-cyan-500/15 hover:text-cyan-200 transition"
               >
-                {item.topic}
+                {item.badge ? `[${item.badge}] ` : ""}
+                {item.topic.length > 42 ? `${item.topic.slice(0, 42)}…` : item.topic}
               </button>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Double-Sided Viral Classmate Referral Engine (Shown to Signed-In Scholars) */}
+      {!loading && data?.authenticated && data?.profile?.id && (
+        <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-blue-600/10 p-5 shadow-lg">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
+              <Gift className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-extrabold text-white">
+                Invite Classmates → Get +10 Free Study Credits Each!
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Share your invite link in your college, IGNOU, UPSC, or school WhatsApp/Telegram group. Every classmate gets{" "}
+                <strong className="text-emerald-300">35 Free Credits</strong>, and you get{" "}
+                <strong className="text-cyan-300">+10 Bonus Credits</strong> automatically ({data.profile.referralBonusCount ?? 0}/20 claimed)!
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/?ref=${encodeURIComponent(
+                  data.profile?.id || ""
+                )}`;
+                const text = `🎓 Stop reading boring notes! Watch a live AI Voice Blackboard teach any IGNOU, UPSC, CBSE, JEE/NEET or college chapter in English, Hindi, Odia & 100+ languages! Join via my classmate link to get 35 Free Study Credits: ${url}`;
+                window.open(
+                  `https://wa.me/?text=${encodeURIComponent(text)}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-400 transition"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              <span>Share on WhatsApp</span>
+            </button>
+            <button
+              onClick={async () => {
+                const url = `${window.location.origin}/?ref=${encodeURIComponent(
+                  data.profile?.id || ""
+                )}`;
+                await navigator.clipboard.writeText(url).catch(() => null);
+                setInviteCopied(true);
+                setTimeout(() => setInviteCopied(false), 2500);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-slate-200 hover:bg-white/10 transition"
+            >
+              {inviteCopied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Invite Copied!</span>
+                </>
+              ) : (
+                <span>Copy Invite Link</span>
+              )}
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* 4 Core Studio Launchers */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -664,6 +735,9 @@ export default function DashboardPage() {
       <footer className="border-t border-white/10 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <span>© 2026 AshuTeacher • Online Education &amp; AI Learning Studio</span>
         <div className="flex flex-wrap items-center gap-4">
+          <Link href="/explore" className="text-cyan-400 hover:text-cyan-300 font-semibold transition">
+            Explore Exam &amp; Language Hubs
+          </Link>
           <Link href="/pricing" className="hover:text-slate-300 transition">
             Pricing (INR / USD)
           </Link>

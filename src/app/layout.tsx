@@ -30,7 +30,7 @@ const notoOriya = Noto_Sans_Oriya({
 });
 
 const appUrl =
-  process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ashuteacher.app";
+  process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ashuteacher.vercel.app";
 
 export const viewport: Viewport = {
   themeColor: "#06b6d4",
@@ -61,6 +61,10 @@ export const metadata: Metadata = {
     "AI voice teacher",
     "Hindi AI tutor",
     "Odia AI tutor",
+    "IGNOU MCA MBA study tutor",
+    "UPSC CSE AI blackboard",
+    "CBSE Class 10 12 AI teacher",
+    "viva voce defense simulator",
     "interactive flashcards",
     "AI quiz generator",
   ],

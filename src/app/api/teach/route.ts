@@ -6,10 +6,11 @@ import {
   createGeminiClient,
   resolveModelName,
 } from "@/lib/gemini";
-import { requireAuthUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { CREDIT_COSTS, refundCredits, spendCredits } from "@/lib/credits";
 import { handleApiError } from "@/lib/api-error";
 import { countAllTopicsInSubjects } from "@/app/api/academy/[id]/route";
+import { findShowcaseLecture } from "@/lib/showcase-lectures";
 
 function normalizeKeyPart(val: unknown): string {
   return String(val || "")
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
   let chargedAmount = 0;
 
   try {
-    const user = await requireAuthUser();
+    const user = await getCurrentUser();
     const body = await req.json();
     const {
       topic,
@@ -162,7 +163,7 @@ export async function POST(req: NextRequest) {
     }
 
     const effectiveTitle = (topic || "Untitled Session").slice(0, 140);
-    const model = resolveModelName(requestedModel || user.preferredModel);
+    const model = resolveModelName(requestedModel || user?.preferredModel);
     const cost =
       mode === "solve" ? CREDIT_COSTS.SOLVE_PAPER : CREDIT_COSTS.LESSON;
 
@@ -196,6 +197,46 @@ export async function POST(req: NextRequest) {
     const isCacheHit = Boolean(
       cachedEntry && cachedEntry.content && cachedEntry.content.trim().length >= 100
     );
+
+    // Zero-API-Cost Instant Guest Preview for cold external visitors!
+    if (!user) {
+      const showcase = isCacheable
+        ? findShowcaseLecture(effectiveTitle, language)
+        : null;
+      const guestPreviewText = showcase?.content || (isCacheHit ? cachedEntry?.content : "");
+
+      if (guestPreviewText) {
+        if (cachedEntry) {
+          await prisma.lessonCache
+            .update({
+              where: { id: cachedEntry.id },
+              data: { hitCount: { increment: 1 } },
+            })
+            .catch(() => null);
+        }
+
+        const encoder = new TextEncoder();
+        const guestStream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(guestPreviewText));
+            controller.close();
+          },
+        });
+
+        return new Response(guestStream, {
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-cache, no-transform",
+            "X-Guest-Preview": "1",
+            "X-Cache": "HIT",
+          },
+        });
+      }
+
+      throw new Error(
+        "AUTH_REQUIRED: Create your free account in 10 seconds to unlock 30 Free Study Credits for custom topics & exam solving!"
+      );
+    }
 
     const headerKey =
       process.env.NODE_ENV !== "production" || user.isAdmin

@@ -79,17 +79,32 @@ interface AdminPayload {
     cachedCatalogNodesCount?: number;
     apiCallsSavedByCache?: number;
     activeGeminiKeyPoolSize?: number;
+    totalVisitsCount?: number;
+    visits7dCount?: number;
+    uniqueVisitors7d?: number;
+    referralSignupsCount?: number;
   };
   users: AdminUserRow[];
   paymentOrders: AdminPaymentRow[];
   recentTransactions: AdminTransactionRow[];
+  topReferrers?: Array<{ source: string; count: number }>;
+  topCountries?: Array<{ country: string; count: number }>;
+  recentVisits?: Array<{
+    id: string;
+    path: string;
+    referrerHost: string;
+    utmSource: string;
+    country: string;
+    refUserId: string | null;
+    createdAt: string;
+  }>;
 }
 
 export default function FounderAdminPage() {
   const [data, setData] = useState<AdminPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "payments" | "ledger">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "traffic" | "payments" | "ledger">("users");
   const [searchQuery, setSearchQuery] = useState("");
   const [grantingUserId, setGrantingUserId] = useState<string | null>(null);
   const [grantAmount, setGrantAmount] = useState<number>(50);
@@ -243,7 +258,7 @@ export default function FounderAdminPage() {
             {data.stats.totalUsers}
           </div>
           <div className="mt-1 text-xs text-emerald-300">
-            +{data.stats.recentSignupsCount} joined in last 7 days
+            +{data.stats.recentSignupsCount} in 7d • {data.stats.referralSignupsCount ?? 0} via referrals • {data.stats.uniqueVisitors7d ?? 0} unique visitors (7d)
           </div>
         </div>
 
@@ -317,6 +332,16 @@ export default function FounderAdminPage() {
             }`}
           >
             Registrations ({data.users.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("traffic")}
+            className={`rounded-lg px-4 py-2 text-xs font-bold transition ${
+              activeTab === "traffic"
+                ? "bg-cyan-500 text-slate-950"
+                : "text-slate-300 hover:text-white"
+            }`}
+          >
+            External Traffic ({data.stats.totalVisitsCount ?? 0})
           </button>
           <button
             onClick={() => setActiveTab("payments")}
@@ -592,6 +617,88 @@ export default function FounderAdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {activeTab === "traffic" && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-300 mb-3">
+                Top Traffic Sources / Referrers
+              </h3>
+              {(data.topReferrers || []).length === 0 ? (
+                <p className="text-xs text-slate-400">
+                  Visitor sessions will appear here in real time as external learners arrive.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {(data.topReferrers || []).map((r) => (
+                    <div
+                      key={r.source}
+                      className="flex items-center justify-between rounded-xl bg-slate-950/70 px-3.5 py-2 text-xs"
+                    >
+                      <span className="font-mono text-white">{r.source}</span>
+                      <span className="font-bold text-cyan-300">{r.count} visits</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-300 mb-3">
+                Visitor Countries (Edge Geo-IP)
+              </h3>
+              {(data.topCountries || []).length === 0 ? (
+                <p className="text-xs text-slate-400">No country data recorded yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {(data.topCountries || []).map((c) => (
+                    <div
+                      key={c.country}
+                      className="flex items-center justify-between rounded-xl bg-slate-950/70 px-3.5 py-2 text-xs"
+                    >
+                      <span className="font-bold text-white">{c.country}</span>
+                      <span className="font-bold text-emerald-300">{c.count} visits</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/75">
+            <table className="w-full text-left text-xs text-slate-200">
+              <thead className="border-b border-white/10 bg-slate-950/80 text-[11px] uppercase text-slate-400">
+                <tr>
+                  <th className="px-4 py-3">Time</th>
+                  <th className="px-4 py-3">Landing Path</th>
+                  <th className="px-4 py-3">Referrer / Source</th>
+                  <th className="px-4 py-3">Country</th>
+                  <th className="px-4 py-3">Classmate Ref</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {(data.recentVisits || []).map((v) => (
+                  <tr key={v.id} className="hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                      {new Date(v.createdAt).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-cyan-200">{v.path}</td>
+                    <td className="px-4 py-3 font-semibold text-white">
+                      {v.referrerHost}
+                      {v.utmSource ? ` (${v.utmSource})` : ""}
+                    </td>
+                    <td className="px-4 py-3 text-emerald-300 font-bold">{v.country}</td>
+                    <td className="px-4 py-3 font-mono text-[11px] text-amber-300">
+                      {v.refUserId || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

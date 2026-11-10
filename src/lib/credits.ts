@@ -125,3 +125,70 @@ export async function grantCredits(params: {
     return { newBalance: updated.creditsBalance };
   });
 }
+
+export const REFERRER_BONUS_CREDITS = 10;
+export const REFEREE_EXTRA_CREDITS = 5;
+export const MAX_REWARDED_REFERRALS = 20;
+
+export async function rewardClassmateReferral(
+  newUserId: string,
+  rawRefCode?: string | null
+) {
+  const refId = String(rawRefCode || "").trim();
+  if (!refId || refId === newUserId || refId.length > 64) return null;
+
+  try {
+    const referrer = await prisma.user.findUnique({
+      where: { id: refId },
+      select: { id: true, name: true, referralBonusCount: true },
+    });
+    if (!referrer || referrer.id === newUserId) return null;
+
+    return await prisma.$transaction(async (tx) => {
+      const updatedNewUser = await tx.user.update({
+        where: { id: newUserId },
+        data: {
+          referredById: referrer.id,
+          creditsBalance: { increment: REFEREE_EXTRA_CREDITS },
+        },
+      });
+
+      await tx.creditTransaction.create({
+        data: {
+          userId: newUserId,
+          amount: REFEREE_EXTRA_CREDITS,
+          balanceAfter: updatedNewUser.creditsBalance,
+          type: "REFERRAL_BONUS",
+          description: `Classmate Invite Bonus (+${REFEREE_EXTRA_CREDITS} Extra Free Credits)`,
+        },
+      });
+
+      if (referrer.referralBonusCount < MAX_REWARDED_REFERRALS) {
+        const updatedReferrer = await tx.user.update({
+          where: { id: referrer.id },
+          data: {
+            creditsBalance: { increment: REFERRER_BONUS_CREDITS },
+            referralBonusCount: { increment: 1 },
+          },
+          select: { creditsBalance: true },
+        });
+
+        await tx.creditTransaction.create({
+          data: {
+            userId: referrer.id,
+            amount: REFERRER_BONUS_CREDITS,
+            balanceAfter: updatedReferrer.creditsBalance,
+            type: "REFERRAL_BONUS",
+            description: `Classmate Joined via Your Invite (+${REFERRER_BONUS_CREDITS} Free Credits)`,
+            metadataJson: JSON.stringify({ invitedUserId: newUserId }),
+          },
+        });
+      }
+
+      return updatedNewUser;
+    });
+  } catch (err) {
+    console.error("Referral bonus error:", err);
+    return null;
+  }
+}

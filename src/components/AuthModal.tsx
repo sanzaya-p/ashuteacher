@@ -37,10 +37,14 @@ export function AuthModal() {
     setLoading(true);
     setError("");
     try {
+      const storedRef =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("ashu_ref") || ""
+          : "";
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, name, email, password }),
+        body: JSON.stringify({ mode, name, email, password, refCode: storedRef }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign in failed");
