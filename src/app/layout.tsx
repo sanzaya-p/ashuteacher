@@ -82,6 +82,9 @@ export const metadata: Metadata = {
     description:
       "Step-by-step LaTeX solutions, live voice narration in 100+ global & Indian languages, 195-country syllabi & quizzes. Start free with 30 credits.",
   },
+  verification: {
+    google: "gBIulmj-GklwoljOv4gSA9HANM6ldkUERvpBhJVPdh8",
+  },
   alternates: {
     canonical: appUrl,
     languages: {
