@@ -35,6 +35,7 @@ import {
 import { ApiKeyModal } from "./ApiKeyModal";
 import { AuthModal } from "./AuthModal";
 import { PaywallModal } from "./PaywallModal";
+import { SEO_LANDING_PAGES } from "@/lib/seo-pages";
 import { InstallAppButton } from "./InstallAppButton";
 
 const NAV_ITEMS = [
@@ -404,6 +405,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto pt-14 lg:pt-0 print:pt-0 print:overflow-visible">
         {children}
+        <footer
+          aria-label="Global Exam and Language Study Hubs"
+          className="mx-auto max-w-7xl border-t border-white/10 px-4 py-8 sm:px-8 mt-12 text-xs text-slate-400 print:hidden"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="font-bold text-slate-300">
+              AshuTeacher — Global AI Voice Blackboard &amp; 195-Country Syllabus Academy
+            </div>
+            <nav className="flex flex-wrap gap-3 text-slate-400">
+              <Link href="/" className="hover:text-cyan-300">Dashboard</Link>
+              <Link href="/explore" className="hover:text-cyan-300">Global Study Hubs</Link>
+              <Link href="/academy" className="hover:text-cyan-300">Syllabus Academy</Link>
+              <Link href="/classroom" className="hover:text-cyan-300">AI Blackboard</Link>
+              <Link href="/research" className="hover:text-cyan-300">Research &amp; Viva Lab</Link>
+              <Link href="/courses" className="hover:text-cyan-300">Course Builder</Link>
+              <Link href="/practice" className="hover:text-cyan-300">Quizzes &amp; 3D Cards</Link>
+              <Link href="/pricing" className="hover:text-cyan-300">Pricing &amp; Credits</Link>
+              <Link href="/legal" className="hover:text-cyan-300">Legal &amp; Privacy</Link>
+            </nav>
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-slate-500">
+            {SEO_LANDING_PAGES.map((hub) => (
+              <Link
+                key={hub.slug}
+                href={`/explore/${hub.slug}`}
+                className="hover:text-cyan-300 transition"
+              >
+                {hub.subjectLabel}
+              </Link>
+            ))}
+          </div>
+        </footer>
       </main>
 
       <ApiKeyModal />

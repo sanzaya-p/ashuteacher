@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Explore Syllabi, Competitive Exams & Regional Language Classrooms",
   description:
     "Browse free interactive AI Voice Blackboard study hubs for IGNOU MCA/MBA/BAG, UPSC CSE, IIT-JEE, NEET UG, GATE, SSC, CBSE/ICSE Boards, Odia, Hindi & 100+ world languages.",
+  alternates: {
+    canonical: "https://ashuteacher.vercel.app/explore",
+  },
 };
 
 const CATEGORIES: Array<SeoCategory> = [
@@ -94,6 +97,7 @@ export default function ExploreDirectoryPage() {
               <Link
                 key={demo.slug}
                 href={href}
+                rel="nofollow"
                 className="group flex flex-col justify-between rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-5 hover:border-emerald-400/60 hover:bg-slate-900 transition"
               >
                 <div>

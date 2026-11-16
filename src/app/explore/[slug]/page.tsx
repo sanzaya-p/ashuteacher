@@ -31,15 +31,23 @@ export async function generateMetadata({
     return { title: "Study Hub | AshuTeacher" };
   }
 
+  const canonicalUrl = `https://ashuteacher.vercel.app/explore/${page.slug}`;
+  const langKey = page.htmlLang || "en";
+
   return {
     title: page.title,
     description: page.metaDescription,
     alternates: {
-      canonical: `https://ashuteacher.vercel.app/explore/${page.slug}`,
+      canonical: canonicalUrl,
+      languages: {
+        [langKey]: canonicalUrl,
+        "x-default": "https://ashuteacher.vercel.app/explore",
+      },
     },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
+      url: canonicalUrl,
       locale: page.htmlLang || "en_US",
     },
   };
@@ -54,10 +62,14 @@ export default async function ExploreLandingPage({
   const page = getSeoLandingPageBySlug(slug);
   if (!page) notFound();
 
-  const relatedPages = SEO_LANDING_PAGES.filter((p) => p.slug !== page.slug).slice(
+  const currentIdx = Math.max(
     0,
-    6
+    SEO_LANDING_PAGES.findIndex((p) => p.slug === page.slug)
   );
+  const relatedPages = Array.from({ length: 12 }, (_, idx) => {
+    const nextIdx = (currentIdx + idx + 1) % SEO_LANDING_PAGES.length;
+    return SEO_LANDING_PAGES[nextIdx];
+  }).filter((p) => p && p.slug !== page.slug);
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -147,6 +159,7 @@ export default async function ExploreLandingPage({
             )}&lang=${encodeURIComponent(
               page.defaultLanguage
             )}&level=${encodeURIComponent(page.defaultLevel)}`}
+            rel="nofollow"
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-xs sm:text-sm font-extrabold text-white shadow-lg hover:brightness-110 transition"
           >
             <Volume2 className="h-4 w-4" />
@@ -164,6 +177,7 @@ export default async function ExploreLandingPage({
 
           <Link
             href="/classroom?mode=solve"
+            rel="nofollow"
             className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20 transition"
           >
             <FileCheck2 className="h-4 w-4 text-emerald-400" />
@@ -197,6 +211,7 @@ export default async function ExploreLandingPage({
               <Link
                 key={ch.title}
                 href={launchHref}
+                rel="nofollow"
                 className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-cyan-400/50 hover:bg-slate-900 transition"
               >
                 <div>
