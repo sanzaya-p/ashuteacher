@@ -269,7 +269,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Zero-API-Call Global Cache Hit Path (<50ms delivery, 0 Gemini quota consumed)
-    if (isCacheHit && cachedEntry) {
+    if (user && isCacheHit && cachedEntry) {
       const cachedText = cachedEntry.content;
       const createdLesson = await prisma.lesson.create({
         data: {
