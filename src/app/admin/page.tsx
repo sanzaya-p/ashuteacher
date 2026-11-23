@@ -16,6 +16,7 @@ import {
   Clock,
   AlertCircle,
 } from "lucide-react";
+import { getWorldCurrency } from "@/lib/credit-packs";
 
 interface AdminUserRow {
   id: string;
@@ -562,8 +563,15 @@ export default function FounderAdminPage() {
                       <span className="text-amber-300">(+{p.creditsAmount} cr)</span>
                     </td>
                     <td className="px-4 py-3 font-mono font-bold text-white">
-                      {p.currency === "INR" ? "₹" : "$"}
-                      {(p.amountSubunits / 100).toFixed(p.currency === "INR" ? 0 : 2)}
+                      {(() => {
+                        const cfg = getWorldCurrency(p.currency);
+                        const val = cfg.zeroDecimal
+                          ? p.amountSubunits
+                          : p.amountSubunits / 100;
+                        return `${cfg.symbol}${val.toFixed(
+                          cfg.zeroDecimal || p.currency === "INR" ? 0 : 2
+                        )} (${p.currency})`;
+                      })()}
                     </td>
                     <td className="px-4 py-3 font-mono text-[11px] text-slate-400">
                       <div>Ord: {p.externalOrderId}</div>
