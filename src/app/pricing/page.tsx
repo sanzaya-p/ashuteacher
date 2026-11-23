@@ -13,7 +13,13 @@ import {
   CreditCard,
   Smartphone,
 } from "lucide-react";
-import { CREDIT_PACKS, CREDIT_COSTS } from "@/lib/credit-packs";
+import {
+  CREDIT_PACKS,
+  CREDIT_COSTS,
+  WORLD_CURRENCIES,
+  getPackPriceForCurrency,
+  detectDefaultCurrencyCode,
+} from "@/lib/credit-packs";
 import { notifyWalletUpdated, promptAuthModal } from "@/lib/client-api";
 
 interface WalletResponse {
@@ -58,7 +64,7 @@ function loadRazorpayScript(): Promise<boolean> {
 
 export default function PricingPage() {
   const [wallet, setWallet] = useState<WalletResponse | null>(null);
-  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+  const [currency, setCurrency] = useState<string>("INR");
   const [processingPack, setProcessingPack] = useState<string | null>(null);
   const [banner, setBanner] = useState<{
     type: "success" | "error";
@@ -77,9 +83,7 @@ export default function PricingPage() {
     refreshWallet();
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz && tz !== "Asia/Kolkata" && tz !== "Asia/Calcutta") {
-        setCurrency("USD");
-      }
+      setCurrency(detectDefaultCurrencyCode(tz));
     } catch {
       // Keep default INR
     }
@@ -87,7 +91,7 @@ export default function PricingPage() {
 
   async function handleRazorpayCheckout(
     packId: string,
-    selectedCurrency: "INR" | "USD" = currency
+    selectedCurrency: string = currency
   ) {
     if (!wallet?.authenticated) {
       promptAuthModal();
@@ -232,29 +236,37 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Currency Switcher */}
-          <div className="inline-flex rounded-xl border border-white/10 bg-slate-900 p-1 text-xs font-bold">
-            <button
-              onClick={() => setCurrency("INR")}
-              className={`rounded-lg px-3 py-1.5 transition ${
-                currency === "INR"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Universal 35+ World Currency Switcher */}
+          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-white/10 bg-slate-900 p-1 text-xs font-bold">
+            {(["INR", "USD", "EUR", "GBP", "AED"] as const).map((code) => {
+              const cfg = WORLD_CURRENCIES.find((c) => c.code === code)!;
+              return (
+                <button
+                  key={code}
+                  onClick={() => setCurrency(code)}
+                  className={`rounded-lg px-2.5 py-1.5 transition ${
+                    currency === code
+                      ? "bg-cyan-500 text-slate-950"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {cfg.flag} {cfg.code} ({cfg.symbol.trim()})
+                </button>
+              );
+            })}
+            <select
+              aria-label="Select any world currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="rounded-lg border border-cyan-500/30 bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-cyan-200 focus:border-cyan-400 focus:outline-none cursor-pointer"
             >
-              🇮🇳 INR (₹ UPI)
-            </button>
-            <button
-              onClick={() => setCurrency("USD")}
-              className={`rounded-lg px-3 py-1.5 transition ${
-                currency === "USD"
-                  ? "bg-cyan-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              🌎 USD ($)
-            </button>
+              {WORLD_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.code} — {c.name} ({c.prices.starter.display})
+                </option>
+              ))}
+            </select>
           </div>
 
           {wallet?.authenticated && (
@@ -288,6 +300,7 @@ export default function PricingPage() {
         {CREDIT_PACKS.map((pack) => {
           const isPopular = pack.badge === "MOST POPULAR";
           const loading = processingPack === pack.id;
+          const localizedQuote = getPackPriceForCurrency(pack.id, currency);
 
           return (
             <div
@@ -310,11 +323,11 @@ export default function PricingPage() {
 
                 <div className="mt-5 flex items-baseline gap-2">
                   <span className="text-4xl font-extrabold text-white">
-                    {currency === "INR"
-                      ? `₹${pack.priceInr}`
-                      : `$${pack.priceUsd}`}
+                    {localizedQuote.display}
                   </span>
-                  <span className="text-xs text-slate-400">one-time top-up</span>
+                  <span className="text-xs text-slate-400">
+                    {localizedQuote.currency} • one-time top-up
+                  </span>
                 </div>
 
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 border border-amber-400/30 px-2.5 py-1 text-xs font-bold text-amber-300">
@@ -344,11 +357,11 @@ export default function PricingPage() {
                     ) : (
                       <Smartphone className="h-4 w-4" />
                     )}
-                    Pay ₹{pack.priceInr} via UPI / Card
+                    Pay {localizedQuote.display} via UPI / Card
                   </button>
                 )}
 
-                {currency === "USD" && wallet?.gateways?.lemonSqueezyEnabled && (
+                {currency !== "INR" && wallet?.gateways?.lemonSqueezyEnabled && (
                   <button
                     onClick={() => handleGlobalCheckout(pack.id)}
                     disabled={loading}
@@ -359,15 +372,15 @@ export default function PricingPage() {
                     ) : (
                       <CreditCard className="h-4 w-4" />
                     )}
-                    Buy for ${pack.priceUsd} (Global Checkout)
+                    Buy for {localizedQuote.display} (Global Checkout)
                   </button>
                 )}
 
-                {currency === "USD" &&
+                {currency !== "INR" &&
                   !wallet?.gateways?.lemonSqueezyEnabled &&
                   wallet?.gateways?.razorpayEnabled && (
                     <button
-                      onClick={() => handleRazorpayCheckout(pack.id, "USD")}
+                      onClick={() => handleRazorpayCheckout(pack.id, currency)}
                       disabled={loading}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 disabled:opacity-50 transition"
                     >
@@ -376,7 +389,7 @@ export default function PricingPage() {
                       ) : (
                         <CreditCard className="h-4 w-4" />
                       )}
-                      Pay ${pack.priceUsd} USD via International Card
+                      Pay {localizedQuote.display} ({localizedQuote.currency}) via International Card
                     </button>
                   )}
 

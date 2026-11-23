@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth";
-import { getCreditPackById } from "@/lib/credits";
+import { getCreditPackById, getPackPriceForCurrency } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -25,52 +25,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const useUsd = String(requestedCurrency || "INR").toUpperCase() === "USD";
-    let orderCurrency: "INR" | "USD" = useUsd ? "USD" : "INR";
-    let orderAmountSubunits = useUsd ? pack.amountCents : pack.amountPaise;
+    const primaryQuote = getPackPriceForCurrency(
+      pack.id,
+      String(requestedCurrency || "INR")
+    );
+    let orderCurrency = primaryQuote.currency;
+    let orderAmountSubunits = primaryQuote.subunits;
 
     const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
-    let rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${authHeader}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: orderAmountSubunits,
-        currency: orderCurrency,
-        receipt: `ashu_${user.id.slice(-8)}_${Date.now()}`,
-        notes: {
-          userId: user.id,
-          packId: pack.id,
-          credits: String(pack.credits),
-          currency: orderCurrency,
-        },
-      }),
-    });
-
-    // Automatic fallback to INR if USD order creation is ever restricted
-    if (!rzpRes.ok && orderCurrency === "USD") {
-      orderCurrency = "INR";
-      orderAmountSubunits = pack.amountPaise;
-      rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
+    const createRzpOrder = async (curr: string, subunits: number) =>
+      fetch("https://api.razorpay.com/v1/orders", {
         method: "POST",
         headers: {
           Authorization: `Basic ${authHeader}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: orderAmountSubunits,
-          currency: orderCurrency,
+          amount: subunits,
+          currency: curr,
           receipt: `ashu_${user.id.slice(-8)}_${Date.now()}`,
           notes: {
             userId: user.id,
             packId: pack.id,
             credits: String(pack.credits),
-            currency: orderCurrency,
+            currency: curr,
           },
         }),
       });
+
+    let rzpRes = await createRzpOrder(orderCurrency, orderAmountSubunits);
+
+    // Fallback chain: Requested Currency -> USD -> INR so no world student is ever blocked
+    if (!rzpRes.ok && orderCurrency !== "USD" && orderCurrency !== "INR") {
+      const usdQuote = getPackPriceForCurrency(pack.id, "USD");
+      orderCurrency = "USD";
+      orderAmountSubunits = usdQuote.subunits;
+      rzpRes = await createRzpOrder(orderCurrency, orderAmountSubunits);
+    }
+    if (!rzpRes.ok && orderCurrency !== "INR") {
+      orderCurrency = "INR";
+      orderAmountSubunits = pack.amountPaise;
+      rzpRes = await createRzpOrder(orderCurrency, orderAmountSubunits);
     }
 
     const rzpOrder = await rzpRes.json();
