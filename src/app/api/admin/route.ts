@@ -30,6 +30,18 @@ export async function GET() {
   try {
     await requireAdmin();
 
+    // Auto-purge unpaid test orders created by internal reviewer@ashuteacher.app account
+    await prisma.paymentOrder
+      .deleteMany({
+        where: {
+          status: "CREATED",
+          user: {
+            email: "reviewer@ashuteacher.app",
+          },
+        },
+      })
+      .catch(() => null);
+
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const [
