@@ -11,6 +11,7 @@ import { CREDIT_COSTS, refundCredits, spendCredits } from "@/lib/credits";
 import { handleApiError } from "@/lib/api-error";
 import { countAllTopicsInSubjects } from "@/app/api/academy/[id]/route";
 import { findShowcaseLecture } from "@/lib/showcase-lectures";
+import { isSeoFeaturedChapter } from "@/lib/seo-pages";
 
 function normalizeKeyPart(val: unknown): string {
   return String(val || "")
@@ -198,12 +199,19 @@ export async function POST(req: NextRequest) {
       cachedEntry && cachedEntry.content && cachedEntry.content.trim().length >= 100
     );
 
-    // Zero-API-Cost Instant Guest Preview for cold external visitors!
+    // Instant Guest Preview for cold external visitors (Showcase + LessonCache + 1st-Click SEO Featured Chapters)
+    const isGuestFirstClickAllowed =
+      !user &&
+      isCacheable &&
+      (isSeoFeaturedChapter(effectiveTitle) ||
+        req.cookies.get("ashu_guest_trial_used")?.value !== "1");
+
     if (!user) {
       const showcase = isCacheable
         ? findShowcaseLecture(effectiveTitle, language)
         : null;
-      const guestPreviewText = showcase?.content || (isCacheHit ? cachedEntry?.content : "");
+      const guestPreviewText =
+        showcase?.content || (isCacheHit ? cachedEntry?.content : "");
 
       if (guestPreviewText) {
         if (cachedEntry) {
@@ -233,26 +241,32 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      throw new Error(
-        "AUTH_REQUIRED: Create your free account in 10 seconds to unlock 30 Free Study Credits for custom topics & exam solving!"
-      );
+      if (!isGuestFirstClickAllowed) {
+        throw new Error(
+          "AUTH_REQUIRED: Create your free account in 10 seconds to unlock 30 Free Study Credits for custom topics & exam solving!"
+        );
+      }
     }
 
     const headerKey =
-      process.env.NODE_ENV !== "production" || user.isAdmin
+      user && (process.env.NODE_ENV !== "production" || user.isAdmin)
         ? req.headers.get("x-gemini-api-key")
         : null;
     const ai = isCacheHit ? null : createGeminiClient(headerKey);
 
-    // Deduct Study Credits atomically (strictly enforced on both cache hits and misses)
-    const { remainingCredits } = await spendCredits({
-      userId: user.id,
-      cost,
-      description: `${mode === "solve" ? "Solved Paper" : "Lesson"}: ${effectiveTitle}`,
-      metadata: { mode, model, cached: isCacheHit },
-    });
-    chargedUserId = user.id;
-    chargedAmount = cost;
+    let remainingCredits = 0;
+    if (user) {
+      // Deduct Study Credits atomically (strictly enforced on both cache hits and misses for authenticated users)
+      const spendRes = await spendCredits({
+        userId: user.id,
+        cost,
+        description: `${mode === "solve" ? "Solved Paper" : "Lesson"}: ${effectiveTitle}`,
+        metadata: { mode, model, cached: isCacheHit },
+      });
+      remainingCredits = spendRes.remainingCredits;
+      chargedUserId = user.id;
+      chargedAmount = cost;
+    }
 
     // Zero-API-Call Global Cache Hit Path (<50ms delivery, 0 Gemini quota consumed)
     if (isCacheHit && cachedEntry) {
@@ -378,24 +392,26 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const createdLesson = await prisma.lesson.create({
-      data: {
-        userId: user.id,
-        title: effectiveTitle,
-        subject: subject || "General",
-        topic: effectiveTitle,
-        mode,
-        sourceType,
-        sourceContent: (sourceContent || topic || "").slice(0, 50000),
-        language,
-        level,
-        content: "",
-        courseId: courseId || null,
-        chapterId: chapterId || null,
-        programId: programId || null,
-        programTopicId: programTopicId || null,
-      },
-    });
+    const createdLesson = user
+      ? await prisma.lesson.create({
+          data: {
+            userId: user.id,
+            title: effectiveTitle,
+            subject: subject || "General",
+            topic: effectiveTitle,
+            mode,
+            sourceType,
+            sourceContent: (sourceContent || topic || "").slice(0, 50000),
+            language,
+            level,
+            content: "",
+            courseId: courseId || null,
+            chapterId: chapterId || null,
+            programId: programId || null,
+            programTopicId: programTopicId || null,
+          },
+        })
+      : null;
 
     const responseStream = await ai!.models.generateContentStream({
       model,
@@ -417,10 +433,12 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          await prisma.lesson.update({
-            where: { id: createdLesson.id },
-            data: { content: fullContent },
-          });
+          if (createdLesson) {
+            await prisma.lesson.update({
+              where: { id: createdLesson.id },
+              data: { content: fullContent },
+            });
+          }
 
           if (isCacheable && lessonCacheKey && fullContent.trim().length >= 120) {
             await prisma.lessonCache
@@ -443,24 +461,26 @@ export async function POST(req: NextRequest) {
               .catch(() => null);
           }
 
-          await recordLessonProgressAndXp({
-            userId: user.id,
-            courseId,
-            chapterId,
-            programId,
-            programTopicId,
-          });
+          if (user) {
+            await recordLessonProgressAndXp({
+              userId: user.id,
+              courseId,
+              chapterId,
+              programId,
+              programTopicId,
+            });
+          }
 
           controller.close();
         } catch (streamErr) {
           console.error("Streaming error:", streamErr);
-          if (!fullContent) {
+          if (user && !fullContent) {
             await refundCredits({
               userId: user.id,
               amount: cost,
               description: `Refund for interrupted ${mode} session`,
             });
-          } else {
+          } else if (createdLesson) {
             await prisma.lesson
               .update({
                 where: { id: createdLesson.id },
@@ -473,14 +493,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const resHeaders: Record<string, string> = {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Cache": "MISS",
+    };
+    if (createdLesson) {
+      resHeaders["X-Lesson-Id"] = createdLesson.id;
+      resHeaders["X-Credits-Remaining"] = String(remainingCredits);
+    } else {
+      resHeaders["X-Guest-Preview"] = "1";
+      resHeaders["Set-Cookie"] =
+        "ashu_guest_trial_used=1; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax";
+    }
+
     return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        "X-Lesson-Id": createdLesson.id,
-        "X-Credits-Remaining": String(remainingCredits),
-        "X-Cache": "MISS",
-      },
+      headers: resHeaders,
     });
   } catch (error) {
     if (chargedUserId && chargedAmount > 0) {

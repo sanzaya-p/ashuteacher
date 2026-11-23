@@ -1901,6 +1901,32 @@ function ClassroomInner() {
                     Writing on blackboard...
                   </div>
                 )}
+
+                {isGuestPreview && boardMarkdown && !isGenerating && (
+                  <div className="mt-8 rounded-2xl border border-emerald-400/40 bg-gradient-to-br from-slate-900/95 via-emerald-950/40 to-slate-950 p-6 font-sans text-left shadow-2xl print:hidden">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1.5">
+                        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-0.5 text-[11px] font-extrabold text-emerald-300">
+                          <Sparkles className="h-3 w-3" />
+                          <span>Free Guest Preview Complete</span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-white">
+                          Save This Lecture &amp; Unlock 15 More Full Lectures Free
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                          Create your free account in 10 seconds (no credit card needed) to claim{" "}
+                          <strong className="text-emerald-300">30 Free Study Credits</strong>, ask live voice follow-up doubts, solve scanned exam papers, and generate quizzes &amp; 3D flashcards.
+                        </p>
+                      </div>
+                      <button
+                        onClick={promptAuthModal}
+                        className="shrink-0 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg hover:brightness-110 transition"
+                      >
+                        Sign Up Free (30 Credits) →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

@@ -1053,3 +1053,17 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
 export function getSeoLandingPageBySlug(slug: string): SeoLandingPage | undefined {
   return SEO_LANDING_PAGES.find((p) => p.slug === slug);
 }
+
+export function isSeoFeaturedChapter(topicTitle: string): boolean {
+  const clean = String(topicTitle || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+  if (!clean) return false;
+  return SEO_LANDING_PAGES.some((page) =>
+    page.featuredChapters.some(
+      (ch) =>
+        ch.title.trim().toLowerCase().replace(/\s+/g, " ") === clean
+    )
+  );
+}
