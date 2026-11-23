@@ -75,9 +75,20 @@ export default function PricingPage() {
 
   useEffect(() => {
     refreshWallet();
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz && tz !== "Asia/Kolkata" && tz !== "Asia/Calcutta") {
+        setCurrency("USD");
+      }
+    } catch {
+      // Keep default INR
+    }
   }, []);
 
-  async function handleRazorpayCheckout(packId: string) {
+  async function handleRazorpayCheckout(
+    packId: string,
+    selectedCurrency: "INR" | "USD" = currency
+  ) {
     if (!wallet?.authenticated) {
       promptAuthModal();
       return;
@@ -94,7 +105,7 @@ export default function PricingPage() {
       const orderRes = await fetch("/api/billing/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId }),
+        body: JSON.stringify({ packId, currency: selectedCurrency }),
       });
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
@@ -324,7 +335,7 @@ export default function PricingPage() {
               <div className="mt-7 space-y-2">
                 {currency === "INR" && wallet?.gateways?.razorpayEnabled && (
                   <button
-                    onClick={() => handleRazorpayCheckout(pack.id)}
+                    onClick={() => handleRazorpayCheckout(pack.id, "INR")}
                     disabled={loading}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 disabled:opacity-50 transition"
                   >
@@ -348,9 +359,26 @@ export default function PricingPage() {
                     ) : (
                       <CreditCard className="h-4 w-4" />
                     )}
-                    Buy for ${pack.priceUsd}
+                    Buy for ${pack.priceUsd} (Global Checkout)
                   </button>
                 )}
+
+                {currency === "USD" &&
+                  !wallet?.gateways?.lemonSqueezyEnabled &&
+                  wallet?.gateways?.razorpayEnabled && (
+                    <button
+                      onClick={() => handleRazorpayCheckout(pack.id, "USD")}
+                      disabled={loading}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 disabled:opacity-50 transition"
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-4 w-4" />
+                      )}
+                      Pay ${pack.priceUsd} USD via International Card
+                    </button>
+                  )}
 
                 {/* Local Dev Sandbox Button so founder can test full flow immediately for ₹0 */}
                 {wallet?.gateways?.sandboxEnabled && (

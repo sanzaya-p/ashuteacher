@@ -269,6 +269,11 @@ export default function FounderAdminPage() {
           </div>
           <div className="mt-2 text-2xl font-extrabold text-white">
             ₹{data.stats.revenueInr.toLocaleString("en-IN")}
+            {data.stats.revenueUsd > 0 && (
+              <span className="ml-2 text-base font-bold text-emerald-300">
+                + ${data.stats.revenueUsd.toFixed(2)}
+              </span>
+            )}
           </div>
           <div className="mt-1 text-xs text-slate-400">
             {data.stats.paidOrdersCount} paid / {data.stats.totalOrdersCount} orders initiated
