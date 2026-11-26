@@ -161,6 +161,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         const sp = new URLSearchParams(window.location.search);
         const refParam = (sp.get("ref") || "").trim();
         const utmSource = (sp.get("utm_source") || "").trim();
+        if (sp.get("signup") === "1") {
+          setTimeout(() => promptAuthModal(), 150);
+        }
         if (refParam) {
           window.localStorage.setItem("ashu_ref", refParam);
           document.cookie = `ashu_ref=${encodeURIComponent(refParam)}; path=/; max-age=2592000; samesite=lax`;

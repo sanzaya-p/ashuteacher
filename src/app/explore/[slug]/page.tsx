@@ -183,6 +183,15 @@ export default async function ExploreLandingPage({
             <FileCheck2 className="h-4 w-4 text-emerald-400" />
             <span>Solve Question Paper PDF/Photo</span>
           </Link>
+
+          <Link
+            href="/classroom?signup=1"
+            rel="nofollow"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg hover:brightness-110 transition"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Claim 30 Free Study Credits (Sign Up)</span>
+          </Link>
         </div>
       </header>
 

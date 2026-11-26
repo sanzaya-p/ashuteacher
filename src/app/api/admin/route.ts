@@ -31,13 +31,24 @@ export async function GET() {
     await requireAdmin();
 
     // Auto-purge unpaid test orders created by internal reviewer@ashuteacher.app account
+    // and remove temporary diagnostic signup account if present
     await prisma.paymentOrder
       .deleteMany({
         where: {
           status: "CREATED",
           user: {
-            email: "reviewer@ashuteacher.app",
+            email: {
+              in: ["reviewer@ashuteacher.app", "diag_test_2026@ashuteacher.app"],
+            },
           },
+        },
+      })
+      .catch(() => null);
+
+    await prisma.user
+      .deleteMany({
+        where: {
+          email: "diag_test_2026@ashuteacher.app",
         },
       })
       .catch(() => null);

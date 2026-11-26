@@ -66,6 +66,14 @@ export default function ExploreDirectoryPage() {
             <Volume2 className="h-4 w-4 text-cyan-400" />
             <span>Open AI Voice Blackboard</span>
           </Link>
+          <Link
+            href="/classroom?signup=1"
+            rel="nofollow"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg hover:brightness-110 transition"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Sign Up Free (Claim 30 Study Credits)</span>
+          </Link>
         </div>
       </section>
 

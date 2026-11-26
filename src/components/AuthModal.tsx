@@ -177,27 +177,14 @@ export function AuthModal() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {mode === "signup" && (
-            <div className="relative">
-              <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your Name"
-                className="w-full rounded-xl border border-white/15 bg-slate-950 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
-                required
-              />
-            </div>
-          )}
-
           <div className="relative">
             <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
+              placeholder="Enter your email address"
+              autoFocus
               className="w-full rounded-xl border border-white/15 bg-slate-950 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
               required
             />
@@ -209,12 +196,25 @@ export function AuthModal() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password (min 6 characters)"
+              placeholder="Choose a password (min 6 chars)"
               minLength={6}
               className="w-full rounded-xl border border-white/15 bg-slate-950 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
               required
             />
           </div>
+
+          {mode === "signup" && (
+            <div className="relative">
+              <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your Name (optional)"
+                className="w-full rounded-xl border border-white/15 bg-slate-950 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+          )}
 
           {error && (
             <div className="rounded-xl border border-rose-500/30 bg-rose-500/15 px-3.5 py-2 text-xs text-rose-200">
@@ -225,16 +225,21 @@ export function AuthModal() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:brightness-110 disabled:opacity-50 transition"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/25 hover:brightness-110 disabled:opacity-50 transition"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : mode === "signup" ? (
-              "Create Account & Get 30 Free Credits"
+              "Claim 30 Free Credits Instantly →"
             ) : (
               "Sign In"
             )}
           </button>
+          {mode === "signup" && (
+            <p className="text-center text-[11px] text-slate-400">
+              Instant access • No credit card or email verification wait required
+            </p>
+          )}
         </form>
       </div>
     </div>
