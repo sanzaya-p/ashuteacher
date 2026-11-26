@@ -168,7 +168,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           window.localStorage.setItem("ashu_ref", refParam);
           document.cookie = `ashu_ref=${encodeURIComponent(refParam)}; path=/; max-age=2592000; samesite=lax`;
         }
-        if (!window.sessionStorage.getItem("ashu_visit_logged")) {
+        if (
+          !window.navigator.webdriver &&
+          !window.sessionStorage.getItem("ashu_visit_logged")
+        ) {
           window.sessionStorage.setItem("ashu_visit_logged", "1");
           fetch("/api/analytics/visit", {
             method: "POST",

@@ -12,6 +12,7 @@ import { handleApiError } from "@/lib/api-error";
 import { countAllTopicsInSubjects } from "@/app/api/academy/[id]/route";
 import { findShowcaseLecture } from "@/lib/showcase-lectures";
 import { isSeoFeaturedChapter } from "@/lib/seo-pages";
+import { isLikelyBotUserAgent } from "@/lib/bot-filter";
 
 function normalizeKeyPart(val: unknown): string {
   return String(val || "")
@@ -200,8 +201,11 @@ export async function POST(req: NextRequest) {
     );
 
     // Instant Guest Preview for cold external visitors (Showcase + LessonCache + 1st-Click SEO Featured Chapters)
+    // Strictly block automated bots/crawlers from triggering uncached AI generation
+    const isBotRequest = isLikelyBotUserAgent(req.headers.get("user-agent"));
     const isGuestFirstClickAllowed =
       !user &&
+      !isBotRequest &&
       isCacheable &&
       (isSeoFeaturedChapter(effectiveTitle) ||
         req.cookies.get("ashu_guest_trial_used")?.value !== "1");

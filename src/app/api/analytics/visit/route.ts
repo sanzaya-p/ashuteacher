@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isLikelyBotUserAgent } from "@/lib/bot-filter";
 
 function extractCleanReferrerHost(rawReferrer: string, ownHost: string): string {
   const trimmed = String(rawReferrer || "").trim();
@@ -19,6 +20,11 @@ function extractCleanReferrerHost(rawReferrer: string, ownHost: string): string 
 
 export async function POST(req: NextRequest) {
   try {
+    const ua = req.headers.get("user-agent") || "";
+    if (isLikelyBotUserAgent(ua)) {
+      return NextResponse.json({ ok: true, skipped: "bot" });
+    }
+
     const body = await req.json().catch(() => ({}));
     const path = String(body?.path || "/").slice(0, 160);
     const rawReferrer = String(body?.referrer || "");
@@ -50,11 +56,10 @@ export async function POST(req: NextRequest) {
       .slice(0, 12);
 
     const forwardedFor = (req.headers.get("x-forwarded-for") || "anon").split(",")[0].trim();
-    const ua = req.headers.get("user-agent") || "ua";
     const dayStamp = new Date().toISOString().slice(0, 10);
     const visitorHash = crypto
       .createHash("sha256")
-      .update(`ashu-visit-v1|${dayStamp}|${forwardedFor}|${ua}`)
+      .update(`ashu-visit-v1|${dayStamp}|${forwardedFor}|${ua || "ua"}`)
       .digest("hex")
       .slice(0, 24);
 
