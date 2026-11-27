@@ -248,7 +248,7 @@ export default function DashboardPage() {
           </h1>
           <p className="mt-2.5 text-sm sm:text-base text-slate-300 max-w-2xl">
             {isNewVisitor
-              ? "Built for university, board, and competitive-exam students (plus thesis researchers). Watch step-by-step blackboard explanations with synchronized voice narration in 24+ languages—starting free with 30 credits and zero subscriptions."
+              ? "Built for university, board, and competitive-exam students (plus thesis researchers). Watch step-by-step blackboard explanations with synchronized voice narration in 95 Indian & world languages—starting free with 30 credits and zero subscriptions."
               : "Stream live blackboard lectures with synchronized voice narration, solve scanned exam papers, build multi-chapter courses, or drill interactive quizzes."}
           </p>
 
@@ -516,9 +516,9 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-lg sm:text-xl font-extrabold text-white">
-                24+ Voice Languages
+                95 Voice Languages
               </div>
-              <div className="text-xs text-slate-400">Indian &amp; global audio tutors</div>
+              <div className="text-xs text-slate-400">35 Indian &amp; 60 world languages</div>
             </div>
           </div>
 
@@ -910,7 +910,7 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-white/5 text-slate-300">
                   <tr>
                     <td className="py-3 pr-4 font-medium text-white">Live Voice-Narrated Blackboard</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Yes (24+ languages)</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Yes (95 languages)</td>
                     <td className="py-3 px-4 text-slate-400">Text chat only</td>
                     <td className="py-3 px-4 text-slate-400">Text Q&amp;A only</td>
                     <td className="py-3 px-4 text-slate-400">Flashcards only</td>
