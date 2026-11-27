@@ -30,6 +30,7 @@ function buildLessonCacheKey(params: {
   topic: string;
   fullChapter: boolean;
   chapterOutline: string;
+  socraticMode: boolean;
 }): string {
   const raw = [
     "v1",
@@ -40,6 +41,7 @@ function buildLessonCacheKey(params: {
     normalizeKeyPart(params.subject),
     normalizeKeyPart(params.topic),
     params.fullChapter ? "full" : "std",
+    params.socraticMode ? "socratic" : "direct",
     normalizeKeyPart(params.chapterOutline),
   ].join("|");
   return crypto.createHash("sha256").update(raw).digest("hex");
@@ -153,6 +155,7 @@ export async function POST(req: NextRequest) {
       curriculumContext = "",
       fullChapter = false,
       chapterOutline = "",
+      socraticMode = false,
       model: requestedModel,
       attachment,
     } = body;
@@ -187,6 +190,7 @@ export async function POST(req: NextRequest) {
           topic: effectiveTitle,
           fullChapter: Boolean(fullChapter),
           chapterOutline: String(chapterOutline || ""),
+          socraticMode: Boolean(socraticMode),
         })
       : "";
 
@@ -335,7 +339,19 @@ export async function POST(req: NextRequest) {
       subject,
       curriculumContext: curriculumContext ? String(curriculumContext) : undefined,
       fullChapter: Boolean(fullChapter),
+      socraticMode: Boolean(socraticMode),
     });
+
+    const sourceHintBlock =
+      sourceType === "youtube"
+        ? "\nSOURCE CONTEXT: The material below is an extracted YouTube lecture transcript/summary. Preserve all key technical insights, clean up spoken filler words, organize clearly by concept, and teach it thoroughly in the target language.\n"
+        : sourceType === "mic"
+          ? "\nSOURCE CONTEXT: The material below is a live speech-to-text lecture recording from a student's microphone. Silently fix any transcription typos or punctuation issues, structure the spoken lecture into crystal-clear academic sections, highlight formulas/definitions, and fill in missing clarity.\n"
+          : "";
+
+    const socraticNote = socraticMode
+      ? "\nREMINDER: Socratic Guide Mode is ON — use hints, pause-and-predict prompts, and guided questions instead of passive answer dumps.\n"
+      : "";
 
     const chapterSyllabusBlock =
       fullChapter && chapterOutline
@@ -346,7 +362,11 @@ export async function POST(req: NextRequest) {
 
     let userPrompt = "";
     if (mode === "solve") {
-      userPrompt = `Solve all questions/problems thoroughly (and work through representative exam/university problems for every sub-topic if teaching a chapter) from the material below.\nTopic/Title: ${effectiveTitle}${chapterSyllabusBlock}\n\n${
+      userPrompt = `${
+        socraticMode
+          ? "Coach the student step-by-step with Socratic hints and guiding questions through all problems in the material below"
+          : "Solve all questions/problems thoroughly (and work through representative exam/university problems for every sub-topic if teaching a chapter) from the material below"
+      }.\nTopic/Title: ${effectiveTitle}${sourceHintBlock}${socraticNote}${chapterSyllabusBlock}\n\n${
         sourceContent
           ? `Extracted Text:\n${sourceContent}`
           : chapterOutline
@@ -358,7 +378,7 @@ export async function POST(req: NextRequest) {
         fullChapter ? "ENTIRE chapter and all its syllabus concepts" : "topic"
       }:\nTopic: ${effectiveTitle}${
         subject ? ` (${subject})` : ""
-      }${chapterSyllabusBlock}\n\n${
+      }${sourceHintBlock}${socraticNote}${chapterSyllabusBlock}\n\n${
         sourceContent ? `Reference Material:\n${sourceContent}` : ""
       }`;
     } else if (mode === "cheatsheet") {
@@ -366,7 +386,7 @@ export async function POST(req: NextRequest) {
         fullChapter ? "every single topic of this entire chapter" : "this topic"
       }:\nTopic: ${effectiveTitle}${
         subject ? ` (${subject})` : ""
-      }${chapterSyllabusBlock}\n\n${
+      }${sourceHintBlock}${socraticNote}${chapterSyllabusBlock}\n\n${
         sourceContent ? `Source Material:\n${sourceContent}` : ""
       }`;
     } else {
@@ -376,7 +396,7 @@ export async function POST(req: NextRequest) {
           : "blackboard lesson on"
       }:\nTopic: ${effectiveTitle}${
         subject ? `\nSubject / Paper: ${subject}` : ""
-      }${chapterSyllabusBlock}\n\n${
+      }${sourceHintBlock}${socraticNote}${chapterSyllabusBlock}\n\n${
         sourceContent
           ? `Base your lesson thoroughly on this source material (expanding and clarifying concepts where helpful):\n\n${sourceContent}`
           : ""

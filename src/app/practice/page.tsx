@@ -16,6 +16,9 @@ import {
   Lightbulb,
   ArrowRight,
   ArrowLeft,
+  Share2,
+  Check,
+  Swords,
 } from "lucide-react";
 import {
   FlashcardItem,
@@ -64,6 +67,11 @@ function PracticeInner() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [quizError, setQuizError] = useState("");
+  const [challengeCopied, setChallengeCopied] = useState(false);
+  const [challengerProfile, setChallengerProfile] = useState<{
+    id?: string;
+    firstName?: string;
+  }>({});
 
   // Flashcards state
   const [decks, setDecks] = useState<FlashcardSetRecord[]>([]);
@@ -116,6 +124,19 @@ function PracticeInner() {
     if (qLevel) setQuizLevel(qLevel);
     if (qLang) setQuizLang(qLang);
     loadAll();
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (s?.profile) {
+          setChallengerProfile({
+            id: s.profile.id,
+            firstName: String(s.profile.name || "")
+              .trim()
+              .split(/\s+/)[0],
+          });
+        }
+      })
+      .catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -252,6 +273,54 @@ function PracticeInner() {
     (acc, q, idx) => acc + (answers[idx] === q.correctIndex ? 1 : 0),
     0
   );
+
+  function buildChallengeLink(quiz: QuizRecord, beatScore?: number | null) {
+    const params = new URLSearchParams();
+    if (challengerProfile.firstName) {
+      params.set("from", challengerProfile.firstName.slice(0, 24));
+    }
+    const scoreToBeat =
+      typeof beatScore === "number"
+        ? beatScore
+        : quiz.bestScore > 0
+          ? quiz.bestScore
+          : null;
+    if (scoreToBeat !== null) {
+      params.set("beat", String(scoreToBeat));
+    }
+    if (challengerProfile.id) {
+      params.set("ref", challengerProfile.id);
+    }
+    const qs = params.toString();
+    return `${window.location.origin}/challenge/${quiz.id}${qs ? `?${qs}` : ""}`;
+  }
+
+  function handleShareChallengeWhatsApp(quiz: QuizRecord, beatScore?: number | null) {
+    const url = buildChallengeLink(quiz, beatScore);
+    const total = activeQuestions.length || quiz.totalQuestions;
+    const score =
+      typeof beatScore === "number"
+        ? beatScore
+        : quiz.bestScore > 0
+          ? quiz.bestScore
+          : null;
+    const msg =
+      score !== null
+        ? `🏆 I scored ${score}/${total} on "${quiz.title}"! Think you can beat my score? Take the exact same quiz free (no login needed): ${url}`
+        : `⚔️ Quiz Challenge: Test yourself on "${quiz.title}" (${total} MCQs with LaTeX explanations)! Play free right now: ${url}`;
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(msg)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  async function handleCopyChallengeLink(quiz: QuizRecord, beatScore?: number | null) {
+    const url = buildChallengeLink(quiz, beatScore);
+    await navigator.clipboard.writeText(url).catch(() => null);
+    setChallengeCopied(true);
+    setTimeout(() => setChallengeCopied(false), 2600);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 space-y-6">
@@ -443,28 +512,86 @@ function PracticeInner() {
                         </p>
                       </div>
 
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleShareChallengeWhatsApp(
+                              activeQuiz,
+                              submitted ? currentScore : undefined
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-500/15 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/25 transition"
+                          title="Send this exact quiz as a zero-login challenge on WhatsApp"
+                        >
+                          <Swords className="h-3.5 w-3.5" />
+                          <span>Challenge Classmate</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopyChallengeLink(
+                              activeQuiz,
+                              submitted ? currentScore : undefined
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10 transition"
+                          title="Copy shareable classmate challenge link"
+                        >
+                          {challengeCopied ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                              <span className="text-emerald-300">Link Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Copy Link</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
                       {submitted && (
-                        <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/15 px-4 py-2">
-                          <Trophy className="h-5 w-5 text-amber-400" />
-                          <div>
-                            <div className="text-sm font-extrabold text-white">
-                              Score: {currentScore} / {activeQuestions.length} (
-                              {Math.round(
-                                (currentScore / Math.max(1, activeQuestions.length)) * 100
-                              )}
-                              %)
+                        <div className="w-full flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-amber-500/10 px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <Trophy className="h-5 w-5 text-amber-400 shrink-0" />
+                            <div>
+                              <div className="text-sm font-extrabold text-white">
+                                Score: {currentScore} / {activeQuestions.length} (
+                                {Math.round(
+                                  (currentScore / Math.max(1, activeQuestions.length)) * 100
+                                )}
+                                %)
+                              </div>
+                              <p className="text-[11px] text-slate-300">
+                                Dare a classmate to beat your {currentScore}/{activeQuestions.length} score—no login required for them!
+                              </p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => {
-                              setAnswers({});
-                              setSubmitted(false);
-                            }}
-                            className="ml-2 inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/20"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Retry
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleShareChallengeWhatsApp(activeQuiz, currentScore)
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-400 px-3 py-1.5 text-xs font-extrabold text-slate-950 hover:bg-emerald-300 transition"
+                            >
+                              <Swords className="h-3.5 w-3.5" />
+                              <span>Dare Friends on WhatsApp</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAnswers({});
+                                setSubmitted(false);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/20"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Retry
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

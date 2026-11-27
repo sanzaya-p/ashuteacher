@@ -243,7 +243,7 @@ export function SharedLecturePlayer({
             <Volume2 className="h-4 w-4 text-cyan-400 shrink-0" />
             <span>
               Teach any chapter across <strong>195+ countries</strong> (IGNOU, UPSC, CBSE, JEE/NEET, MIT) in{" "}
-              <strong>100+ languages</strong>.
+              <strong>95 Indian &amp; world languages</strong>.
             </span>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">

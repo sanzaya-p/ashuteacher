@@ -45,6 +45,10 @@ import {
   SkipForward,
   Check,
   Share2,
+  Video,
+  Compass,
+  Radio,
+  Trash2,
 } from "lucide-react";
 import {
   AI_TTS_VOICES,
@@ -58,8 +62,45 @@ import { apiFetch, getStoredModel, promptAuthModal } from "@/lib/client-api";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
-type SourceTab = "topic" | "upload" | "url" | "paste";
+type SourceTab = "topic" | "youtube" | "mic" | "upload" | "url" | "paste";
 type BoardTheme = "photon" | "chalk" | "paper";
+
+interface YouTubePreviewMeta {
+  videoId: string;
+  title: string;
+  channel: string;
+  durationSeconds?: number;
+  thumbnailUrl: string;
+  captionLanguage?: string;
+  hasTranscript: boolean;
+  transcriptWarning?: string;
+  charCount: number;
+}
+
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternativeLike;
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface BrowserSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
 
 interface DoubtChatItem {
   id?: string;
@@ -79,7 +120,20 @@ function ClassroomInner() {
   const [pastedText, setPastedText] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [urlStatus, setUrlStatus] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeStatus, setYoutubeStatus] = useState("");
+  const [youtubeMeta, setYoutubeMeta] = useState<YouTubePreviewMeta | null>(null);
   const [extracting, setExtracting] = useState(false);
+
+  // Live Lecture Mic Note-Taker state
+  const [liveTranscript, setLiveTranscript] = useState("");
+  const [liveInterimText, setLiveInterimText] = useState("");
+  const [isRecordingLecture, setIsRecordingLecture] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [lectureMicError, setLectureMicError] = useState("");
+  const lectureRecRef = useRef<BrowserSpeechRecognition | null>(null);
+  const lectureRecordingActiveRef = useRef(false);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Uploaded file / PDF state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -94,6 +148,7 @@ function ClassroomInner() {
 
   // Pedagogical settings
   const [mode, setMode] = useState<string>("lesson");
+  const [socraticMode, setSocraticMode] = useState<boolean>(false);
   const [language, setLanguage] = useState<string>("en-US");
   const [level, setLevel] = useState<string>("Intermediate");
   const [speakingRate, setSpeakingRate] = useState<number>(1.0);
@@ -539,10 +594,20 @@ function ClassroomInner() {
     }
     const qLevel = searchParams.get("level");
     const qLang = searchParams.get("lang");
+    const qSocratic = searchParams.get("socratic") === "1";
+    const qYoutube = searchParams.get("youtube");
 
-    if (qTab && ["topic", "upload", "url", "paste"].includes(qTab)) {
+    if (
+      qTab &&
+      ["topic", "youtube", "mic", "upload", "url", "paste"].includes(qTab)
+    ) {
       setSourceTab(qTab);
     }
+    if (qYoutube) {
+      setSourceTab("youtube");
+      setYoutubeUrl(qYoutube);
+    }
+    if (qSocratic) setSocraticMode(true);
     if (qMode) setMode(qMode);
     if (qTopic) setTopic(qTopic);
     if (qSubject) setSubject(qSubject);
@@ -652,6 +717,181 @@ function ClassroomInner() {
     }
   }
 
+  async function handleYouTubeExtract(overrideUrl?: string) {
+    const trimmed = (overrideUrl ?? youtubeUrl).trim();
+    if (!trimmed) return;
+    setExtracting(true);
+    setYoutubeStatus("Extracting YouTube lecture transcript & metadata...");
+    setYoutubeMeta(null);
+    try {
+      const res = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to extract YouTube video");
+      if (!data.isYouTube) {
+        throw new Error("Please paste a valid YouTube video URL (youtube.com or youtu.be).");
+      }
+
+      const textVal = String(data.text || "");
+      setExtractedSourceText(textVal);
+      setAttachment(null);
+      setPdfTotalPages(0);
+      setTopic(data.title || "YouTube Lecture");
+      setYoutubeMeta({
+        videoId: data.videoId,
+        title: data.title || "YouTube Lecture",
+        channel: data.channel || "YouTube",
+        durationSeconds: data.durationSeconds,
+        thumbnailUrl: data.thumbnailUrl,
+        captionLanguage: data.captionLanguage,
+        hasTranscript: Boolean(data.hasTranscript),
+        transcriptWarning: data.transcriptWarning,
+        charCount: textVal.length,
+      });
+      setYoutubeStatus(
+        data.hasTranscript
+          ? `Transcript extracted (${textVal.length.toLocaleString()} chars)`
+          : data.transcriptWarning || "Loaded video summary."
+      );
+      setStatusMessage("YouTube lecture ready for Blackboard, Quiz, or Flashcards");
+    } catch (err) {
+      setYoutubeStatus(
+        err instanceof Error ? err.message : "Failed to extract YouTube lecture"
+      );
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  // Live Lecture Note-Taker (Continuous Browser Speech-to-Text)
+  const stopLectureRecording = useCallback(() => {
+    lectureRecordingActiveRef.current = false;
+    setIsRecordingLecture(false);
+    setLiveInterimText("");
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    if (lectureRecRef.current) {
+      try {
+        lectureRecRef.current.onend = null;
+        lectureRecRef.current.stop();
+      } catch {
+        // Ignore already-stopped recognition
+      }
+      lectureRecRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopLectureRecording();
+    };
+  }, [stopLectureRecording]);
+
+  function startLectureRecording() {
+    if (typeof window === "undefined") return;
+    const SpeechRecCtor =
+      (
+        window as unknown as {
+          SpeechRecognition?: new () => BrowserSpeechRecognition;
+          webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+        }
+      ).SpeechRecognition ||
+      (
+        window as unknown as {
+          webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+        }
+      ).webkitSpeechRecognition;
+
+    if (!SpeechRecCtor) {
+      setLectureMicError(
+        "Live microphone transcription requires Chrome, Edge, or Safari. You can still type or paste notes below."
+      );
+      return;
+    }
+
+    setLectureMicError("");
+    stopSpeaking();
+
+    const recognition = new SpeechRecCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang =
+      parsedLanguage.voiceLangCandidates[0] ||
+      (parsedLanguage.baseCode.startsWith("custom:") ||
+      parsedLanguage.baseCode === "hinglish"
+        ? "en-IN"
+        : parsedLanguage.baseCode || "en-US");
+
+    recognition.onresult = (event) => {
+      let finalized = "";
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const resItem = event.results[i];
+        const chunk = resItem?.[0]?.transcript || "";
+        if (resItem.isFinal) {
+          finalized += chunk;
+        } else {
+          interim += chunk;
+        }
+      }
+      if (finalized.trim()) {
+        setLiveTranscript((prev) => {
+          const cleanPrev = prev.trimEnd();
+          const cleanChunk = finalized.trim();
+          return cleanPrev ? `${cleanPrev} ${cleanChunk}` : cleanChunk;
+        });
+      }
+      setLiveInterimText(interim.trim());
+    };
+
+    recognition.onerror = (event) => {
+      const code = event?.error || "";
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        setLectureMicError(
+          "Microphone permission was denied. Please allow mic access in your browser address bar and try again."
+        );
+        stopLectureRecording();
+      } else if (code === "audio-capture") {
+        setLectureMicError("No microphone detected. Check your audio input device.");
+        stopLectureRecording();
+      }
+      // Transient "no-speech" / "network" pauses are handled smoothly by onend auto-restart
+    };
+
+    recognition.onend = () => {
+      if (lectureRecordingActiveRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          stopLectureRecording();
+        }
+      }
+    };
+
+    try {
+      lectureRecRef.current = recognition;
+      lectureRecordingActiveRef.current = true;
+      setIsRecordingLecture(true);
+      setStatusMessage("Recording live lecture via microphone...");
+      recognition.start();
+      if (!recordingTimerRef.current) {
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingSeconds((s) => s + 1);
+        }, 1000);
+      }
+    } catch (err) {
+      setLectureMicError(
+        err instanceof Error ? err.message : "Could not start microphone recording."
+      );
+      stopLectureRecording();
+    }
+  }
+
   async function handleUrlExtract() {
     const trimmed = urlInput.trim();
     if (!trimmed) return;
@@ -671,6 +911,31 @@ function ClassroomInner() {
       if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
 
       setExtractedSourceText(data.text || "");
+      if (data.isYouTube) {
+        setYoutubeUrl(trimmed);
+        setTopic(data.title || "YouTube Lecture");
+        setYoutubeMeta({
+          videoId: data.videoId,
+          title: data.title || "YouTube Lecture",
+          channel: data.channel || "YouTube",
+          durationSeconds: data.durationSeconds,
+          thumbnailUrl: data.thumbnailUrl,
+          captionLanguage: data.captionLanguage,
+          hasTranscript: Boolean(data.hasTranscript),
+          transcriptWarning: data.transcriptWarning,
+          charCount: (data.text || "").length,
+        });
+        setSourceTab("youtube");
+        setYoutubeStatus(
+          data.hasTranscript
+            ? `Transcript extracted (${(data.text || "").length.toLocaleString()} chars)`
+            : data.transcriptWarning || "Loaded video summary."
+        );
+        setUrlStatus("");
+        setStatusMessage("YouTube lecture ready");
+        return;
+      }
+
       if (!topic) setTopic(data.title || "Web Source");
       if (data.isPdf && data.totalPages > 1) {
         setPdfTotalPages(data.totalPages);
@@ -712,6 +977,7 @@ function ClassroomInner() {
         curriculumContext?: string;
         fullChapter?: boolean;
         chapterOutline?: string;
+        socraticMode?: boolean;
       }
     ) => {
       const activeMode = overrideMode || mode;
@@ -719,16 +985,30 @@ function ClassroomInner() {
       const activeSubject = (overrideSubject ?? subject).trim() || "General";
       const activeLanguage = overrideExtras?.lang || language;
       const activeLevel = overrideExtras?.level || level;
+      const activeSocratic = Boolean(overrideExtras?.socraticMode ?? socraticMode);
 
       let sourceContent = "";
       if (sourceTab === "paste") {
         sourceContent = pastedText.trim();
-      } else if (sourceTab === "upload" || sourceTab === "url") {
+      } else if (sourceTab === "mic") {
+        if (isRecordingLecture) stopLectureRecording();
+        sourceContent = `${liveTranscript} ${liveInterimText}`.trim();
+      } else if (
+        sourceTab === "upload" ||
+        sourceTab === "url" ||
+        sourceTab === "youtube"
+      ) {
         sourceContent = extractedSourceText.trim();
       }
 
       if (!activeTopic && !sourceContent && !attachment) {
-        setStatusMessage("Please enter a topic, paste text, or upload a file first.");
+        setStatusMessage(
+          sourceTab === "youtube"
+            ? "Paste a YouTube lecture link and click Extract first."
+            : sourceTab === "mic"
+              ? "Record your live lecture or type notes first."
+              : "Please enter a topic, paste text, or upload a file first."
+        );
         return;
       }
 
@@ -743,10 +1023,19 @@ function ClassroomInner() {
       setLessonId(null);
       const displayTitle =
         activeTopic ||
+        youtubeMeta?.title ||
         uploadedFile?.name ||
-        (sourceTab === "paste" ? "Custom Text Session" : "Interactive Session");
+        (sourceTab === "mic"
+          ? `Live Lecture Notes (${new Date().toLocaleDateString()})`
+          : sourceTab === "paste"
+            ? "Custom Text Session"
+            : "Interactive Session");
       setLessonTitle(displayTitle);
-      setStatusMessage("Streaming live lesson from Gemini...");
+      setStatusMessage(
+        activeSocratic
+          ? "Streaming Socratic guided lesson from Gemini..."
+          : "Streaming live lesson from Gemini..."
+      );
 
       // Auto-collapse studio panel on narrow screens so blackboard shines
       if (typeof window !== "undefined" && window.innerWidth < 1100) {
@@ -796,6 +1085,7 @@ function ClassroomInner() {
             ),
             chapterOutline:
               overrideExtras?.chapterOutline || courseContext.chapterOutline || "",
+            socraticMode: activeSocratic,
             model: getStoredModel(),
             attachment,
           }),
@@ -845,11 +1135,16 @@ function ClassroomInner() {
     },
     [
       mode,
+      socraticMode,
       topic,
       subject,
       sourceTab,
       pastedText,
+      liveTranscript,
+      liveInterimText,
+      isRecordingLecture,
       extractedSourceText,
+      youtubeMeta,
       attachment,
       uploadedFile,
       pdfTotalPages,
@@ -860,6 +1155,7 @@ function ClassroomInner() {
       level,
       autoNarrate,
       stopSpeaking,
+      stopLectureRecording,
       speakFromSegment,
     ]
   );
@@ -963,10 +1259,20 @@ function ClassroomInner() {
     }
   }
 
-  // Generate Structured Quiz from Lesson & Open Practice Arena
+  // Generate Structured Quiz from Lesson, YouTube Transcript, or Live Mic Notes & Open Practice Arena
   async function handleGenerateQuizFromLesson() {
-    const contextMaterial = boardMarkdown || extractedSourceText || pastedText;
-    const quizTopic = lessonTitle || topic;
+    const micText = `${liveTranscript} ${liveInterimText}`.trim();
+    const contextMaterial =
+      (sourceTab === "mic" ? micText : "") ||
+      boardMarkdown ||
+      extractedSourceText ||
+      pastedText ||
+      micText;
+    const quizTopic =
+      lessonTitle ||
+      topic ||
+      youtubeMeta?.title ||
+      (micText ? "Live Lecture Notes" : "");
     if (!quizTopic && !contextMaterial) return;
 
     setCreatingQuiz(true);
@@ -995,10 +1301,20 @@ function ClassroomInner() {
     }
   }
 
-  // Generate 3D Flashcards from Lesson & Open Practice Arena
+  // Generate 3D Flashcards from Lesson, YouTube Transcript, or Live Mic Notes & Open Practice Arena
   async function handleGenerateFlashcardsFromLesson() {
-    const contextMaterial = boardMarkdown || extractedSourceText || pastedText;
-    const deckTopic = lessonTitle || topic;
+    const micText = `${liveTranscript} ${liveInterimText}`.trim();
+    const contextMaterial =
+      (sourceTab === "mic" ? micText : "") ||
+      boardMarkdown ||
+      extractedSourceText ||
+      pastedText ||
+      micText;
+    const deckTopic =
+      lessonTitle ||
+      topic ||
+      youtubeMeta?.title ||
+      (micText ? "Live Lecture Notes" : "");
     if (!deckTopic && !contextMaterial) return;
 
     setCreatingCards(true);
@@ -1056,6 +1372,7 @@ function ClassroomInner() {
           language,
           level,
           history: prevHistory,
+          socraticMode,
           model: getStoredModel(),
         }),
       });
@@ -1184,13 +1501,15 @@ function ClassroomInner() {
             </button>
           </div>
 
-          {/* 4 Source Tabs */}
-          <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-950/80 p-1 border border-white/10">
+          {/* 6 Source Tabs (Topic, YouTube, Live Mic, Upload, Web URL, Paste) */}
+          <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-950/80 p-1 border border-white/10">
             {(
               [
                 { id: "topic", label: "Topic", icon: Sparkles },
+                { id: "youtube", label: "YouTube", icon: Video },
+                { id: "mic", label: "Live Mic", icon: Radio },
                 { id: "upload", label: "Upload", icon: Upload },
-                { id: "url", label: "URL", icon: Globe },
+                { id: "url", label: "Web URL", icon: Globe },
                 { id: "paste", label: "Paste", icon: FileText },
               ] as const
             ).map((t) => {
@@ -1202,7 +1521,11 @@ function ClassroomInner() {
                   onClick={() => setSourceTab(t.id)}
                   className={`flex flex-col items-center justify-center gap-1 rounded-lg py-2 text-[11px] font-semibold transition ${
                     active
-                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30"
+                      ? t.id === "youtube"
+                        ? "bg-rose-500/20 text-rose-300 border border-rose-400/35"
+                        : t.id === "mic"
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35"
+                          : "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
@@ -1239,6 +1562,257 @@ function ClassroomInner() {
                   placeholder="e.g., Maxwell's Equations & Electromagnetic Waves"
                   className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none resize-none"
                 />
+              </div>
+            </div>
+          )}
+
+          {sourceTab === "youtube" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Paste Any YouTube Lecture URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleYouTubeExtract();
+                      }
+                    }}
+                    placeholder="https://youtube.com/watch?v=... or youtu.be/..."
+                    className="flex-1 rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleYouTubeExtract()}
+                    disabled={extracting || !youtubeUrl.trim()}
+                    className="rounded-xl bg-rose-500/20 border border-rose-400/35 px-3.5 py-2 text-xs font-bold text-rose-200 hover:bg-rose-500/30 disabled:opacity-50 transition"
+                  >
+                    {extracting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Extract"
+                    )}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
+                  Turn any English or regional YouTube video into a Voice Blackboard lesson, Quiz, or 3D Flashcards in any of 95 languages.
+                </p>
+              </div>
+
+              {youtubeMeta && (
+                <div className="rounded-2xl border border-rose-400/30 bg-slate-950/80 overflow-hidden">
+                  <div className="relative h-28 w-full bg-slate-900 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={youtubeMeta.thumbnailUrl}
+                      alt={youtubeMeta.title}
+                      className="h-full w-full object-cover opacity-85"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between gap-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          youtubeMeta.hasTranscript
+                            ? "bg-emerald-500/90 text-slate-950"
+                            : "bg-amber-400/90 text-slate-950"
+                        }`}
+                      >
+                        {youtubeMeta.hasTranscript
+                          ? `✓ Transcript (${youtubeMeta.captionLanguage || "CC"})`
+                          : "Video Summary Mode"}
+                      </span>
+                      {youtubeMeta.durationSeconds ? (
+                        <span className="rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-mono text-white">
+                          {Math.floor(youtubeMeta.durationSeconds / 60)}:
+                          {String(youtubeMeta.durationSeconds % 60).padStart(2, "0")}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-2.5">
+                    <div>
+                      <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug">
+                        {youtubeMeta.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {youtubeMeta.channel} • {youtubeMeta.charCount.toLocaleString()} chars ready
+                      </p>
+                    </div>
+                    {youtubeMeta.transcriptWarning && (
+                      <p className="text-[11px] text-amber-200/90 leading-snug">
+                        {youtubeMeta.transcriptWarning}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => startTeaching("lesson", youtubeMeta.title)}
+                        disabled={isGenerating}
+                        className="rounded-lg bg-cyan-500/20 border border-cyan-400/35 px-2 py-1.5 text-[10px] font-bold text-cyan-200 hover:bg-cyan-500/30 transition"
+                      >
+                        Blackboard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleGenerateQuizFromLesson}
+                        disabled={creatingQuiz}
+                        className="rounded-lg bg-emerald-500/20 border border-emerald-400/35 px-2 py-1.5 text-[10px] font-bold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 transition"
+                      >
+                        {creatingQuiz ? "..." : "Quiz Me"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleGenerateFlashcardsFromLesson}
+                        disabled={creatingCards}
+                        className="rounded-lg bg-violet-500/20 border border-violet-400/35 px-2 py-1.5 text-[10px] font-bold text-violet-200 hover:bg-violet-500/30 disabled:opacity-50 transition"
+                      >
+                        {creatingCards ? "..." : "3D Cards"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {youtubeStatus && !youtubeMeta && (
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  {youtubeStatus}
+                </p>
+              )}
+            </div>
+          )}
+
+          {sourceTab === "mic" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Lecture Title (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g., Prof. Sharma — Thermodynamics Lecture 4"
+                  className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-emerald-400/25 bg-slate-950/75 p-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={
+                      isRecordingLecture
+                        ? stopLectureRecording
+                        : startLectureRecording
+                    }
+                    className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition ${
+                      isRecordingLecture
+                        ? "bg-rose-500 text-white shadow-lg shadow-rose-500/25 hover:bg-rose-400"
+                        : "bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/30"
+                    }`}
+                  >
+                    {isRecordingLecture ? (
+                      <>
+                        <span className="h-2.5 w-2.5 rounded-full bg-white animate-ping" />
+                        <span>Pause Mic ({Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")})</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="h-4 w-4" />
+                        <span>{liveTranscript ? "Resume Live Mic" : "Start Live Lecture Mic"}</span>
+                      </>
+                    )}
+                  </button>
+                  {liveTranscript && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopLectureRecording();
+                        setLiveTranscript("");
+                        setLiveInterimText("");
+                        setRecordingSeconds(0);
+                      }}
+                      className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-400 hover:bg-rose-500/15 hover:text-rose-300 transition"
+                      title="Clear Recorded Transcript"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>
+                    Listening language:{" "}
+                    <strong className="text-emerald-300">{activeLanguageDisplay}</strong>
+                  </span>
+                  <span>
+                    {liveTranscript.trim()
+                      ? `${liveTranscript.trim().split(/\s+/).length} words`
+                      : "0 words"}
+                  </span>
+                </div>
+
+                {lectureMicError && (
+                  <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1.5 text-[11px] text-rose-200">
+                    {lectureMicError}
+                  </p>
+                )}
+
+                {liveInterimText && (
+                  <div className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] text-emerald-200 italic">
+                    Capturing: {liveInterimText}…
+                  </div>
+                )}
+
+                <textarea
+                  rows={5}
+                  value={liveTranscript}
+                  onChange={(e) => setLiveTranscript(e.target.value)}
+                  placeholder="Hit Start Live Lecture Mic while your teacher speaks (or dictate your own study notes). You can edit any words here before converting to Blackboard Notes, Quiz, or Flashcards..."
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/90 p-2.5 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none"
+                />
+
+                {(liveTranscript.trim() || liveInterimText.trim()) && (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => startTeaching("lesson")}
+                      disabled={isGenerating}
+                      className="rounded-lg bg-cyan-500/20 border border-cyan-400/35 px-2.5 py-1.5 text-[11px] font-bold text-cyan-200 hover:bg-cyan-500/30 transition"
+                    >
+                      Clean Blackboard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startTeaching("cheatsheet")}
+                      disabled={isGenerating}
+                      className="rounded-lg bg-amber-500/20 border border-amber-400/35 px-2.5 py-1.5 text-[11px] font-bold text-amber-200 hover:bg-amber-500/30 transition"
+                    >
+                      Cheat Sheet
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateQuizFromLesson}
+                      disabled={creatingQuiz}
+                      className="rounded-lg bg-emerald-500/20 border border-emerald-400/35 px-2.5 py-1.5 text-[11px] font-bold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 transition"
+                    >
+                      {creatingQuiz ? "Building..." : "Quiz Me"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateFlashcardsFromLesson}
+                      disabled={creatingCards}
+                      className="rounded-lg bg-violet-500/20 border border-violet-400/35 px-2.5 py-1.5 text-[11px] font-bold text-violet-200 hover:bg-violet-500/30 disabled:opacity-50 transition"
+                    >
+                      {creatingCards ? "Building..." : "3D Flashcards"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1401,6 +1975,51 @@ function ClassroomInner() {
             </div>
           </div>
 
+          {/* Socratic "Guide Me" Tutor Mode Toggle */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={socraticMode}
+            onClick={() => setSocraticMode((prev) => !prev)}
+            className={`w-full flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${
+              socraticMode
+                ? "border-amber-400/50 bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-transparent text-amber-100 shadow-sm"
+                : "border-white/10 bg-slate-950/60 text-slate-300 hover:border-white/20"
+            }`}
+          >
+            <div className="flex items-start gap-2.5 min-w-0">
+              <Compass
+                className={`h-4 w-4 shrink-0 mt-0.5 ${
+                  socraticMode ? "text-amber-300" : "text-slate-400"
+                }`}
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                  <span>Socratic &ldquo;Guide Me&rdquo; Mode</span>
+                  {socraticMode && (
+                    <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-extrabold text-slate-950 uppercase">
+                      ON
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 leading-snug mt-0.5">
+                  Guides you step-by-step with hints &amp; questions instead of spoiling answers.
+                </p>
+              </div>
+            </div>
+            <span
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                socraticMode ? "bg-amber-400" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-slate-950 transition-transform ${
+                  socraticMode ? "translate-x-4.5" : "translate-x-1"
+                }`}
+              />
+            </span>
+          </button>
+
           {/* Launch Button */}
           <div className="pt-1">
             {isGenerating ? (
@@ -1417,13 +2036,17 @@ function ClassroomInner() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 px-4 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:brightness-110 transition"
               >
                 <Play className="h-4 w-4 fill-current" />
-                {mode === "solve"
-                  ? "Solve Paper Step-by-Step"
-                  : mode === "story"
-                    ? "Tell Educational Story"
-                    : mode === "cheatsheet"
-                      ? "Build Formula Cheat Sheet"
-                      : "Start Interactive Lesson"}
+                {socraticMode
+                  ? mode === "solve"
+                    ? "Coach Me Step-by-Step (Hints)"
+                    : "Start Socratic Guided Lesson"
+                  : mode === "solve"
+                    ? "Solve Paper Step-by-Step"
+                    : mode === "story"
+                      ? "Tell Educational Story"
+                      : mode === "cheatsheet"
+                        ? "Build Formula Cheat Sheet"
+                        : "Start Interactive Lesson"}
               </button>
             )}
           </div>
@@ -1592,6 +2215,17 @@ function ClassroomInner() {
                 <span className="truncate text-sm font-bold text-white">
                   {lessonTitle || "Interactive Blackboard"}
                 </span>
+                {socraticMode && (
+                  <button
+                    type="button"
+                    onClick={() => setSocraticMode(false)}
+                    className="hidden sm:inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-200 hover:bg-amber-500/25 transition shrink-0"
+                    title="Socratic Guide Mode is ON — click to switch back to direct answers"
+                  >
+                    <Compass className="h-3 w-3" />
+                    <span>Socratic</span>
+                  </button>
+                )}
               </div>
               <p className="text-[11px] text-slate-400 truncate">{statusMessage}</p>
             </div>
@@ -2041,6 +2675,31 @@ function ClassroomInner() {
 
           {rightDrawer === "doubt" ? (
             <>
+              <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/60 px-4 py-2">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+                  <Compass
+                    className={`h-3.5 w-3.5 ${
+                      socraticMode ? "text-amber-300" : "text-slate-500"
+                    }`}
+                  />
+                  <span>
+                    {socraticMode
+                      ? "Socratic Coach: Hints & guiding questions"
+                      : "Direct Tutor: Instant explanations"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSocraticMode((v) => !v)}
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border transition ${
+                    socraticMode
+                      ? "border-amber-400/50 bg-amber-500/20 text-amber-200"
+                      : "border-white/15 bg-white/5 text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {socraticMode ? "Socratic ON" : "Guide Me"}
+                </button>
+              </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {doubts.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-white/15 bg-slate-950/40 p-6 text-center mt-6">

@@ -30,6 +30,9 @@ import {
   CheckCircle2,
   Lock,
   HelpCircle,
+  Video,
+  Radio,
+  Swords,
 } from "lucide-react";
 import {
   promptApiKeyModal,
@@ -187,7 +190,7 @@ export default function DashboardPage() {
                 New Student Offer: Get 30 Free AI Study Credits Instantly
               </h2>
               <p className="text-xs text-slate-300 mt-0.5">
-                Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, exam paper solving, quizzes &amp; 3D flashcards across all 22 Indian &amp; 60+ world languages.
+                Sign up in 10 seconds (no credit card needed) to unlock live voice-narrated blackboard lessons, YouTube lecture conversion, Socratic coaching, exam paper solving, quizzes &amp; 3D flashcards across 95 Indian &amp; world languages.
               </p>
             </div>
           </div>
@@ -334,7 +337,7 @@ export default function DashboardPage() {
                 const url = `${window.location.origin}/?ref=${encodeURIComponent(
                   data.profile?.id || ""
                 )}`;
-                const text = `🎓 Stop reading boring notes! Watch a live AI Voice Blackboard teach any IGNOU, UPSC, CBSE, JEE/NEET or college chapter in English, Hindi, Odia & 100+ languages! Join via my classmate link to get 35 Free Study Credits: ${url}`;
+                const text = `🎓 Stop reading boring notes! Watch a live AI Voice Blackboard teach any IGNOU, UPSC, CBSE, JEE/NEET or college chapter in 95 Indian & world languages! Join via my classmate link to get 35 Free Study Credits: ${url}`;
                 window.open(
                   `https://wa.me/?text=${encodeURIComponent(text)}`,
                   "_blank",
@@ -428,8 +431,99 @@ export default function DashboardPage() {
             Quiz & 3D Flashcards
           </h3>
           <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-            Practice MCQs with detailed explanations and active-recall decks.
+            Practice MCQs, challenge classmates with shareable links, and drill 3D decks.
           </p>
+        </Link>
+      </section>
+
+      {/* 4 New Competitor-Beating Quick Launchers */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Link
+          href="/classroom?tab=youtube"
+          className="group flex items-start gap-3 rounded-2xl border border-rose-400/25 bg-gradient-to-r from-rose-500/10 to-slate-900/70 p-4 hover:border-rose-400/50 transition"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-300">
+            <Video className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-white group-hover:text-rose-200 transition">
+                YouTube → Blackboard
+              </h3>
+              <span className="rounded bg-rose-500/25 px-1.5 py-0.5 text-[9px] font-extrabold text-rose-200">
+                NEW
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+              Paste any YouTube lecture URL → Voice Blackboard, Quiz &amp; Cards in 95 languages.
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/classroom?socratic=1"
+          className="group flex items-start gap-3 rounded-2xl border border-amber-400/25 bg-gradient-to-r from-amber-500/10 to-slate-900/70 p-4 hover:border-amber-400/50 transition"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
+            <Compass className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-white group-hover:text-amber-200 transition">
+                Socratic &ldquo;Guide Me&rdquo;
+              </h3>
+              <span className="rounded bg-amber-500/25 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-200">
+                NEW
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+              Step-by-step hints &amp; questions that teach you to solve it yourself without spoilers.
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/classroom?tab=mic"
+          className="group flex items-start gap-3 rounded-2xl border border-emerald-400/25 bg-gradient-to-r from-emerald-500/10 to-slate-900/70 p-4 hover:border-emerald-400/50 transition"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
+            <Radio className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-white group-hover:text-emerald-200 transition">
+                Live Lecture Mic Notes
+              </h3>
+              <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-200">
+                NEW
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+              Record class live via mic → instant clean Blackboard notes, Cheat Sheet &amp; Flashcards.
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/practice"
+          className="group flex items-start gap-3 rounded-2xl border border-cyan-400/25 bg-gradient-to-r from-cyan-500/10 to-slate-900/70 p-4 hover:border-cyan-400/50 transition"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300">
+            <Swords className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-white group-hover:text-cyan-200 transition">
+                Challenge a Classmate
+              </h3>
+              <span className="rounded bg-cyan-500/25 px-1.5 py-0.5 text-[9px] font-extrabold text-cyan-200">
+                NEW
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+              Share any quiz on WhatsApp—friends play free with zero login to beat your score.
+            </p>
+          </div>
         </Link>
       </section>
 
@@ -890,10 +984,10 @@ export default function DashboardPage() {
           <section className="rounded-3xl border border-white/10 bg-slate-900/65 p-6 sm:p-8 space-y-4">
             <div>
               <h2 className="text-xl font-extrabold text-white">
-                How AshuTeacher Compares to Khanmigo, Chegg &amp; Quizlet
+                How AshuTeacher Compares to Khanmigo, StudyFetch, Gizmo, Chegg &amp; Quizlet
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Visual voice-narrated teaching plus exam paper solving—without locking students into monthly subscriptions.
+                Voice-narrated blackboard teaching, YouTube &amp; Live Mic lecture conversion, Socratic coaching, and zero-login classmate challenges—without monthly subscriptions.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -901,47 +995,54 @@ export default function DashboardPage() {
                 <thead>
                   <tr className="border-b border-white/10 text-slate-400">
                     <th className="py-3 pr-4 font-semibold">Capability</th>
-                    <th className="py-3 px-4 font-extrabold text-cyan-300">AshuTeacher</th>
-                    <th className="py-3 px-4 font-semibold">Khanmigo</th>
-                    <th className="py-3 px-4 font-semibold">Chegg</th>
-                    <th className="py-3 px-4 font-semibold">Quizlet Plus</th>
+                    <th className="py-3 px-3 font-extrabold text-cyan-300">AshuTeacher</th>
+                    <th className="py-3 px-3 font-semibold">Khanmigo</th>
+                    <th className="py-3 px-3 font-semibold">StudyFetch / Gizmo</th>
+                    <th className="py-3 px-3 font-semibold">Chegg / Quizlet</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-slate-300">
                   <tr>
                     <td className="py-3 pr-4 font-medium text-white">Live Voice-Narrated Blackboard</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Yes (95 languages)</td>
-                    <td className="py-3 px-4 text-slate-400">Text chat only</td>
-                    <td className="py-3 px-4 text-slate-400">Text Q&amp;A only</td>
-                    <td className="py-3 px-4 text-slate-400">Flashcards only</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">✓ Yes (95 languages)</td>
+                    <td className="py-3 px-3 text-slate-400">Text chat only</td>
+                    <td className="py-3 px-3 text-slate-400">Notes/cards only</td>
+                    <td className="py-3 px-3 text-slate-400">Text / cards only</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-4 font-medium text-white">Upload PDF / Photo Exam Paper Solver</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Full step-by-step LaTeX</td>
-                    <td className="py-3 px-4 text-slate-400">Limited</td>
-                    <td className="py-3 px-4">✓ Paid</td>
-                    <td className="py-3 px-4 text-slate-400">Limited</td>
+                    <td className="py-3 pr-4 font-medium text-white">YouTube &amp; Live Mic Lecture Notes</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">✓ Both built-in</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
+                    <td className="py-3 px-3">✓ Paid tier</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Socratic &ldquo;Guide Me&rdquo; + Exam Solver</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">✓ Toggle both modes</td>
+                    <td className="py-3 px-3">Socratic only</td>
+                    <td className="py-3 px-3 text-slate-400">Limited</td>
+                    <td className="py-3 px-3 text-slate-400">Direct answers only</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Classmate Quiz Challenge Links</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">✓ Zero-login play</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
+                    <td className="py-3 px-3">Gizmo Live</td>
+                    <td className="py-3 px-3">Classroom only</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-4 font-medium text-white">Project, Thesis &amp; Viva Defense Studio</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ 6-milestone mentor</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">✓ 6-milestone mentor</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
+                    <td className="py-3 px-3 text-slate-400">No</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-4 font-medium text-white">Pricing Model</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">Free 30 cr • ₹99 / $2.99 one-time</td>
-                    <td className="py-3 px-4">$4/mo subscription</td>
-                    <td className="py-3 px-4">$15.95–$19.95/mo</td>
-                    <td className="py-3 px-4">$7.99/mo</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 pr-4 font-medium text-white">Bring Your Own AI Key (₹0 Unlimited)</td>
-                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Supported</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
-                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 pr-4 font-medium text-white">Pricing &amp; Bring Your Own Key (BYOK)</td>
+                    <td className="py-3 px-3 text-emerald-300 font-semibold">Free 30 cr • ₹99/$2.99 once • BYOK ₹0</td>
+                    <td className="py-3 px-3">$4/mo</td>
+                    <td className="py-3 px-3">$9.99–$19.99/mo</td>
+                    <td className="py-3 px-3">$7.99–$19.95/mo</td>
                   </tr>
                 </tbody>
               </table>

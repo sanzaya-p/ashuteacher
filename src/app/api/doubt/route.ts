@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       language = "en-US",
       level = "Intermediate",
       history = [],
+      socraticMode = false,
       model: requestedModel,
     } = body;
 
@@ -56,9 +57,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const socraticGuidance = socraticMode
+      ? `SOCRATIC "GUIDE ME" MODE (ACTIVE):
+- Do NOT directly hand out the final answer right away unless the student has already made a genuine attempt or explicitly asks "just show the final answer".
+- Step 1: Acknowledge what the student already knows or got right in their question/attempt.
+- Step 2: Give ONE crisp conceptual hint, analogy, or tiny sub-step nudge.
+- Step 3: End with ONE focused guiding question that helps the student take the next step themselves.
+- Keep responses warm, concise (4–8 lines), and encouraging.`
+      : `Address their exact confusion directly with an intuitive analogy or worked mini-example.`;
+
     const systemInstruction = `You are "AshuTeacher", a patient, encouraging, and crystal-clear tutor answering a student's live "Raised Hand" question during a lesson on "${topic}".
 Student Level: ${level}.
-Formatting: Use concise Markdown and proper LaTeX ($...$ for inline math, $$...$$ for block equations). Address their exact confusion directly with an intuitive analogy or worked mini-example.
+Formatting: Use concise Markdown and proper LaTeX ($...$ for inline math, $$...$$ for block equations).
+${socraticGuidance}
 
 ${languageDirective}
 

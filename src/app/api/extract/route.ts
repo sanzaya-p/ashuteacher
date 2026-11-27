@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractText, getDocumentProxy } from "unpdf";
+import { extractYouTubeLecture, extractYouTubeVideoId } from "@/lib/youtube";
 
 async function extractPdfRange(
   uint8Array: Uint8Array,
@@ -106,6 +107,17 @@ export async function POST(req: NextRequest) {
     const parsedUrl = new URL(url);
     if (!["http:", "https:"].includes(parsedUrl.protocol)) {
       return NextResponse.json({ error: "Only HTTP/HTTPS URLs are supported" }, { status: 400 });
+    }
+
+    // YouTube Lecture URL detection (₹0 transcript + metadata extractor)
+    if (extractYouTubeVideoId(parsedUrl.toString())) {
+      const yt = await extractYouTubeLecture(parsedUrl.toString());
+      return NextResponse.json({
+        isYouTube: true,
+        isPdf: false,
+        totalPages: 1,
+        ...yt,
+      });
     }
 
     const response = await fetch(parsedUrl.toString(), {

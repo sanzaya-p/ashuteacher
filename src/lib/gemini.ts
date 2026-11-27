@@ -178,6 +178,7 @@ export function buildTeachingSystemPrompt(params: {
   subject?: string;
   curriculumContext?: string;
   fullChapter?: boolean;
+  socraticMode?: boolean;
 }): string {
   const languageDirective = buildLanguageDirective(params.languageCode);
   const subjectCtx = params.subject ? ` specializing in ${params.subject}` : "";
@@ -186,6 +187,9 @@ export function buildTeachingSystemPrompt(params: {
     : "";
   const fullChapterLine = params.fullChapter
     ? `\n- FULL-CHAPTER MASTER LECTURE REQUIREMENT (CRITICAL): You are teaching an ENTIRE official syllabus chapter in one complete session! Cover EVERY single syllabus sub-topic provided in the prompt systematically section-by-section with thorough explanations, formal definitions, complete derivations/algorithms/proofs, worked numericals/examples, and end-of-chapter exam practice questions. Never skip or gloss over sub-topics!`
+    : "";
+  const socraticLine = params.socraticMode
+    ? `\n- SOCRATIC "GUIDE ME" TUTOR MODE (STRICTLY ACTIVE): Act like an inspiring Socratic mentor (never spoon-feed passive answers!). Open key sections with a "Pause & Predict" question before explaining, guide the learner step-by-step with progressive hints, ask probing "Why does this happen?" checkpoints after major ideas, and invite the student to test their reasoning using the Raise Hand Q&A drawer!`
     : "";
 
   let pedagogyGuidance = `- Pitch explanations precisely for a ${params.level}-level learner.`;
@@ -207,7 +211,7 @@ FORMATTING RULES (CRITICAL):
 - Use proper LaTeX for ALL mathematical notation: $...$ for inline math and $$...$$ on its own lines for block equations.
 - For multi-line derivations, use \\begin{aligned} ... \\end{aligned} inside $$...$$.
 - Where a concept benefits from a visual mental model, process flow, or hierarchy, include ONE clean \`\`\`mermaid\`\`\` diagram using \`flowchart TD\` or \`flowchart LR\` (always wrap node labels containing parentheses or special characters in double quotes, e.g. A["Force (N)"]).
-${pedagogyGuidance}${syllabusLine}${fullChapterLine}
+${pedagogyGuidance}${syllabusLine}${fullChapterLine}${socraticLine}
 
 ${languageDirective}`;
 
@@ -216,6 +220,15 @@ ${languageDirective}`;
       return `You are a master educator and captivating storyteller${subjectCtx}. Weave the core concepts of the user's topic or source material into an unforgettable, vivid narrative story that naturally teaches every underlying principle without losing scientific or academic accuracy. Conclude with a brief "Moral & Core Takeaways" section connecting the story back to formal concepts.${mathAndDiagramRules}`;
 
     case "solve":
+      if (params.socraticMode) {
+        return `You are a Socratic exam coach and patient mentor${subjectCtx}. Carefully inspect all problems in the provided text, PDF, or image. DO NOT immediately spoil the final numerical/algebraic answer at the top! For EVERY problem, guide the student to discover the solution themselves:
+1. **Understand & Restate**: List the given values and what we need to find.
+2. **Guiding Question**: Ask the student which law, theorem, or strategy connects the given data to the unknown.
+3. **Hint 1 (Conceptual Nudge)**: Give the core intuition without computing the final number yet.
+4. **Hint 2 (Equation Setup)**: Show the starting equation/skeleton with placeholders so the student can try substituting values.
+5. **Try It Yourself Checkpoint**: Prompt the student to attempt the algebra or reply in "Raise Hand Q&A" with their step for feedback.
+6. **Self-Check Verification (Only After Trying)**: At the very end of the problem, provide a concise "Check Your Final Answer" sanity/unit check and final result clearly marked so they can verify their own work.${mathAndDiagramRules}`;
+      }
       return `You are an elite professor and exam problem solver${subjectCtx}. Carefully inspect all problems in the provided text, PDF, or image. Solve EVERY problem step-by-step:
 1. Restate the problem & given data clearly.
 2. State the governing formulas or theorems.
@@ -227,6 +240,14 @@ ${languageDirective}`;
 
     case "lesson":
     default:
+      if (params.socraticMode) {
+        return `You are "AshuTeacher" in Socratic Guide Mode${subjectCtx}. Teach through active guided discovery so the student builds deep mastery rather than passively reading:
+1. **Curiosity Puzzle (Think First!)** — Start with an intriguing real-world question and ask the student to predict what happens before revealing the concept.
+2. **Guided Concept Discovery** — Break the idea into small steps, pairing each step with a guiding question + clear hint before confirming the insight.
+3. **Interactive Equations & Visual Mental Model** — Walk through formulas/diagrams by explaining *why* each term belongs there.
+4. **Spot-the-Trap Challenge** — Present a common misconception as a mini-riddle for the student to debug.
+5. **Your Turn — Socratic Dialogue Prompts** — End with 3 scaffolded challenge questions the student can attempt right now in "Raise Hand Q&A" to get live step-by-step hints.${mathAndDiagramRules}`;
+      }
       return `You are "AshuTeacher", a world-class, inspiring professor${subjectCtx}. Deliver an engaging, crystal-clear blackboard lecture structured as:
 1. **Big Picture Hook** — Why this matters in the real world.
 2. **Core Concepts & Intuition** — Clear breakdown from first principles.

@@ -56,7 +56,7 @@ export async function generateMetadata({
     return {
       title: "Shared AI Voice Blackboard Lecture",
       description:
-        "Watch and listen to interactive AI Voice Blackboard lectures across 195+ countries and 100+ languages on AshuTeacher.",
+        "Watch and listen to interactive AI Voice Blackboard lectures across 195+ countries and 95 Indian & world languages on AshuTeacher.",
     };
   }
 
