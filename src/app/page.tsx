@@ -26,12 +26,21 @@ import {
   Globe2,
   Share2,
   Check,
+  ShieldCheck,
+  CheckCircle2,
+  Lock,
+  HelpCircle,
 } from "lucide-react";
 import {
   promptApiKeyModal,
   promptAuthModal,
   getStoredApiKey,
 } from "@/lib/client-api";
+import {
+  CREDIT_PACKS,
+  CREDIT_COSTS,
+  WELCOME_FREE_CREDITS,
+} from "@/lib/credit-packs";
 
 interface DashboardData {
   authenticated?: boolean;
@@ -136,7 +145,8 @@ export default function DashboardPage() {
   }
 
   const aiConfigured = Boolean(data?.hasServerKey || hasLocalKey);
-  const isNewVisitor = !loading && data?.authenticated === false;
+  const isAuthenticated = Boolean(data?.authenticated);
+  const isNewVisitor = !isAuthenticated;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 space-y-8">
@@ -209,7 +219,7 @@ export default function DashboardPage() {
             {isNewVisitor ? (
               <>
                 <Volume2 className="h-3.5 w-3.5" />
-                <span>AI Voice Blackboard • English, Hindi, Odia + 11 Languages</span>
+                <span>AI Voice Blackboard • Exam Paper Solver • Thesis Studio</span>
               </>
             ) : (
               <>
@@ -220,13 +230,26 @@ export default function DashboardPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            What would you like to{" "}
-            <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-400 bg-clip-text text-transparent">
-              master today?
-            </span>
+            {isNewVisitor ? (
+              <>
+                Turn any topic, PDF, or exam photo into a{" "}
+                <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-400 bg-clip-text text-transparent">
+                  live voice blackboard lesson.
+                </span>
+              </>
+            ) : (
+              <>
+                What would you like to{" "}
+                <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-400 bg-clip-text text-transparent">
+                  master today?
+                </span>
+              </>
+            )}
           </h1>
           <p className="mt-2.5 text-sm sm:text-base text-slate-300 max-w-2xl">
-            Stream live blackboard lectures with synchronized voice narration, solve scanned exam papers, build multi-chapter courses, or drill interactive quizzes.
+            {isNewVisitor
+              ? "Built for university, board, and competitive-exam students (plus thesis researchers). Watch step-by-step blackboard explanations with synchronized voice narration in 24+ languages—starting free with 30 credits and zero subscriptions."
+              : "Stream live blackboard lectures with synchronized voice narration, solve scanned exam papers, build multi-chapter courses, or drill interactive quizzes."}
           </p>
 
           {/* Instant Topic Bar */}
@@ -410,56 +433,108 @@ export default function DashboardPage() {
         </Link>
       </section>
 
-      {/* Mastery Metrics */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-400">
-            <BookOpen className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {data?.stats.totalLessons ?? 0}
+      {/* Personal Mastery Metrics (Authenticated) OR Real Value & Proof Highlights (New Visitors / SSR) */}
+      {isAuthenticated ? (
+        <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-400">
+              <BookOpen className="h-5 w-5" />
             </div>
-            <div className="text-xs text-slate-400">Lessons Studied</div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {data?.stats.totalLessons ?? 0}
+              </div>
+              <div className="text-xs text-slate-400">Lessons Studied</div>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-            <Trophy className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {data?.stats.avgQuizAccuracy ?? 0}%
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <Trophy className="h-5 w-5" />
             </div>
-            <div className="text-xs text-slate-400">Quiz Accuracy</div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {data?.stats.avgQuizAccuracy ?? 0}%
+              </div>
+              <div className="text-xs text-slate-400">Quiz Accuracy</div>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
-            <Layers className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {data?.stats.flashcardsMastered ?? 0}
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
+              <Layers className="h-5 w-5" />
             </div>
-            <div className="text-xs text-slate-400">Cards Mastered</div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {data?.stats.flashcardsMastered ?? 0}
+              </div>
+              <div className="text-xs text-slate-400">Cards Mastered</div>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
-            <Flame className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {data?.profile?.streakDays ?? 1} Day{(data?.profile?.streakDays ?? 1) === 1 ? "" : "s"}
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
+              <Flame className="h-5 w-5" />
             </div>
-            <div className="text-xs text-slate-400">Learning Streak</div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {data?.profile?.streakDays ?? 1} Day{(data?.profile?.streakDays ?? 1) === 1 ? "" : "s"}
+              </div>
+              <div className="text-xs text-slate-400">Learning Streak</div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <Gift className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg sm:text-xl font-extrabold text-white">
+                {WELCOME_FREE_CREDITS} Free Credits
+              </div>
+              <div className="text-xs text-slate-400">No credit card required</div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-400">
+              <Coins className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg sm:text-xl font-extrabold text-white">
+                From ₹99 / $2.99
+              </div>
+              <div className="text-xs text-slate-400">Pay-per-use • Never expires</div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400">
+              <Volume2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg sm:text-xl font-extrabold text-white">
+                24+ Voice Languages
+              </div>
+              <div className="text-xs text-slate-400">Indian &amp; global audio tutors</div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+              <Lock className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg sm:text-xl font-extrabold text-white">
+                Free BYOK Ready
+              </div>
+              <div className="text-xs text-slate-400">Use your own Gemini key for ₹0</div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Structured Global Academy & Research Lab Hub (Additive) */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -600,136 +675,349 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Two-Column Recent Activity & Active Courses */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Active Courses */}
-        <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-cyan-400" />
-              Active Learning Paths
-            </h2>
-            <Link
-              href="/courses"
-              className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
-            >
-              View all →
-            </Link>
-          </div>
-
-          {!data?.courses?.length ? (
-            <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
-              <Wand2 className="mx-auto h-8 w-8 text-slate-500 mb-2" />
-              <p className="text-sm font-medium text-slate-300">
-                No custom courses yet
-              </p>
-              <p className="text-xs text-slate-500 mt-1 mb-4">
-                Generate a structured multi-chapter syllabus for any exam or skill.
-              </p>
+      {/* Two-Column Recent Activity & Active Courses (Signed-In) OR Transparent Pricing, Comparison & Trust (Visitors) */}
+      {isAuthenticated ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Active Courses */}
+          <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-cyan-400" />
+                Active Learning Paths
+              </h2>
               <Link
                 href="/courses"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/15 transition"
+                className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
               >
-                Create Your First Course
+                View all →
               </Link>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {data.courses.map((course) => (
+
+            {!data?.courses?.length ? (
+              <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
+                <Wand2 className="mx-auto h-8 w-8 text-slate-500 mb-2" />
+                <p className="text-sm font-medium text-slate-300">
+                  No custom courses yet
+                </p>
+                <p className="text-xs text-slate-500 mt-1 mb-4">
+                  Generate a structured multi-chapter syllabus for any exam or skill.
+                </p>
                 <Link
-                  key={course.id}
-                  href={`/courses?id=${course.id}`}
-                  className="block rounded-xl border border-white/10 bg-slate-950/60 p-4 hover:border-cyan-400/30 transition"
+                  href="/courses"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/15 transition"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <span className="text-[11px] font-medium text-cyan-400">
-                        {course.subject} • {course.level}
-                      </span>
-                      <h3 className="font-semibold text-white text-sm mt-0.5">
-                        {course.title}
-                      </h3>
-                    </div>
-                    <span className="text-xs font-bold text-cyan-300">
-                      {course.progressPercent}%
-                    </span>
-                  </div>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${course.coverGradient}`}
-                      style={{ width: `${course.progressPercent}%` }}
-                    />
-                  </div>
+                  Create Your First Course
                 </Link>
-              ))}
-            </div>
-          )}
-        </section>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.courses.map((course) => (
+                  <Link
+                    key={course.id}
+                    href={`/courses?id=${course.id}`}
+                    className="block rounded-xl border border-white/10 bg-slate-950/60 p-4 hover:border-cyan-400/30 transition"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[11px] font-medium text-cyan-400">
+                          {course.subject} • {course.level}
+                        </span>
+                        <h3 className="font-semibold text-white text-sm mt-0.5">
+                          {course.title}
+                        </h3>
+                      </div>
+                      <span className="text-xs font-bold text-cyan-300">
+                        {course.progressPercent}%
+                      </span>
+                    </div>
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${course.coverGradient}`}
+                        style={{ width: `${course.progressPercent}%` }}
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
 
-        {/* Recent Blackboard Sessions */}
-        <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Clock className="h-5 w-5 text-cyan-400" />
-              Recent Blackboard Sessions
-            </h2>
-            <Link
-              href="/library"
-              className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
-            >
-              Open Library →
-            </Link>
-          </div>
-
-          {!data?.recentLessons?.length ? (
-            <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
-              <Presentation className="mx-auto h-8 w-8 text-slate-500 mb-2" />
-              <p className="text-sm font-medium text-slate-300">
-                Your blackboard history will appear here
-              </p>
-              <p className="text-xs text-slate-500 mt-1 mb-4">
-                Every lesson, story, and solved exam paper is saved automatically.
-              </p>
+          {/* Recent Blackboard Sessions */}
+          <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Clock className="h-5 w-5 text-cyan-400" />
+                Recent Blackboard Sessions
+              </h2>
               <Link
-                href="/classroom"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/30 px-4 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/30 transition"
+                href="/library"
+                className="text-xs font-medium text-cyan-400 hover:text-cyan-300"
               >
-                Open Classroom
+                Open Library →
               </Link>
             </div>
-          ) : (
-            <div className="space-y-2.5">
-              {data.recentLessons.map((lesson) => (
+
+            {!data?.recentLessons?.length ? (
+              <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-center">
+                <Presentation className="mx-auto h-8 w-8 text-slate-500 mb-2" />
+                <p className="text-sm font-medium text-slate-300">
+                  Your blackboard history will appear here
+                </p>
+                <p className="text-xs text-slate-500 mt-1 mb-4">
+                  Every lesson, story, and solved exam paper is saved automatically.
+                </p>
                 <Link
-                  key={lesson.id}
-                  href={`/classroom?lessonId=${lesson.id}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 hover:border-cyan-400/30 transition"
+                  href="/classroom"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/30 px-4 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/30 transition"
                 >
-                  <div className="min-w-0 pr-3">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-300">
-                        {lesson.mode}
-                      </span>
-                      <span className="truncate text-sm font-semibold text-white">
-                        {lesson.title}
+                  Open Classroom
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {data.recentLessons.map((lesson) => (
+                  <Link
+                    key={lesson.id}
+                    href={`/classroom?lessonId=${lesson.id}`}
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 hover:border-cyan-400/30 transition"
+                  >
+                    <div className="min-w-0 pr-3">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-300">
+                          {lesson.mode}
+                        </span>
+                        <span className="truncate text-sm font-semibold text-white">
+                          {lesson.title}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {lesson.subject} • {lesson.level}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {lesson.isFavorite && (
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      )}
+                      <ArrowRight className="h-4 w-4 text-slate-500" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Transparent Pay-Per-Use Pricing Preview */}
+          <section className="rounded-3xl border border-white/10 bg-slate-900/65 p-6 sm:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-amber-400" />
+                  Transparent Pricing — Start Free, Never Pay a Subscription
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Start with {WELCOME_FREE_CREDITS} free credits ({CREDIT_COSTS.LESSON} credits/lesson, {CREDIT_COSTS.QUIZ} credits/quiz, {CREDIT_COSTS.SOLVE_PAPER} credits/exam paper). Top up only when needed, or bring your own Gemini key for ₹0.
+                </p>
+              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300 shrink-0"
+              >
+                Full Pricing &amp; 35+ Currencies →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-5 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                    Free Forever
+                  </span>
+                  <h3 className="text-base font-bold text-white mt-1">Free Starter</h3>
+                  <div className="mt-2 text-2xl font-extrabold text-white">
+                    ₹0 <span className="text-xs font-medium text-slate-400">/ $0</span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-2">
+                    {WELCOME_FREE_CREDITS} welcome credits on signup, no-login live demos, PDF export, voice playback &amp; free BYOK mode.
+                  </p>
+                </div>
+                <button
+                  onClick={promptAuthModal}
+                  className="mt-4 w-full rounded-xl bg-emerald-400 py-2 text-xs font-extrabold text-slate-950 hover:bg-emerald-300 transition"
+                >
+                  Start Free
+                </button>
+              </div>
+
+              {CREDIT_PACKS.map((pack) => (
+                <div
+                  key={pack.id}
+                  className={`rounded-2xl border p-5 flex flex-col justify-between ${
+                    pack.badge === "MOST POPULAR"
+                      ? "border-cyan-400/50 bg-cyan-500/10"
+                      : "border-white/10 bg-slate-950/60"
+                  }`}
+                >
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300">
+                      {pack.badge || "One-Time Pack"}
+                    </span>
+                    <h3 className="text-base font-bold text-white mt-1">{pack.name}</h3>
+                    <div className="mt-2 text-2xl font-extrabold text-white">
+                      ₹{pack.priceInr}{" "}
+                      <span className="text-xs font-medium text-slate-400">
+                        / ${pack.priceUsd} USD
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {lesson.subject} • {lesson.level}
+                    <p className="text-xs text-amber-300 font-semibold mt-1">
+                      +{pack.credits} Credits (never expire)
                     </p>
+                    <p className="text-xs text-slate-400 mt-1.5">{pack.tagline}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {lesson.isFavorite && (
-                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    )}
-                    <ArrowRight className="h-4 w-4 text-slate-500" />
-                  </div>
-                </Link>
+                  <Link
+                    href="/pricing"
+                    className="mt-4 block w-full rounded-xl border border-white/15 bg-white/5 py-2 text-center text-xs font-bold text-white hover:bg-white/10 transition"
+                  >
+                    View Pack →
+                  </Link>
+                </div>
               ))}
             </div>
-          )}
-        </section>
-      </div>
+          </section>
+
+          {/* Competitive Comparison Table */}
+          <section className="rounded-3xl border border-white/10 bg-slate-900/65 p-6 sm:p-8 space-y-4">
+            <div>
+              <h2 className="text-xl font-extrabold text-white">
+                How AshuTeacher Compares to Khanmigo, Chegg &amp; Quizlet
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                Visual voice-narrated teaching plus exam paper solving—without locking students into monthly subscriptions.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 text-slate-400">
+                    <th className="py-3 pr-4 font-semibold">Capability</th>
+                    <th className="py-3 px-4 font-extrabold text-cyan-300">AshuTeacher</th>
+                    <th className="py-3 px-4 font-semibold">Khanmigo</th>
+                    <th className="py-3 px-4 font-semibold">Chegg</th>
+                    <th className="py-3 px-4 font-semibold">Quizlet Plus</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-slate-300">
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Live Voice-Narrated Blackboard</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Yes (24+ languages)</td>
+                    <td className="py-3 px-4 text-slate-400">Text chat only</td>
+                    <td className="py-3 px-4 text-slate-400">Text Q&amp;A only</td>
+                    <td className="py-3 px-4 text-slate-400">Flashcards only</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Upload PDF / Photo Exam Paper Solver</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Full step-by-step LaTeX</td>
+                    <td className="py-3 px-4 text-slate-400">Limited</td>
+                    <td className="py-3 px-4">✓ Paid</td>
+                    <td className="py-3 px-4 text-slate-400">Limited</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Project, Thesis &amp; Viva Defense Studio</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ 6-milestone mentor</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Pricing Model</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">Free 30 cr • ₹99 / $2.99 one-time</td>
+                    <td className="py-3 px-4">$4/mo subscription</td>
+                    <td className="py-3 px-4">$15.95–$19.95/mo</td>
+                    <td className="py-3 px-4">$7.99/mo</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium text-white">Bring Your Own AI Key (₹0 Unlimited)</td>
+                    <td className="py-3 px-4 text-emerald-300 font-semibold">✓ Supported</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                    <td className="py-3 px-4 text-slate-400">No</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Trust, Founder Note & Key FAQ */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5 rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-900 to-cyan-950/25 p-6 space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-bold text-cyan-300">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Independent • Privacy-First • Student-Built</span>
+              </div>
+              <h2 className="text-lg font-extrabold text-white">
+                Built by Sanzaya Patel for Accessible Multilingual Learning
+              </h2>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                AshuTeacher was created independently so students studying for university degrees, national boards, competitive exams, and research theses can access visual, voice-guided instruction in their native language—without expensive monthly paywalls.
+              </p>
+              <div className="space-y-2 pt-1 text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Featured in Awesome-PWA, Product Hunt, Hacker News, OER Commons &amp; SeedFoundry</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Automatic credit refund if any AI generation ever fails</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Installable PWA (94/100 technical score) + direct Android APK</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-slate-900/65 p-6 space-y-4">
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-cyan-400" />
+                Common Questions Before You Start
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3.5 space-y-1">
+                  <h3 className="font-bold text-white">Is it really free to try?</h3>
+                  <p className="text-slate-400">
+                    Yes—click any demo topic above with zero login, or sign up in 10 seconds for 30 free credits (no card needed). You can also connect your own Gemini key for ₹0 unlimited use.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3.5 space-y-1">
+                  <h3 className="font-bold text-white">How accurate are AI exam solutions?</h3>
+                  <p className="text-slate-400">
+                    Lessons and derivations use Gemini 3 Flash with step-by-step LaTeX math formatting. Always cross-check final answers against your official syllabus or textbook.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3.5 space-y-1">
+                  <h3 className="font-bold text-white">Is my uploaded homework or PDF private?</h3>
+                  <p className="text-slate-400">
+                    Yes. Uploaded files are used solely to generate your lesson or solution—never sold to advertisers. See our{" "}
+                    <Link href="/legal#privacy" className="text-cyan-400 underline">
+                      Privacy Policy
+                    </Link>.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3.5 space-y-1">
+                  <h3 className="font-bold text-white">What if I buy credits and change my mind?</h3>
+                  <p className="text-slate-400">
+                    Purchased credits never expire, failed AI requests auto-refund immediately, and unused packs are covered under our{" "}
+                    <Link href="/legal#refunds" className="text-cyan-400 underline">
+                      Refund Policy
+                    </Link>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* Footer Compliance Links (Razorpay & Global Gateways) */}
       <footer className="border-t border-white/10 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">

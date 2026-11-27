@@ -295,6 +295,45 @@ export default function PricingPage() {
         </div>
       )}
 
+      {/* Free Starter + BYOK Tier Banner (Always SSR-visible) */}
+      <section className="rounded-3xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-slate-900 p-6 sm:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+        <div className="space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-0.5 text-[11px] font-bold text-emerald-200">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>FREE FOREVER OPTION • NO CREDIT CARD REQUIRED</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            Free Starter — ₹0 / $0 <span className="text-sm font-semibold text-emerald-300">(+30 Welcome Study Credits)</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Every new account starts with <strong>30 free credits</strong> (up to 15 interactive voice blackboard lessons or 7 solved exam papers). Plus, revisiting saved lessons, voice narration, PDF export, instant demos, and <strong>Bring Your Own Gemini API Key (BYOK)</strong> are always ₹0 / $0.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {!wallet?.authenticated ? (
+            <button
+              onClick={promptAuthModal}
+              className="rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-500 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-lg hover:brightness-110 transition"
+            >
+              Claim 30 Free Credits
+            </button>
+          ) : (
+            <Link
+              href="/classroom"
+              className="rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-500 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-lg hover:brightness-110 transition"
+            >
+              Open AI Classroom →
+            </Link>
+          )}
+          <Link
+            href="/settings"
+            className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-xs font-semibold text-slate-200 hover:bg-white/10 transition"
+          >
+            Use Own Gemini Key (₹0)
+          </Link>
+        </div>
+      </section>
+
       {/* 3 Credit Pack Cards */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {CREDIT_PACKS.map((pack) => {
@@ -326,7 +365,7 @@ export default function PricingPage() {
                     {localizedQuote.display}
                   </span>
                   <span className="text-xs text-slate-400">
-                    {localizedQuote.currency} • one-time top-up
+                    {localizedQuote.currency} • one-time ({currency === "INR" ? `$${pack.priceUsd} USD` : `₹${pack.priceInr} INR`})
                   </span>
                 </div>
 
@@ -346,7 +385,17 @@ export default function PricingPage() {
               </div>
 
               <div className="mt-7 space-y-2">
-                {currency === "INR" && wallet?.gateways?.razorpayEnabled && (
+                {!wallet?.authenticated && (
+                  <button
+                    onClick={promptAuthModal}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 transition"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Sign In to Buy ({localizedQuote.display})
+                  </button>
+                )}
+
+                {wallet?.authenticated && currency === "INR" && wallet?.gateways?.razorpayEnabled && (
                   <button
                     onClick={() => handleRazorpayCheckout(pack.id, "INR")}
                     disabled={loading}
@@ -361,7 +410,7 @@ export default function PricingPage() {
                   </button>
                 )}
 
-                {currency !== "INR" && wallet?.gateways?.lemonSqueezyEnabled && (
+                {wallet?.authenticated && currency !== "INR" && wallet?.gateways?.lemonSqueezyEnabled && (
                   <button
                     onClick={() => handleGlobalCheckout(pack.id)}
                     disabled={loading}
@@ -376,7 +425,8 @@ export default function PricingPage() {
                   </button>
                 )}
 
-                {currency !== "INR" &&
+                {wallet?.authenticated &&
+                  currency !== "INR" &&
                   !wallet?.gateways?.lemonSqueezyEnabled &&
                   wallet?.gateways?.razorpayEnabled && (
                     <button
@@ -394,7 +444,7 @@ export default function PricingPage() {
                   )}
 
                 {/* Local Dev Sandbox Button so founder can test full flow immediately for ₹0 */}
-                {wallet?.gateways?.sandboxEnabled && (
+                {wallet?.authenticated && wallet?.gateways?.sandboxEnabled && (
                   <button
                     onClick={() => handleSandboxTopUp(pack.id)}
                     disabled={loading}
@@ -409,11 +459,12 @@ export default function PricingPage() {
                   </button>
                 )}
 
-                {!wallet?.gateways?.razorpayEnabled &&
+                {wallet?.authenticated &&
+                  !wallet?.gateways?.razorpayEnabled &&
                   !wallet?.gateways?.lemonSqueezyEnabled &&
                   !wallet?.gateways?.sandboxEnabled && (
                     <div className="rounded-xl border border-white/10 bg-slate-950 p-2.5 text-center text-xs text-slate-400">
-                      Configure Razorpay or Lemon Squeezy keys in `.env` to enable live checkout
+                      Live checkout temporarily unavailable — use your free credits or connect your own Gemini key in Settings.
                     </div>
                   )}
               </div>
@@ -532,6 +583,46 @@ export default function PricingPage() {
           )}
         </section>
       </div>
+
+      {/* Pricing, Privacy & Refund FAQ */}
+      <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 sm:p-8 space-y-5">
+        <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-emerald-400" />
+          Pricing, Privacy &amp; Refund FAQ
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 space-y-1.5">
+            <h4 className="font-bold text-white">Are there any recurring subscriptions?</h4>
+            <p className="text-slate-400 leading-relaxed">
+              Never. AshuTeacher is strictly pay-per-use. Start with 30 free credits (no card required), buy a one-time pack only if you want more, or connect your own Gemini API key in Settings for ₹0.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 space-y-1.5">
+            <h4 className="font-bold text-white">Do Study Credits expire or get wasted on errors?</h4>
+            <p className="text-slate-400 leading-relaxed">
+              Purchased credits never expire. If any AI generation fails or times out, the system refunds your credits automatically. Unused pack purchases are covered by our{" "}
+              <Link href="/legal#refunds" className="text-cyan-400 underline">
+                Refund Policy
+              </Link>.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 space-y-1.5">
+            <h4 className="font-bold text-white">How is my study data &amp; uploaded PDF handled?</h4>
+            <p className="text-slate-400 leading-relaxed">
+              Uploaded exam papers and notes are processed solely to generate your lesson or solution—never sold or shared with third-party advertisers. See our{" "}
+              <Link href="/legal#privacy" className="text-cyan-400 underline">
+                Privacy Policy
+              </Link>.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 space-y-1.5">
+            <h4 className="font-bold text-white">How accurate are AI blackboard solutions?</h4>
+            <p className="text-slate-400 leading-relaxed">
+              Powered by Gemini 3 Flash with step-by-step LaTeX derivations and structured viva checks. As with any AI tutor, we encourage students to cross-verify critical formulas against official syllabi.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <footer className="border-t border-white/10 pt-6 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-400">
         <Link href="/legal#terms" className="hover:text-white underline-offset-4 hover:underline">
