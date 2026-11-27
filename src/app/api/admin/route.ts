@@ -53,6 +53,35 @@ export async function GET() {
       })
       .catch(() => null);
 
+    // Auto-purge obvious historical stateless bot bursts (>= 6 visits from the same daily visitorHash)
+    // and known HK direct /classroom polling bot hits so Founder Admin reflects real human traffic.
+    const burstHashes = await prisma.siteVisit
+      .groupBy({
+        by: ["visitorHash"],
+        _count: { id: true },
+        having: { id: { _count: { gte: 6 } } },
+      })
+      .catch(() => []);
+    if (burstHashes.length > 0) {
+      await prisma.siteVisit
+        .deleteMany({
+          where: {
+            visitorHash: { in: burstHashes.map((b) => b.visitorHash) },
+            referrerHost: "direct",
+          },
+        })
+        .catch(() => null);
+    }
+    await prisma.siteVisit
+      .deleteMany({
+        where: {
+          country: "HK",
+          referrerHost: "direct",
+          path: "/classroom",
+        },
+      })
+      .catch(() => null);
+
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const [

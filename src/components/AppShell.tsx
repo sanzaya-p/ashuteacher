@@ -155,7 +155,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshStatus();
 
-    // Capture ?ref= classmate referral & log privacy-safe external traffic beacon once per tab session
+    // Capture ?ref= classmate referral & log human-verified external traffic beacon once per tab session
+    let cleanupVisitListeners: (() => void) | undefined;
     if (typeof window !== "undefined") {
       try {
         const sp = new URLSearchParams(window.location.search);
@@ -164,26 +165,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         if (sp.get("signup") === "1") {
           setTimeout(() => promptAuthModal(), 150);
         }
-        if (refParam) {
+        if (refParam && !/\.[a-z]{2,}$/i.test(refParam)) {
           window.localStorage.setItem("ashu_ref", refParam);
           document.cookie = `ashu_ref=${encodeURIComponent(refParam)}; path=/; max-age=2592000; samesite=lax`;
         }
-        if (
-          !window.navigator.webdriver &&
-          !window.sessionStorage.getItem("ashu_visit_logged")
-        ) {
-          window.sessionStorage.setItem("ashu_visit_logged", "1");
-          fetch("/api/analytics/visit", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            keepalive: true,
-            body: JSON.stringify({
-              path: window.location.pathname,
-              referrer: document.referrer || "",
-              utmSource,
-              refCode: refParam || window.localStorage.getItem("ashu_ref") || "",
-            }),
-          }).catch(() => null);
+
+        const isHeadless =
+          Boolean(window.navigator.webdriver) ||
+          (window.outerWidth === 0 && window.outerHeight === 0) ||
+          !window.navigator.languages ||
+          window.navigator.languages.length === 0;
+
+        if (!isHeadless && !window.sessionStorage.getItem("ashu_visit_logged")) {
+          const mountedAt = Date.now();
+          const initialPath = window.location.pathname;
+          const initialReferrer = document.referrer || "";
+          const initialRefCode = refParam || window.localStorage.getItem("ashu_ref") || "";
+
+          const sendHumanVisit = () => {
+            if (document.visibilityState !== "visible") return;
+            if (window.sessionStorage.getItem("ashu_visit_logged")) return;
+            window.sessionStorage.setItem("ashu_visit_logged", "1");
+            cleanup();
+            fetch("/api/analytics/visit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              keepalive: true,
+              body: JSON.stringify({
+                path: initialPath,
+                referrer: initialReferrer,
+                utmSource,
+                refCode: initialRefCode,
+                human: true,
+                engagedMs: Math.max(0, Date.now() - mountedAt),
+                vw: window.innerWidth,
+                vh: window.innerHeight,
+              }),
+            }).catch(() => null);
+          };
+
+          const events: Array<keyof WindowEventMap> = [
+            "pointerdown",
+            "mousemove",
+            "keydown",
+            "scroll",
+            "touchstart",
+          ];
+          const cleanup = () => {
+            for (const evt of events) {
+              window.removeEventListener(evt, sendHumanVisit);
+            }
+          };
+          for (const evt of events) {
+            window.addEventListener(evt, sendHumanVisit, { passive: true, once: true });
+          }
+          cleanupVisitListeners = cleanup;
         }
       } catch {
         // Ignore storage restrictions
@@ -199,6 +235,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
     });
     return () => {
+      cleanupVisitListeners?.();
       unsubKey();
       unsubWallet();
     };
