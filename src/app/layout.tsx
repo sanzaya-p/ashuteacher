@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     template: "%s | AshuTeacher",
   },
   description:
-    "AI interactive blackboard with synchronized voice narration in all 22 Indian & 60+ global languages, step-by-step JEE/NEET/board exam paper solver, custom syllabi, adaptive quizzes, and 3D flashcards. Start free with 30 study credits.",
+    "AI interactive blackboard with synchronized voice narration in 95 Indian & world languages (+ custom dialects), YouTube & Live Mic lecture conversion, Socratic Guide mode, step-by-step exam paper solver, 195-country syllabi, classmate quiz challenges, and 3D flashcards. Start free with 30 study credits.",
   keywords: [
     "AI tutor",
     "AI blackboard",
@@ -74,16 +74,22 @@ export const metadata: Metadata = {
     siteName: "AshuTeacher",
     title: "AshuTeacher — AI Interactive Blackboard & Exam Solver",
     description:
-      "Upload any PDF, screenshot, or tough topic. Watch it written step-by-step on a smart blackboard with live voice narration. Claim 30 free credits!",
+      "Upload any PDF, photo, YouTube lecture, or tough topic. Watch it written step-by-step on a smart blackboard with live voice narration in 95 languages. Claim 30 free credits!",
   },
   twitter: {
     card: "summary_large_image",
     title: "AshuTeacher — AI Interactive Blackboard & Exam Solver",
     description:
-      "Step-by-step LaTeX solutions, live voice narration in 100+ global & Indian languages, 195-country syllabi & quizzes. Start free with 30 credits.",
+      "Step-by-step LaTeX solutions, Socratic coaching, YouTube & live mic lecture notes, and voice narration in 95 Indian & world languages. Start free with 30 credits.",
   },
   verification: {
     google: "gBIulmj-GklwoljOv4gSA9HANM6ldkUERvpBhJVPdh8",
+    other: {
+      "directree-verify": [
+        "directree-verify=574526c9f2ca07cf31bf1e6535075a5e",
+        "574526c9f2ca07cf31bf1e6535075a5e",
+      ],
+    },
   },
   alternates: {
     canonical: appUrl,
@@ -128,7 +134,7 @@ export default function RootLayout({
     url: appUrl,
     downloadUrl: `${appUrl}/downloads/AshuTeacher.apk`,
     description:
-      "Interactive AI Voice Blackboard and Step-by-Step Exam Paper Solver across all 22 Indian and 60+ international languages with custom courses, quizzes, and 3D flashcards.",
+      "Interactive AI Voice Blackboard, YouTube & Live Mic lecture studio, Socratic Guide mode, and Step-by-Step Exam Paper Solver across 95 Indian and world languages (+ custom dialects) with 195-country syllabi, classmate quiz challenges, and 3D flashcards.",
     offers: {
       "@type": "Offer",
       price: "0",
