@@ -453,8 +453,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="mx-auto max-w-7xl border-t border-white/10 px-4 py-8 sm:px-8 mt-12 text-xs text-slate-400 print:hidden"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="font-bold text-slate-300">
-              AshuTeacher — Global AI Voice Blackboard &amp; 195-Country Syllabus Academy
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="font-bold text-slate-300">
+                AshuTeacher — Global AI Voice Blackboard &amp; 195-Country Syllabus Academy
+              </div>
+              <a
+                href="https://www.directree.io"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center opacity-85 hover:opacity-100 transition"
+                title="Verified on directree"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://www.directree.io/badge/directree-badge-darkmode.svg"
+                  alt="Verified on directree"
+                  width={200}
+                  height={37}
+                  className="h-7 w-auto"
+                />
+              </a>
             </div>
             <nav className="flex flex-wrap gap-3 text-slate-400">
               <Link href="/" className="hover:text-cyan-300">Dashboard</Link>
